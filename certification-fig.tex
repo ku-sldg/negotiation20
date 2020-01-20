@@ -5,9 +5,9 @@
   \node[main node] (Request) {$R$};
   \node[main node] (Proposal) [below of=Request] {$\langle P\rangle $};
   \node[main node] (Phrase) [below of=Proposal] {$P$};
-  \node[main node] (AttInt) [below of=Phrase] {$AI$};
+  \node[main node] (AttInt) [below of=Phrase] {$\mathsf{AVM}$};
   \node[main node] (Hardware) [below of=AttInt] {Hardware};
-  \node[main node] (Bits) [node distance=3.0cm, right of=Hardware] {Bits};
+  \node[main node] (Bits) [node distance=3.0cm, right of=Hardware] {Evidence};
   \node[main node] (VME) [node distance=3.0cm, right of=AttInt] {$E$};
   \node[main node] (Evidence) [node distance=3.0cm, right of=Phrase] {$E$};
   \node[main node] (EvidenceVec) [node distance=3.0cm, right of=Proposal] {$\langle E\rangle$};
@@ -22,7 +22,7 @@
     (Request) edge node[left=1mm] {Negotiation} (Proposal)
     (Proposal) edge node[left=1mm] {Selection} (Phrase)
     (Phrase) edge node[left=1mm] {Compilation} (AttInt)
-    (AttInt) edge node[left=1mm] {Attestation VM} (Hardware)
+    (AttInt) edge node[left=1mm] {Execution} (Hardware)
     (Hardware) edge node[below=1mm] {} (Bits)
     (AttInt) edge [dashed] node[below=1mm] {} (VME)
     (Phrase) edge [dashed] node[below=1mm] {} (Evidence)
