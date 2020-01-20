@@ -1,0 +1,23 @@
+\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=2.0cm,
+  thick,main node/.style={rectangle,fill=blue!20,draw,
+    font=\sffamily,minimum height=20mm,minimum width=10mm,rounded corners=2mm},
+  io node/.style={rectangle,
+    font=\sffamily,minimum height=5mm,minimum width=10mm}]
+
+  \node[main node] (NM) {Appraiser};
+  \node[main node] (NME) [node distance=5.0cm, right of=NM] {Target};
+  \node[io node] (IN) [above of=NM] {$r:R$};
+  \node[io node] (OUT) [below of=NM] {$\mathtt{Trust?}$};
+    
+  \path[every node/.style={font=\sffamily\small, fill=white,inner sep=1pt}]
+    (NM) edge [bend left=20] node[above=1mm] {$r$} (NME)
+    (NME) edge [bend left=20] node[below=1mm] {$e:E$} (NM)
+    (IN) edge (NM)
+    (NM) edge (OUT)
+    ;
+\end{tikzpicture}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "negotiation20"
+%%% End:
