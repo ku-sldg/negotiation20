@@ -1,0 +1,67 @@
+\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=2.0cm,
+  thick,main node/.style={rectangle,fill=blue!20,draw,
+    font=\sffamily,minimum height=20mm,minimum width=10mm,rounded corners=2mm},
+  io node/.style={rectangle,
+    font=\sffamily,minimum height=5mm,minimum width=10mm}]
+
+  \node[main node] (VMM) at (2.5,2.5) [minimum height=50mm, minimum
+  width=40mm] {}; 
+  \node[main node] (UserAM) [fill=red!20,minimum height=15mm,minimum
+  width=17mm] at (1.5,1.0) {}; 
+  \node[main node] (Crypto)  [fill=green!20,minimum height=15mm,minimum
+  width=17mm] at (3.5,1.0) {};
+  \node[io node] (CryptoL1) [node distance=0.2cm, above of=Crypto] {Crypto};
+  \node[io node] (CryptoL2) [node distance=0.2cm, below of=Crypto] {CompCert};
+  \node[io node] (UserAML1) [node distance=0.2cm, above of=UserAM] {UserAM};
+  \node[io node] (UserAML2) [node distance=0.2cm, below of=UserAM] {CakeML};
+  \node[io node] (VMML1) [node distance=1.5cm, above of=Crypto] {Buildroot};
+  \node[io node] (VMML2) [node distance=1.1cm, above of=Crypto] {seL4 VMM};
+  \node[main node] (Target) [fill=red!20,minimum height=15mm,minimum
+  width=17mm] [node distance= 1.3 cm, above of=VMM] {Ground Station};
+
+  \node[main node] (CAmkES1) at (-2.5,1.5) [minimum height=30mm,
+  minimum width=30mm] {}; 
+  \node[io node] (CAmkES1L1) [node distance=1.0cm, above of=CAmkES1]
+  {seL4 CAmkES}; 
+  \node[main node] (PlatAM)  [fill=red!20,minimum height=15mm,minimum
+  width=17mm] [node distance=0.5cm, below of=CAmkES1] {};
+  \node[io node] (PlatAML1) [node distance=0.2cm, above of=PlatAM] {PlatAM};
+  \node[io node] (PlatAML2) [node distance=0.2cm, below of=PlatAM] {CakeML};
+
+  \node[main node] (TZ) at (-7.0,1.5) [minimum height=30mm, minimum
+  width=30mm] {}; 
+  \node[io node] (TZL1) [node distance=1.0cm, above of=TZ] {seL4 CAmkES};
+  \node[main node] (seL4AM)  [minimum height=15mm,minimum width=17mm]
+  [fill=red!20,node distance=0.5cm, below of=TZ] {};
+  \node[io node] (seL4AML1) [node distance=0.2cm, above of=seL4AM] {seL4AM};
+  \node[io node] (seL4AML2) [node distance=0.2cm, below of=seL4AM] {CakeML};
+
+  \node[io node] (IN) [node distance=5.5cm, above of=UserAM]
+  {$(R,n)$};
+  \node[io node] (OUT) [node distance=5.0cm, above of=UserAM]
+  {$\{\#(M_{\mathsf{gs}},E_{\mathsf{platAM}},n)\}_{\mathsf{UserAM}^{-1}}$};
+      
+  \node[io node] (INP) [node distance=3.5cm, above of=PlatAM]
+  {$(R,n)$};
+  \node[io node] (OUTP) [node distance=3.0cm, above of=PlatAM]
+  {$\{\#(M_{\mathsf{plat}},E_{\mathsf{seL4AM}},n)\}_{\mathsf{PlatAM}^{-1}}$};
+
+  \node[io node] (INTZ) [node distance=3.5cm, above of=seL4AM]
+  {$(R,n)$};
+  \node[io node] (OUTTZ) [node distance=3.0cm, above of=seL4AM]
+  {$\{\#(M_{\mathsf{seL4}},n)\}_{\mathsf{seL4AM}^{-1}}$};
+
+  \path[every node/.style={font=\sffamily\small, fill=white,inner sep=1pt}]
+  (OUT) edge [bend right=20] (UserAM)
+  (UserAM) edge [bend left=20] (PlatAM)
+  (PlatAM) edge [bend left=20] (seL4AM)
+  (seL4AM) edge [dashed,bend left=20] (CAmkES1)
+  (PlatAM) edge [dashed,bend left=20] (VMM)
+  (UserAM) edge [dashed,bend right=20] (Target)
+  ;
+\end{tikzpicture}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "negotiation20"
+%%% End:
