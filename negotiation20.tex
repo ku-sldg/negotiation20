@@ -1,5 +1,33 @@
 \documentclass[sigconf,authordraft]{acmart}
 
+\usepackage{tikz}
+\usetikzlibrary{arrows}
+
+\newcommand{\den}[2][]{
+\left\llbracket#2\right\rrbracket^{#1}
+}
+\newcommand{\low}[1]{
+\left\lfloor#1\right\rfloor
+}
+\newcommand{\denml}[1]{
+  \den[ml]{#1}
+}
+\newcommand{\denev}[1]{
+  \den[ev]{#1}
+}
+
+\newcommand{\squash}{\itemsep=0pt\parskip=0pt}
+\newcommand{\uavam}{\textsf{UAVAM}}
+\newcommand{\useram}{\textsf{UserAM}}
+\newcommand{\platam}{\textsf{PlatformAM}}
+\newcommand{\selam}{\textsf{seL4AM}}
+\newcommand{\uboot}{\textsf{UBOOT}}
+\newcommand{\duhk}{\textsf{DUHK}}
+\newcommand{\M}[1]{\ensuremath{M_{\mathsf{#1}}}}
+\newcommand{\E}[1]{\ensuremath{E_{\mathsf{#1}}}}
+\newcommand{\R}[1]{\ensuremath{R_{\mathsf{#1}}}}
+\newcommand{\sign}[2]{\ensuremath{\{#1\}_{#2^{-1}}}}
+
 %% The article template's documentation, available at
 %% \url{https://www.acm.org/publications/proceedings-template}, has a
 %% complete explanation of these commands and tips for their effective
@@ -85,6 +113,25 @@
 \section{Introduction}
 
 Introduction goes here.
+
+\begin{figure}[hbtp]
+  \centering
+  \input{architecture-fig.tex}
+  \caption[Attestation architecture]{Remote attestation architecture
+    showing an \emph{appraiser} making an attestation request of a
+    \emph{target}.}
+  \Description{Remote attestation basic architecture.}
+  \label{fig:remote-attestation}
+\end{figure}
+
+\begin{figure}[hbtp]
+  \centering
+  \input{sequence-fig.tex}
+  \caption[Attestation process]{Attestation process.}
+  \Description{Attestation sequence.}
+  \label{fig:sequence-fig}
+\end{figure}
+
 
 \section{Conclusions}
 
