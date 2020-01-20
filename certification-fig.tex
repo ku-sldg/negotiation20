@@ -1,0 +1,42 @@
+\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=2.0cm,
+  thick,main node/.style={rectangle,%%fill=blue!20,draw,
+    font=\sffamily,minimum height=7mm,minimum width=10mm}]
+
+  \node[main node] (Request) {$R$};
+  \node[main node] (Proposal) [below of=Request] {$\langle P\rangle $};
+  \node[main node] (Phrase) [below of=Proposal] {$P$};
+  \node[main node] (AttInt) [below of=Phrase] {$AI$};
+  \node[main node] (Hardware) [below of=AttInt] {Hardware};
+  \node[main node] (Bits) [node distance=3.0cm, right of=Hardware] {Bits};
+  \node[main node] (VME) [node distance=3.0cm, right of=AttInt] {$E$};
+  \node[main node] (Evidence) [node distance=3.0cm, right of=Phrase] {$E$};
+  \node[main node] (EvidenceVec) [node distance=3.0cm, right of=Proposal] {$\langle E\rangle$};
+  \node[main node] (Result) [node distance=3.0cm, right of=Request]
+  {$(E,\preceq,\top,\bot)$};
+  \node[main node] (IN) [node distance=2.0cm, left of=Request] {Request};
+  \node[main node] (OUT) [node distance=2.0cm, right of=Result] {Result};
+    
+
+  \path[every node/.style={font=\sffamily\small, fill=white,inner sep=1pt}]
+    (IN) edge (Request)
+    (Request) edge node[left=1mm] {Negotiation ($\gamma_{n}$)} (Proposal)
+    (Proposal) edge node[left=1mm] {Selection ($\gamma_{s}$)} (Phrase)
+    (Phrase) edge node[left=1mm] {Compilation ($\gamma_c$)} (AttInt)
+    (AttInt) edge node[left=1mm] {Attestation VM ($\gamma_{i}$)} (Hardware)
+    (Hardware) edge node[below=1mm] {$\delta_{hw}$} (Bits)
+    (AttInt) edge [dashed] node[below=1mm] {$\delta_v$} (VME)
+    (Phrase) edge [dashed] node[below=1mm] {$\delta_a$} (Evidence)
+    (Proposal) edge [dashed] node[below=1mm] {$\delta_c=(\mathsf{fmap}\; \delta_{a})$} (EvidenceVec)
+    (Request) edge [dashed] node[below=1mm] {$\delta_m$} (Result)
+    (Bits) edge node[right=1mm] {Extraction ($\alpha_i$)} (VME)
+    (VME) edge node[right=1mm] {Identity ($\alpha_c=\lambda (x:E) . x$)} (Evidence)
+    (Evidence) edge node[right=1mm] {Unselection ($\alpha_s$)} (EvidenceVec)
+    (EvidenceVec) edge node[right=1mm] {Appraisal ($\alpha_n$)} (Result)
+    (Result) edge (OUT)
+    ;
+\end{tikzpicture}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "negotiation20"
+%%% End:
