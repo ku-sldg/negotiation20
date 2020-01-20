@@ -13,12 +13,9 @@
   \node[main node] (EvidenceVec) [node distance=3.0cm, right of=Proposal] {$\langle E\rangle$};
   \node[main node] (Result) [node distance=3.0cm, right of=Request]
   {$(E,\preceq,\top,\bot)$};
-  \node[main node] (IN) [node distance=2.0cm, left of=Request] {Request};
-  \node[main node] (OUT) [node distance=2.0cm, right of=Result] {Result};
     
 
   \path[every node/.style={font=\sffamily\small, fill=white,inner sep=1pt}]
-    (IN) edge (Request)
     (Request) edge node[left=1mm] {Negotiation} (Proposal)
     (Proposal) edge node[left=1mm] {Selection} (Phrase)
     (Phrase) edge node[left=1mm] {Compilation} (AttInt)
@@ -32,7 +29,6 @@
     (VME) edge node[right=1mm] {Identity} (Evidence)
     (Evidence) edge node[right=1mm] {Unselection} (EvidenceVec)
     (EvidenceVec) edge node[right=1mm] {Appraisal} (Result)
-    (Result) edge (OUT)
     ;
 \end{tikzpicture}
 
