@@ -1,19 +1,23 @@
-\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=2.0cm,
-  thick,main node/.style={rectangle,fill=blue!20,draw,
-    font=\sffamily,minimum height=20mm,minimum width=10mm,rounded corners=2mm},
+\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=1.2cm,
+  thick,main node/.style={rectangle,%fill=blue!20,draw,
+    font=\sffamily,minimum height=2mm,minimum width=2mm},
   io node/.style={rectangle,
     font=\sffamily,minimum height=5mm,minimum width=10mm}]
 
-  \node[main node] (NM) {Appraiser};
-  \node[main node] (NME) [node distance=5.0cm, right of=NM] {Target};
-  \node[io node] (IN) [above of=NM] {$r:R$};
-  \node[io node] (OUT) [below of=NM] {$\mathtt{Trust?}$};
+  \node[main node] (APPTITLE) {Appraiser};
+  \node[main node] (TARTITLE) [node distance=3.5cm, right of=APPTITLE] {Target};
+  \node[main node] (SREQ) [below of=APPTITLE] {\textbullet};
+  \node[main node] (RREQ) [below of=TARTITLE] {\textbullet};
+  \node[main node] (REV) [below of=SREQ] {\textbullet};
+  \node[main node] (SEV) [below of=RREQ] {\textbullet};
+%  \node[io node] (IN) [above of=NM] {$r:R$};
+%  \node[io node] (OUT) [below of=NM] {$\mathtt{Trust?}$};
     
   \path[every node/.style={font=\sffamily\small, fill=white,inner sep=1pt}]
-    (NM) edge [bend left=20] node[above=1mm] {$r$} (NME)
-    (NME) edge [bend left=20] node[below=1mm] {$e:E$} (NM)
-    (IN) edge (NM)
-    (NM) edge (OUT)
+    (SREQ) edge node[above=1mm] {$r:R$} (RREQ)
+    (SEV) edge node[below=1mm] {$e:E$} (REV)
+    (SREQ) edge (REV)
+    (RREQ) edge node[right=1mm] {Attestation} (SEV)
     ;
 \end{tikzpicture}
 
