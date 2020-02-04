@@ -187,7 +187,9 @@ the appraiser makes a request $r:R$, a protocol $p:P$ is selected and
 executed returning evidence $e:E$ for evaluation by the appraiser.
 Selection of $p$ is achieved by finding the ``best'' protocol that
 satisfies the needs of the appraiser while respecting the privacy of
-the target.  Figure~\ref{fig:sequence-fig} graphically shows the
+the target. The notion of ``best'' is situationally dependent and
+can change for different attestation scenarios.
+Figure~\ref{fig:sequence-fig} graphically shows the
 negotiation process for finding a best $p$ given a request $r$ and a
 collection of available protocols, $P$.
 
@@ -262,6 +264,10 @@ Figure \ref{fig:certification-fig}.
 \todo[inline] {do we have semantics for unselection? }
 \todo[inline] {selection and unselection together define a Galios
   connection.  selection is concretization and unselection is abstraction.}
+
+\section{Negotiation Verification}
+
+Knowing that a request $r:R$ produces evidence, we can send a request through the attestation manager to generate all possible pieces of evidence. From that resulting vector of evidence, a situationally dependent ordering will be imposed and one piece of evidence will be deemed ``best''. This ``best'' piece of evidence represents the top of the lattice. As seen in figure 3, this procedure is described using the top arrow where the $r:R$ generates a vector of evidence. We will then move backwards through the certification figure to enforce an ordering over the possible pieces of evidence $\langle E \rangle$, undoing appraisal. We can take the ordering of evidence and order the possible protocols generated from the request. This repensents the appraiser's ordering of protocols, creating the appraiser's lattice. After the request is sent, we can then compare the appraiser's protocol ordering to the target's proposal. The protocol selected for attestation will be the one that is ``best'' for the appraiser and that is included in the target's proposal.      
 
 \section{Conclusions}
 
