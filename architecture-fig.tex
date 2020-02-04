@@ -10,14 +10,17 @@
   \node[main node] (RREQ) [below of=TARTITLE] {\textbullet};
   \node[main node] (REV) [below of=SREQ] {\textbullet};
   \node[main node] (SEV) [below of=RREQ] {\textbullet};
-%  \node[io node] (IN) [above of=NM] {$r:R$};
-%  \node[io node] (OUT) [below of=NM] {$\mathtt{Trust?}$};
+  \node[main node] (APP) [below of=REV] {\textbullet};
+  \node[main node] (NONE) [below of=SEV] {\textbullet};
     
   \path[every node/.style={font=\sffamily\small, fill=white,inner sep=1pt}]
     (SREQ) edge node[above=1mm] {$r:R$} (RREQ)
-    (SEV) edge node[below=1mm] {$e:E$} (REV)
+    (SEV) edge node[above=1mm] {$e:E$} (REV)
+    (APP) edge (NONE)
     (SREQ) edge (REV)
     (RREQ) edge node[right=1mm] {Attestation} (SEV)
+    (SEV) edge (NONE)
+    (REV) edge node[left=1mm] {Appraisal} (APP)
     ;
 \end{tikzpicture}
 
