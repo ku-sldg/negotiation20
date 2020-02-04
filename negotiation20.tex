@@ -152,6 +152,11 @@ local policy.  The appraiser chooses a protocol from the proposal that
 the target then executes.  The resulting evidence is returned to the
 appraiser and evaluated to determine trust.
 
+%% just decribe whats in it. domain which defines vocabulary 
+
+It is important to note that in order to begin the negotiation procedure,
+a security association (SA) must be established. The security association is essential as it authorizes the parties to communicate under the same vocabulary. More precisely, a SA  establishes identification, keys, security labels, and  a domain of interpretation. It could also include details pertaining to situational awareness and its lifetime. To enstanciate the SA, an appriaser sends a request to the target where, through ISAKMP, the target responds with the certificate validating the security association. Communcation between the two parties can then occur under a common domain of interpretation.   
+
 The negotiation of an attestation protocol satisfying the
 requirements of the appraiser and restrictions of the target is our
 objective here.  Following we will formally define a negotiation
