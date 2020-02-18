@@ -131,6 +131,8 @@ services that perform measurement, generate cryptographic signatures,
 and make requests of other systems. These protocols are executed by an
 \emph{attestation manager} associated with the appraiser or target.
 
+\todo[inline] {Do we need to include the 5 principles of remote attestation?}
+
 Figure~\ref{fig:sequence-fig} illustrates the process of negotiating
 and executing an attestation protocol.  An appraiser and target first
 establish a security association that identifies appraiser and target,
@@ -317,24 +319,16 @@ $@_1 (\text{USM}\: hash$ vc).
 The first example is one such that negotation occurs ``perfectly''. In
 this perfect scenario, the target will respond with
 $@_1 (\text{USM}\: hash$ vc) and possibly some other collection of
-Copland terms. The appraiser can take the intersection of the request
-and the proposal and find that that the exact protocol requested is
-present in the target's proposal. The appraiser will move onto
-attestation with the ideal protocol. This is called ideal negotiation.
-
-\todo[inline] {Can we call this ideal negotiation? Sounds fancy. Not
-  sure if it works.}
+Copland terms. The appraiser will find the exact protocol is present
+in the intersection poset. This is called perfect negotiation.
 
 Next, the second, more problematic, example is if the request results
 in an empty proposal. This occurs when the target cannot find any
 protocol to satify the appriaser's request. In this case, the
-appraiser assumes the system is not trusted or can reattempt
-negotiation with a different request. It remains to be determined if
-negotiation can be repeated or if this simply results in a failure and
-an untrusted system.
+appraiser assumes the system is not trusted. It may restart
+negotiation with a new request as a separate scenario.
 
-A third and very important example is one in which the interestion of
-the proposal and the request is empty. For instance, if the proposal
+A third and very important example is one in which the interestion poset and the request is empty. For instance, if the proposal
 returns something unrelated to the request to hash the virus checker,
 like a hash of the signature server, ss, the proposal would look like
 {{$@_1 (\text{USM}\: hash$ ss)}}. The intersection of the request and
@@ -372,16 +366,12 @@ duration that the SA is valid. If the process of negotiation outlasts
 the time that the security assoication is valid then negotiation fails
 and target is deemed untrusted or negotiation must restart.
 
-\gls{Ideal}
-\gls{Perfect}
-\gls{Intersection Poset}
-\gls{Domain}
+\gls{Ideal} \gls{Perfect} \gls{Intersection Poset} \gls{Domain}
 
-\gls{Selection Policy}
-\gls{Negotiation Policy}
-\gls{Local Policy}
-\gls{Privacy Policy}
-\printglossaries
+\gls{Selection Policy} \gls{Negotiation Policy} \gls{Local Policy}
+\gls{Privacy Policy} \printglossaries
+
+\todo[inline] {add seperate glossary for policies}
 
 
 \section{Conclusions}
