@@ -317,59 +317,38 @@ checker, vc. Unless otherwise noted, the request will look like
 $@_1 (\text{USM}\: hash$ vc).
 
 The first example is one such that negotation occurs ``perfectly''. In
-this perfect scenario, the target will respond with
+this \gls{perfect} scenario, the target will respond with
 $@_1 (\text{USM}\: hash$ vc) and possibly some other collection of
 Copland terms. The appraiser will find the exact protocol is present
 in the intersection poset. This is called perfect negotiation.
 
+Similarly, there is the case in which the target responds will all
+possible protocols, providing the appraiser with a complete view of
+the target's current state. This is situation is defined to be \gls{Ideal}
+as the target is willing to expose all components of its architecutre.
+
 Next, the second, more problematic, example is if the request results
-in an empty proposal. This occurs when the target cannot find any
-protocol to satify the appriaser's request. In this case, the
+in an empty intersection poset. This occurs when the target cannot find a protocol to satisfy the request or the target responds with a proposal of protocols unrelated to the request. In either case, the
 appraiser assumes the system is not trusted. It may restart
 negotiation with a new request as a separate scenario.
 
-A third and very important example is one in which the interestion poset and the request is empty. For instance, if the proposal
-returns something unrelated to the request to hash the virus checker,
-like a hash of the signature server, ss, the proposal would look like
-{{$@_1 (\text{USM}\: hash$ ss)}}. The intersection of the request and
-the proposal would then be empty. In this case, it could be true that
-no protocol could be selected for attestion and negotiation could
-terminate with the same results as case two. However, it could also be
-true that the appraiser decides the hash of the signature server is an
-equally sound protocol. So, it could accept the target's proposal and
-move foward with attestation. The decision to accept the unrelated
-proposal would be situationally dependent. Thus, there must be some
-component of situational awareness or else an empty interestion will
-automatically result in negotiation failure.
-
-Another example is one in which the appraiser requests all possible
-information about the target system. With this, the appraiser is
-requesting a compelete assessment of the target.  In a strict
-negotiation, if not all requested information is provided by the
-target in the proposal then negotation will fail. However, if the
-appraiser is lenient, it may choose to continue to appriasal with
-whatever pieces of information are provided. Again, this will depended
-on the situation and what the target is willing to accept.
-
-A fifth example is one where the target returns two completely
+Another example is one where the target returns two completely
 unrelated pieces of evidence. For example, if the request is still a
 hash of the virus checker, this proposal would then include a hash of
 the signature server and a hash of its own attestation manager,
 am. This proposal would look like {$@_1 (\text{USM}\: hash$ ss),
-  $@_1 (\text{USM}\: hash$ am)}. In either case, the intersection of
-the request and proposal is empty so case three applies.
+  $@_1 (\text{USM}\: hash$ am)}. In either case, the appraiser must apply its selection policy to attain if either protocol is acceptable for attestation.
 
-Additionaly, a sixth example could be if the target takes too long to
+Additionaly, an example could be if the target takes too long to
 respond to the appriser's request. In the security association, there
 is a lifetime header where the target and the appraiser agree on the
 duration that the SA is valid. If the process of negotiation outlasts
 the time that the security assoication is valid then negotiation fails
 and target is deemed untrusted or negotiation must restart.
 
-\gls{Ideal} \gls{Perfect} \gls{Intersection Poset} \gls{Domain}
+\printglossary
+\glsaddallunused
 
-\gls{Selection Policy} \gls{Negotiation Policy} \gls{Local Policy}
-\gls{Privacy Policy} \printglossaries
 
 \todo[inline] {add seperate glossary for policies}
 
