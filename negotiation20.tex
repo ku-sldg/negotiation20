@@ -109,9 +109,8 @@ identification, unhindered operation, and direct observation of good
 behavior or indirect observation by a trusted third party.  Semantic
 remote attestation~\cite{Haldar:04:Semantic-Remote} is a technique by
 which a target provides evidence used to establish trust in its
-execution.  Shown in figure~\ref{fig:architecture-fig} and
-\emph{appraiser} makes a request ($r:R$) of a \emph{target} than in
-turn generates and returns evidence ($e:E$) that is appraised to
+execution.  Shown in figure~\ref{fig:architecture-fig} an
+\emph{appraiser} makes a request ($r:R$) of a \emph{target} where attestation then generates and returns evidence ($e:E$) that is appraised to
 determine trust.
 
 \begin{figure}[hbtp]
@@ -131,7 +130,8 @@ services that perform measurement, generate cryptographic signatures,
 and make requests of other systems. These protocols are executed by an
 \emph{attestation manager} associated with the appraiser or target.
 
-\todo[inline] {Do we need to include the 5 principles of remote attestation?}
+\todo[inline] {Do we need to include the 5 principles of remote
+  attestation?}
 
 Figure~\ref{fig:sequence-fig} illustrates the process of negotiating
 and executing an attestation protocol.  An appraiser and target first
@@ -141,7 +141,7 @@ providing context for negotiation.  The appraiser then sends a request
 to the target describing the evidence and meta-evidence it needs for
 appraisal.  The target produces a proposal consisting of a protocol
 set that responds to the request while obeying the target's local
-policy.  The appraiser chooses a protocol from the proposal that the
+policy. Based on the selection policy, the appraiser chooses a protocol from the proposal that the
 target then executes.  The resulting evidence is returned to the
 appraiser and evaluated to determine trust.
 
@@ -307,47 +307,47 @@ appraiser and that is included in the target's proposal.
   
 In this section, we attempt to describe the outcome of various
 negotiation scenarios with examples of the appraiser's request and
-target's responses. We will cover edge cases as well as other possble
-unique situations. It is important to not only understand the details
-of each example but also to abstract about the forms of requests and
-proposals to understand the various shapes of negotiation. In all
-subsequent cases, assume that the request from the appraiser is at
-place one and is a user space measurement, USM, of a hash of the virus
+target's response. In all
+subsequent cases, assume the appraiser requests a user space measurement, USM, from place one, to provide a hash of the virus
 checker, vc. Unless otherwise noted, the request will look like
 $@_1 (\text{USM}\: hash$ vc).
 
-The first example is one such that negotation occurs ``perfectly''. In
+The first example is one such that negotation occurs ``perfectly'' where the targets proposal includes the exact protocol requested. In
 this \gls{perfect} scenario, the target will respond with
 $@_1 (\text{USM}\: hash$ vc) and possibly some other collection of
-Copland terms. The appraiser will find the exact protocol is present
-in the intersection poset. This is called perfect negotiation.
+Copland terms. The appraiser will implement the selection policy to find the exact protocol is present
+in the intersection poset and select that for attestation. This is called perfect negotiation.
 
-Similarly, there is the case in which the target responds will all
-possible protocols, providing the appraiser with a complete view of
-the target's current state. This is situation is defined to be \gls{Ideal}
-as the target is willing to expose all components of its architecutre.
+Upon recieving a request, the target could choose to expose all information by responding with every
+possible protocol it can generate so the decision of the correct protocol for attestation is given to the appriser. In choosing, the appriser will implement its selection policy to obtain the most effective protocol(s). This is situation is defined to be
+\gls{Ideal} as the target is willing to expose all components of its
+architecutre.
 
-Next, the second, more problematic, example is if the request results
-in an empty intersection poset. This occurs when the target cannot find a protocol to satisfy the request or the target responds with a proposal of protocols unrelated to the request. In either case, the
+If the request results
+in an empty intersection poset, the target fails negotiation. This situation may occurs when the target cannot
+find a protocol to satisfy the request or the target responds with a
+proposal of protocols unrelated to the request. In either case, the
 appraiser assumes the system is not trusted. It may restart
 negotiation with a new request as a separate scenario.
 
-Another example is one where the target returns two completely
-unrelated pieces of evidence. For example, if the request is still a
+There is also a possiblity that target returns two completely
+unrelated pieces of evidence where the appriser must decide which is more suitable for attestation. For example, if the request is still a
 hash of the virus checker, this proposal would then include a hash of
 the signature server and a hash of its own attestation manager,
 am. This proposal would look like {$@_1 (\text{USM}\: hash$ ss),
-  $@_1 (\text{USM}\: hash$ am)}. In either case, the appraiser must apply its selection policy to attain if either protocol is acceptable for attestation.
+  $@_1 (\text{USM}\: hash$ am)}. In either case, the appraiser must
+apply its selection policy to attain if the protocols meet the situational requirements and choose which should be selected for attestation. 
 
-Additionaly, an example could be if the target takes too long to
-respond to the appriser's request. In the security association, there
+%%It is possible that the target responds with protocols in an unfavorable pairing such that the target is willing to give the exact thing requested but only if it is bundled with other unwanted pieces of evidence. 
+
+Unrelated to the specific protocols examples, if the target takes too long to
+respond to the appriser's request the negotiation situation fails. This idea can be enforced through the security association as there
 is a lifetime header where the target and the appraiser agree on the
 duration that the SA is valid. If the process of negotiation outlasts
 the time that the security assoication is valid then negotiation fails
 and target is deemed untrusted or negotiation must restart.
 
-\printglossary
-\glsaddallunused
+\printglossary \glsaddallunused
 
 
 \todo[inline] {add seperate glossary for policies}
