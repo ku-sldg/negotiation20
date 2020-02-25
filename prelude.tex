@@ -1,0 +1,168 @@
+\newtheorem{thm}{Theorem}
+\newtheorem{lem}[thm]{Lemma}
+\newtheorem{defn}[thm]{Definition}
+\newtheorem{ex}[thm]{Example}
+%\newtheorem{claim}[thm]{Claim}
+
+\newcommand{\squash}{\parskip=0ex\itemsep=0ex}
+\newcommand{\cnf}[1]{\ensuremath{\operatorname{\mathsf{#1}}}}
+\newcommand{\cnc}[1]{\ensuremath{\mathsf{#1}}}
+\newcommand{\fnf}[1]{\ensuremath{\operatorname{\mathit{#1}}}}
+\newcommand{\fnc}[1]{\ensuremath{\mathit{#1}}}
+
+% Binary operators for linear and branching terms
+\newcommand{\linseq}{\prec}
+\newcommand{\linpar}{\sim}
+\newcommand{\sdup}{\leftrightarrow}
+\newcommand{\slft}{\leftarrow}
+\newcommand{\srht}{\rightarrow}
+\newcommand{\bradupseq}{\stackrel{\sdup}{\linseq}}
+\newcommand{\bralftseq}{\stackrel{\slft}{\linseq}}
+\newcommand{\brarhtseq}{\stackrel{\srht}{\linseq}}
+\newcommand{\braduppar}{\stackrel{\sdup}{\linpar}}
+\newcommand{\bralftpar}{\stackrel{\slft}{\linpar}}
+\newcommand{\brarhtpar}{\stackrel{\srht}{\linpar}}
+\newcommand{\linseqe}{\to}
+\newcommand{\braseqe}[1]{\stackrel{#1}{\prec}}
+\newcommand{\brapare}[1]{\stackrel{#1}{\sim}}
+
+\newcommand{\apdt}{APDT}
+\newcommand{\skp}{\cnc{SKIP}}
+\newcommand{\cpy}{\cnc{CPY}}
+\newcommand{\done}{\cnc{DONE}}
+\newcommand{\at}[2]{\mathop{@_{#1}}{#2}}
+%\newcommand{\ati}[3]{\mathop{@_{#1}}[{#2}]{#3}}
+\newcommand{\sig}{\cnc{SIG}}
+\newcommand{\hsh}{\cnc{HSH}}
+\newcommand{\kimc}{\cnc{KIM}}
+\newcommand{\kim}[3]{\cnc{KIM}~#1~#2~#3}
+\newcommand{\kime}[3]{\cnc{KIM}~#1~#2~#3}
+\newcommand{\usm}{\cnc{USM}}
+\newcommand{\usme}[2]{\cnc{USM}~#1~#2}
+
+\newcommand{\seqe}{\mathbin{;\!;}}
+\newcommand{\pare}{\parallel}
+\newcommand{\mt}{\xi}
+\newcommand{\sign}[2]{[\![#1]\!]_{#2}}
+\newcommand{\hash}[2]{\mathop{\#_{#1}}{#2}}
+\newcommand{\KK}[2]{\cnc{K}^{#1}_{#2}}
+\newcommand{\UU}[1]{\cnc{U}_{#1}}
+\newcommand{\Ke}[4]{\cnc{K}^{#1}_{#3}({#4})}
+\newcommand{\Ue}[3]{\cnc{U}_{#2}({#3})}
+\newcommand{\Ne}[2]{\cnc{N}_{#1}({#2})}
+
+\newcommand{\eval}[3]{\mathcal{E}({#1},{#2},{#3})}
+\newcommand{\aeval}[3]{\bar{\mathcal{E}}({#1},{#2},{#3})}
+\newcommand{\evalS}[1]{\ensuremath{\mathcal{E}(#1)}}
+\newcommand{\evalv}[3]{\mathcal{V}({#1},{#2},{#3})}
+\newcommand{\evalvS}[1]{\mathcal{V}({#1})}
+\newcommand{\po}[3]{\mathcal{R}({#1},{#2},{#3})}
+\newcommand{\bfr}[3]{{#1}\mathbin:{#2}\prec{#3}}
+%\newcommand{\bfr}[3]{{#2}\prec_{#1}{#3}}
+\newcommand{\splt}[2]{\mathcal{S}({#1},{#2})}
+\newcommand{\subterm}{\sqsubseteq}
+\newcommand{\sevalf}{\mathcal{F}}
+\newcommand{\seval}[1]{\sevalf({#1})}
+\newcommand{\placef}{\mathcal{G}}
+\newcommand{\place}[1]{\placef({#1})}
+\newcommand{\halt}[1]{\mathcal{H}({#1})}
+\newcommand{\size}[1]{|{#1}|}
+\newcommand{\evof}{\mathrel\Diamond}
+\newcommand\te[4]{{#1}\evof^{#2}_{#3}{#4}}
+% for tables
+\newcommand\tte[4]{{#1}&{}\evof^{#2}_{#3}{}&{#4}}
+
+\newcommand{\futr}{\cnc{FUTR}}
+
+\newcommand{\nat}{\mathbb{N}}
+\newcommand{\anno}[3]{[{#1}]^{#2}_{#3}}
+\newcommand{\step}{\leadsto}
+\newcommand{\lts}[3]{{#2}\mathbin:{#1}\step{#3}}
+\newcommand{\lstp}[3]{{#1}\stackrel{#2}{\leadsto}{#3}}
+\newcommand{\nstep}[1]{\leadsto^{{}_{#1}}}
+\newcommand{\kstar}{\leadsto^*}
+\newcommand{\nlstep}[2]{\stackrel{\!\!#1}{\leadsto^{{}_{#2}}}}
+\newcommand{\lstep}[1]{\stackrel{#1}{\leadsto}}
+\newcommand{\lstar}[1]{\stackrel{\!\!#1}{\leadsto^{{}_{*}}}}
+\newcommand{\nlstar}[2]{\stackrel{\!\!#1}{\leadsto^{{}_{#2}}}}
+\newcommand{\sseq}{\mathbin{;}}
+\newcommand{\sfut}{\mid}
+\newcommand{\qmid}{\mathbin{\mbox{`$\mid$'}}}
+\newcommand{\ssft}{\mathbin{;\!;}}
+\newcommand{\spar}{\parallel}
+\newcommand{\sstop}{\mathcal{D}}
+\newcommand{\conf}{\mathcal{C}}
+\newcommand{\lseq}{\mathcal{LS}}
+\newcommand{\bseq}{\mathcal{BS}}
+\newcommand{\bpar}{\mathcal{BP}}
+\newcommand{\ats}{\mathcal{A}}
+
+\newcommand{\compf}{\mathcal{C}}
+\newcommand{\comp}[2]{\compf({#1},{#2})}
+\newcommand{\compp}[2]{[{#2}]_{#1}}
+\newcommand{\cop}[1]{\mathbin{\cdot{#1}\cdot}}
+\newcommand{\atc}[1]{\mathop{\bar{@}_{#1}}}
+\newcommand{\estep}{\Rightarrow}
+
+\newcommand{\seq}[1]{\ensuremath{\langle#1\rangle}}
+%\newcommand{\app}{\mathbin{{}^\smallfrown}}
+\newcommand{\app}{\mathbin{\ast}}
+\newcommand{\cons}{\mathbin{::}}
+\newcommand{\sel}{\mathbin{\downarrow}}
+
+\newcommand{\csize}[1]{\ensuremath{\mid\!#1\!\mid}}
+\newcommand{\labi}[2]{\ensuremath{\alpha({#1},#2)}}
+\newcommand{\lab}[1]{\ensuremath{\alpha(#1)}}
+%\newcommand{\tsize}[1]{\ensuremath{\mid\!#1\!\mid}}
+\newcommand{\tsize}[1]{\size{#1}}
+
+\newcommand{\term}{\cnc{APDT}}
+%\newcommand\tr[4]{{#1}\mathcal{T}^{#2}_{#3}{#4}}
+\newcommand\tr[4]{{#1}\mathbin\Box^{#2}_{#3}{#4}}
+\newcommand{\trace}[2]{\ensuremath{\mathcal{T}(#1,#2)}}
+\newcommand{\traceS}[2]{\ensuremath{\mathcal{T}(#1,#2)}}
+
+
+\newcommand{\utype}[3]{\cnc{(\forall#1<:#2.\hspace{1mm} #3)}}
+\newcommand{\tyu}[2]{\cnc{(\forall#1.\hspace{1mm} #2)}}
+\newcommand{\uterm}[3]{\cnc{(\lambda#1<:#2.\hspace{1mm} #3)}}
+\newcommand{\nilenv}[0]{$\emptyset$}
+\newcommand{\topt}{\cnc{TOP}}
+\newcommand{\noncec}{\cnc{NONCE}}
+\newcommand{\lam}[3]{\cnc{(\lambda}#1:#2 . \hspace{1mm} #3)}
+\newcommand{\tylam}[2]{\cnc{(\lambda}#1 . \hspace{1mm} #2)}
+\newcommand{\typest}[0]{\cnc{T} }
+\newcommand{\id}[0]{\cnc{\emph{x}} }
+\newcommand{\tid}[0]{\cnc{\emph{X}} }
+\newcommand{\appl}[2]{#1 \hspace {2mm} #2}
+\newcommand{\tappl}[2]{#1 \hspace {2mm} [#2]}
+\newcommand{\terms}[0]{\cnc{\emph{t}} }
+\newcommand{\meast}[0]{\cnc{MEAS}}
+\newcommand{\evt}[0]{\cnc{\emph{E}} }
+\newcommand{\evc}[0]{\cnc{\emph{e}} }
+\newcommand{\arrt}[2]{#1 \hspace{1mm} \cnc{\rightarrow} \hspace{1mm} #2}
+\newcommand{\pl}[0]{\cnc{\emph{P}} }
+\newcommand{\placec}[1]{\cnc{pl_#1}}
+\newcommand{\placee}[1]{\cnc{PL_#1}}
+\newcommand{\placet}[0]{\cnc{PLACE_Q}}
+\DeclareMathOperator{\vvdash}{\vdash}
+\newcommand{\typeof}[3]{\cnc{\Gamma \vvdash\limits_{#1,#2} : #3}}
+\newcommand{\btt}[2]{\cnc{(#1,#2)} \hspace{1mm} \ensuremath{\epsilon\hspace{1mm}\Gamma}}
+\newcommand{\bs}{\cnc{BS}}
+\newcommand{\argt}{\cnc{ARG}}
+\newcommand{\Uec}[5]{\cnc{U}_{#1}~#2~#3~#4~(#5)}
+\newcommand{\Kec}[6]{\cnc{K}^{#1}_{#2}~#3~#4~#5~(#6)}
+\newcommand{\Gec}[3]{\cnc{G}_{#1} \hspace{1mm} #2 \hspace{1mm}  #3}
+\newcommand{\Hec}[2]{\cnc{H}_{#1} \hspace{1mm} #2}
+\newcommand{\Nec}[3]{\cnc{N}_{#1} \hspace{1mm} #2 \hspace{1mm} (#3)}
+\newcommand{\Sec}[2]{\cnc{SS} \hspace{1mm} {#1} \hspace{1mm} {#2}}
+\newcommand{\Pec}[2]{\cnc{PP} \hspace{1mm} {#1} \hspace{1mm} {#2}}
+\newcommand{\mtc}{\cnc{mt}}
+\newcommand{\strj}{\cnc{<string>}}
+\newcommand{\numj}{\cnc{<number>}}
+\newcommand{\arrj}{\cnc{<array>}}
+\newcommand{\tj}{\cnc{<term>}}
+\newcommand{\ej}{\cnc{<evidence>}}
+\newcommand{\namej}{\cnc{<nameMap>}}
+\newcommand{\reqmc}[5]{#1~#2~#3~#4~#5}
+\newcommand{\respmc}[4]{#1~#2~#3~#4}
