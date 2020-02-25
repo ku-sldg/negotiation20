@@ -5,6 +5,7 @@
 \usepackage[nonumberlist]{glossaries}
 \makeglossaries
 \input{glossary}
+\input{prelude}
 
 \usetikzlibrary{arrows}
 
@@ -21,7 +22,7 @@
   \den[ev]{#1}
 }
 
-\newcommand{\squash}{\itemsep=0pt\parskip=0pt}
+%%\newcommand{\squash}{\itemsep=0pt\parskip=0pt}
 \newcommand{\uavam}{\textsf{UAVAM}}
 \newcommand{\useram}{\textsf{UserAM}}
 \newcommand{\platam}{\textsf{PlatformAM}}
@@ -32,6 +33,8 @@
 \newcommand{\E}[1]{\ensuremath{E_{\mathsf{#1}}}}
 \newcommand{\R}[1]{\ensuremath{R_{\mathsf{#1}}}}
 \newcommand{\sign}[2]{\ensuremath{\{#1\}_{#2^{-1}}}}
+%%\newcommand{\placee}[1]{\cnc{PL_#1}}
+\newcommand{\bara}{\bar{a}}
 
 %% The article template's documentation, available at
 %% \url{https://www.acm.org/publications/proceedings-template}, has a
@@ -110,8 +113,9 @@ behavior or indirect observation by a trusted third party.  Semantic
 remote attestation~\cite{Haldar:04:Semantic-Remote} is a technique by
 which a target provides evidence used to establish trust in its
 execution.  Shown in figure~\ref{fig:architecture-fig} an
-\emph{appraiser} makes a request ($r:R$) of a \emph{target} where attestation then generates and returns evidence ($e:E$) that is appraised to
-determine trust.
+\emph{appraiser} makes a request ($r:R$) of a \emph{target} where
+attestation then generates and returns evidence ($e:E$) that is
+appraised to determine trust.
 
 \begin{figure}[hbtp]
   \centering \input{architecture-fig.tex}
@@ -141,23 +145,12 @@ providing context for negotiation.  The appraiser then sends a request
 to the target describing the evidence and meta-evidence it needs for
 appraisal.  The target produces a proposal consisting of a protocol
 set that responds to the request while obeying the target's local
-policy. Based on the selection policy, the appraiser chooses a protocol from the proposal that the
-target then executes.  The resulting evidence is returned to the
-appraiser and evaluated to determine trust.
+policy. Based on the selection policy, the appraiser chooses a
+protocol from the proposal that the target then executes.  The
+resulting evidence is returned to the appraiser and evaluated to
+determine trust.
 
 %% just decribe whats in it. domain which defines vocabulary
-
-It is important to note that in order to begin the negotiation
-procedure, a security association (SA) must be established. The
-security association is essential as it authorizes the parties to
-communicate under the same vocabulary. More precisely, a SA
-establishes identification, keys, security labels, and a domain of
-interpretation. It could also include details pertaining to
-situational awareness and its lifetime. To enstanciate the SA, an
-appriaser sends a request to the target where, through ISAKMP, the
-target responds with the certificate validating the security
-association. Communcation between the two parties can then occur under
-a common domain of interpretation.
 
 The negotiation of an attestation protocol satisfying the requirements
 of the appraiser and restrictions of the target is our objective here.
@@ -176,16 +169,54 @@ protocols uses Copland~\citep{Ramsdell:2019aa} which provides a
 convenient language for modeling and execution as well as a formal
 semantics for verification.
 
+In Copland, an appriser to perform measurments, gathers evidence, and
+prepares meta-evidence to make a claims about the current state of the
+target. Evidence is distinct from meta-evidence as evidence describes
+the system properties and meta-evidence ensure that the evidence was
+obtained accurately. An appriaser can obtain evidence by asking the
+target to perform copying, signing, or hashing of evidence
+values. These three, CPY, SIG, HSH, represent the minimal Copland
+operations.
+
+The act of measuring the target must either be a \emph{User Space
+  Measurement} (USM) or a \emph{Kernel Integrity Measurement}
+(KIM). The former provides evidence of a local user space while the
+latter makes claims about an external system. A USM takes the shape
+(USM $\bara$) where $\bara$ is a measurement operation such as
+\emph{hash}. A KIM takes a similar shape but includes P, the place
+where measurement occurs. This results in a term like (KIM \emph{P}
+$\bara$) where P is represented by a natural number and $\bara$ is the
+measurement operation.
+
+Terms or phrases define a sequence of one or more
+protocols. Individual operations such as CPY, SIG, HSH, can be
+combined to enforce ordering during execution. The possible ways of
+combining the protocols include imposing a specific order, in
+sequence, or in parallel.  To ensure one term, $T_1$, executes before
+a second term, $T_2$, the $\linseqe$ operator is used to result in an
+peration like $(T_1\linseqe T_2)$.
+
 \todo[inline]{section should continue and define/describe Copland
   protocols.  Important concepts are ASPs, protocols, evidence and
   meta-evidence}
 
 \section{Protocol Negotiation}
 
-For the purposes of his discussion we will assume the establishment of
-a security association between appraiser and target and begin with the
-appraiser sending a request to the target.  We define $A$ as the type
-of appraisers and $T$ the type of targets.  $R$ is the type of
+It is important to note that in order to begin the negotiation
+procedure, a security association (SA) must be established in order to
+ensure the parties communicate with the same vocabulary. More
+precisely, a SA establishes identification, keys, security labels, and
+a domain of interpretation. It could also include details pertaining
+to situational awareness and the length it is valid. To enstanciate
+the SA, an appriaser sends a request to the target where, through
+ISAKMP, the target responds with the certificate validating the
+security association. Communcation between the two parties can then
+occur under a common domain of interpretation.
+
+For the purposes of this discussion we will assume the establishment
+of a security association between appraiser and target and begin with
+the appraiser sending a request to the target.  We define $A$ as the
+type of appraisers and $T$ the type of targets.  $R$ is the type of
 attestation requests that define the needs of the appraiser.  $P$ is
 the type of protocols represented as Copland phrases.  $E$ is the type
 of evidence generated by protocol execution.
@@ -272,9 +303,10 @@ Figure \ref{fig:certification-fig}.
   \label{fig:certification-fig}
 \end{figure}
 
-\todo[inline] {do we have semantics for unselection? } \todo[inline]
-{selection and unselection together define a Galios connection.
-  selection is concretization and unselection is abstraction.}
+% \todo[inline] {do we have semantics for unselection? }
+% \todo[inline]{selection and unselection together define a Galios
+% connection.  selection is concretization and unselection is
+% abstraction.}
 
 \section{Negotiation Verification}
 
@@ -307,45 +339,58 @@ appraiser and that is included in the target's proposal.
   
 In this section, we attempt to describe the outcome of various
 negotiation scenarios with examples of the appraiser's request and
-target's response. In all
-subsequent cases, assume the appraiser requests a user space measurement, USM, from place one, to provide a hash of the virus
-checker, vc. Unless otherwise noted, the request will look like
-$@_1 (\text{USM}\: hash$ vc).
+target's response. In all subsequent cases, assume the appraiser
+requests a user space measurement, USM, from place one, to provide a
+hash of the virus checker, vc. Unless otherwise noted, the request
+will look like $@_1 (\text{USM}\: hash$ vc).
 
-The first example is one such that negotation occurs ``perfectly'' where the targets proposal includes the exact protocol requested. In
+The first example is one such that negotation occurs ``perfectly''
+where the targets proposal includes the exact protocol requested. In
 this \gls{perfect} scenario, the target will respond with
 $@_1 (\text{USM}\: hash$ vc) and possibly some other collection of
-Copland terms. The appraiser will implement the selection policy to find the exact protocol is present
-in the intersection poset and select that for attestation. This is called perfect negotiation.
+Copland terms. The appraiser will implement the selection policy to
+find the exact protocol is present in the intersection poset and
+select that for attestation. This is called perfect negotiation.
 
-Upon recieving a request, the target could choose to expose all information by responding with every
-possible protocol it can generate so the decision of the correct protocol for attestation is given to the appriser. In choosing, the appriser will implement its selection policy to obtain the most effective protocol(s). This is situation is defined to be
-\gls{Ideal} as the target is willing to expose all components of its
-architecutre.
+Upon recieving a request, the target could choose to expose all
+information by responding with every possible protocol it can generate
+so the decision of the correct protocol for attestation is given to
+the appriser. In choosing, the appriser will implement its selection
+policy to obtain the most effective protocol(s). This is situation is
+defined to be \gls{Ideal} as the target is willing to expose all
+components of its architecutre.
 
-If the request results
-in an empty intersection poset, the target fails negotiation. This situation may occurs when the target cannot
+If the request results in an empty intersection poset, the target
+fails negotiation. This situation may occurs when the target cannot
 find a protocol to satisfy the request or the target responds with a
 proposal of protocols unrelated to the request. In either case, the
 appraiser assumes the system is not trusted. It may restart
 negotiation with a new request as a separate scenario.
 
 There is also a possiblity that target returns two completely
-unrelated pieces of evidence where the appriser must decide which is more suitable for attestation. For example, if the request is still a
+unrelated pieces of evidence where the appriser must decide which is
+more suitable for attestation. For example, if the request is still a
 hash of the virus checker, this proposal would then include a hash of
 the signature server and a hash of its own attestation manager,
 am. This proposal would look like {$@_1 (\text{USM}\: hash$ ss),
   $@_1 (\text{USM}\: hash$ am)}. In either case, the appraiser must
-apply its selection policy to attain if the protocols meet the situational requirements and choose which should be selected for attestation. 
+apply its selection policy to attain if the protocols meet the
+situational requirements and choose which should be selected for
+attestation.
 
-%%It is possible that the target responds with protocols in an unfavorable pairing such that the target is willing to give the exact thing requested but only if it is bundled with other unwanted pieces of evidence. 
+%% It is possible that the target responds with protocols in an
+%% unfavorable pairing such that the target is willing to give the
+%% exact thing requested but only if it is bundled with other unwanted
+%% pieces of evidence.
 
-Unrelated to the specific protocols examples, if the target takes too long to
-respond to the appriser's request the negotiation situation fails. This idea can be enforced through the security association as there
-is a lifetime header where the target and the appraiser agree on the
-duration that the SA is valid. If the process of negotiation outlasts
-the time that the security assoication is valid then negotiation fails
-and target is deemed untrusted or negotiation must restart.
+Unrelated to the specific protocols examples, if the target takes too
+long to respond to the appriser's request the negotiation situation
+fails. This idea can be enforced through the security association as
+there is a lifetime header where the target and the appraiser agree on
+the duration that the SA is valid. If the process of negotiation
+outlasts the time that the security assoication is valid then
+negotiation fails and target is deemed untrusted or negotiation must
+restart.
 
 \printglossary \glsaddallunused
 
