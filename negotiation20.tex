@@ -169,36 +169,20 @@ protocols uses Copland~\citep{Ramsdell:2019aa} which provides a
 convenient language for modeling and execution as well as a formal
 semantics for verification.
 
-In Copland, an appriser to perform measurments, gathers evidence, and
-prepares meta-evidence to make a claims about the current state of the
-target. Evidence is distinct from meta-evidence as evidence describes
-the system properties and meta-evidence ensure that the evidence was
-obtained accurately. An appriaser can obtain evidence by asking the
-target to perform copying, signing, or hashing of evidence
-values. These three, CPY, SIG, HSH, represent the minimal Copland
-operations.
+%% something about evidence and metaevidence somewhere
 
-The act of measuring the target must either be a \emph{User Space
-  Measurement} (USM) or a \emph{Kernel Integrity Measurement}
-(KIM). The former provides evidence of a local user space while the
-latter makes claims about an external system. A USM takes the shape
-(USM $\bara$) where $\bara$ is a measurement operation such as
-\emph{hash}. A KIM takes a similar shape but includes P, the place
-where measurement occurs. This results in a term like (KIM \emph{P}
-$\bara$) where P is represented by a natural number and $\bara$ is the
-measurement operation.
+Protocols are built from a miminal set of operations that include copying, signing, and hashing evidence values. They are encoded as CPY, SIG, and HSH respectively. Before asking the target to perform these operations, the appriser must decide if it would like a  \emph{User Space Measurement} (USM) or a \emph{Kernel Integrity Measurement} (KIM) of the target. The former provides evidence of a local user space while the latter makes claims about an external system. Also, the appriser decides from what place the measurement should occur. In Copland, place is represented simply by a natural number.   
 
-Terms or phrases define a sequence of one or more
-protocols. Individual operations such as CPY, SIG, HSH, can be
-combined to enforce ordering during execution. The possible ways of
-combining the protocols include imposing a specific order, in
-sequence, or in parallel.  To ensure one term, $T_1$, executes before
-a second term, $T_2$, the $\linseqe$ operator is used to result in an
-peration like $(T_1\linseqe T_2)$.
+Phrases define a sequence of one or more
+protocols and can be combined in three ways for sequential or parallel execution to enforce an evaluation ordering. The first way is using linear sequencing to ensure one term, $T_1$, executes before
+a second term, $T_2$. This operation is denoted using the $\linseqe$ symbol and is encoded as $(T_1\linseqe T_2)$. Next, Copland allows the use of a pair of projection function $\pi$ to specifically split the evidence between term when executing in sequence or in parallel. An example of $\pi$ is $\pi = (\emph{id} , \bot) $ where all evidence is sent to $T_1$ and $T_2$ executes with no prior evidence. $(T_1\braseqe\pi T_2)$ states that the goal is sequential execution where $T_1$ evaluates before $T_2$ with the specificed evidence splitting operation. $(T_1\brapare\pi T_2)$ describes a phrase where $T_1$ and $T_2$ can execute in parallel with evidence splitting.  
+
 
 \todo[inline]{section should continue and define/describe Copland
   protocols.  Important concepts are ASPs, protocols, evidence and
   meta-evidence}
+
+Additionally, while each attestation manager is responsible for providing evidence of a target system's state, they are also responsible for providing meta-evidence. While evidence is the tangible result of attestation, meta-evidence assures the appraiser that evidence was gathered correctly. Together, evidence and meta-evidence result in a depiction of the current state of the target system.   
 
 \section{Protocol Negotiation}
 
