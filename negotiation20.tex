@@ -140,7 +140,7 @@ and make requests of other systems. These protocols are executed by an
 Figure~\ref{fig:sequence-fig} illustrates the process of negotiating
 and executing an attestation protocol.  An appraiser and target first
 establish a security association that identifies appraiser and target,
-sets up secure communication and establishes a security domain
+sets up secure communication, and establishes a security domain
 providing context for negotiation.  The appraiser then sends a request
 to the target describing the evidence and meta-evidence it needs for
 appraisal.  The target produces a proposal consisting of a protocol
@@ -171,18 +171,43 @@ semantics for verification.
 
 %% something about evidence and metaevidence somewhere
 
-Protocols are built from a miminal set of operations that include copying, signing, and hashing evidence values. They are encoded as CPY, SIG, and HSH respectively. Before asking the target to perform these operations, the appriser must decide if it would like a  \emph{User Space Measurement} (USM) or a \emph{Kernel Integrity Measurement} (KIM) of the target. The former provides evidence of a local user space while the latter makes claims about an external system. Also, the appriser decides from what place the measurement should occur. In Copland, place is represented simply by a natural number.   
+Terms define a single attestation instance. The appraiser requests a \emph{User
+  Space Measurement} (USM), a \emph{Kernel Integrity Measurement}
+(KIM), or a combination of both. A USM
+provides evidence of a local user space while a KIM makes claims
+about an external system. The appraiser then requests evidence of the user space or kernal through protocols.  Protocols are built from a miminal set of operations that
+include copying, signing, and hashing evidence values. They are
+encoded as CPY, SIG, and HSH respectively. The place of measurement is also declared in the protocol with a natural number.
 
-Phrases define a sequence of one or more
-protocols and can be combined in three ways for sequential or parallel execution to enforce an evaluation ordering. The first way is using linear sequencing to ensure one term, $T_1$, executes before
-a second term, $T_2$. This operation is denoted using the $\linseqe$ symbol and is encoded as $(T_1\linseqe T_2)$. Next, Copland allows the use of a pair of projection function $\pi$ to specifically split the evidence between term when executing in sequence or in parallel. An example of $\pi$ is $\pi = (\emph{id} , \bot) $ where all evidence is sent to $T_1$ and $T_2$ executes with no prior evidence. $(T_1\braseqe\pi T_2)$ states that the goal is sequential execution where $T_1$ evaluates before $T_2$ with the specificed evidence splitting operation. $(T_1\brapare\pi T_2)$ describes a phrase where $T_1$ and $T_2$ can execute in parallel with evidence splitting.  
+Phrases define a sequence of one or more protocols and can be combined
+in three ways for sequential or parallel execution to enforce an
+evaluation ordering. The first way is using linear sequencing to
+ensure one term, $T_1$, executes before a second term, $T_2$. This
+operation is denoted using the $\linseqe$ symbol and is encoded as
+$(T_1\linseqe T_2)$. Next, Copland allows the use of a pair of
+projection function $\pi$ to specifically split the evidence between
+term when executing in sequence or in parallel. An example of $\pi$ is
+$\pi = (\emph{id} , \bot) $ where all evidence is sent to $T_1$ and
+$T_2$ executes with no prior evidence. $(T_1\braseqe\pi T_2)$ states
+that the goal is sequential execution where $T_1$ evaluates before
+$T_2$ with the specificed evidence splitting
+operation. $(T_1\brapare\pi T_2)$ describes a phrase where $T_1$ and
+$T_2$ can execute in parallel with evidence splitting.
 
 
 \todo[inline]{section should continue and define/describe Copland
   protocols.  Important concepts are ASPs, protocols, evidence and
   meta-evidence}
 
-Additionally, while each attestation manager is responsible for providing evidence of a target system's state, they are also responsible for providing meta-evidence. While evidence is the tangible result of attestation, meta-evidence assures the appraiser that evidence was gathered correctly. Together, evidence and meta-evidence result in a depiction of the current state of the target system.   
+Additionally, while each attestation manager is responsible for
+providing evidence of a target system's state, they are also
+responsible for providing meta-evidence. While evidence is the
+tangible result of attestation, meta-evidence assures the appraiser
+that evidence was gathered correctly. Together, evidence and
+meta-evidence result in a depiction of the current state of the target
+system.
+
+
 
 \section{Protocol Negotiation}
 
