@@ -118,7 +118,7 @@ attestation then generates and returns evidence ($e:E$) that is
 appraised to determine trust.
 
 \begin{figure}[hbtp]
-  \centering \input{architecture-fig.tex}
+  \centering \input{architecture-fig-simpl.tex}
   \caption[Attestation architecture]{Remote attestation architecture
     showing an \emph{appraiser} making an attestation request of a
     \emph{target}.}
@@ -245,19 +245,15 @@ providing evidence of a target system's state, they are also
 responsible for providing meta-evidence. While evidence is the
 tangible result of attestation, meta-evidence assures the appraiser
 that evidence was gathered correctly. Together, evidence and
-meta-evidence result in a depiction of the current state of the target
+meta-evidence result in an accurate depiction of the current state of the target
 system.
 
 
 
 \section{Protocol Negotiation}
 
-It is important to note that in order to begin the negotiation
-procedure, a security association (SA) must be established in order to
-ensure the parties communicate with the same vocabulary. More
-precisely, a SA establishes identification, keys, security labels, and
-a domain of interpretation. It could also include details pertaining
-to situational awareness and the length it is valid. To enstanciate
+To begin negotiation, a security association (SA) must be established to allow the parties communicate with the same vocabulary. More
+precisely, a SA establishes identification, keys, security labels, domain of interpretation, situational awareness and lifetime. To enstanciate
 the SA, an appriaser sends a request to the target where, through
 ISAKMP, the target responds with the certificate validating the
 security association. Communcation between the two parties can then

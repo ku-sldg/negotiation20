@@ -1,0 +1,17 @@
+\begin{tikzpicture}[->,>=stealth',shorten >=1pt,auto,node distance=2.0cm,
+  thick,main node/.style={rectangle,fill=blue!20,draw,
+    font=\sffamily,minimum height=10mm,minimum width=10mm,rounded corners=2mm}]
+
+  \node[main node] (app) {Appraiser};
+  \node[main node] (tar) [node distance=4cm, right of=app] {Target};
+
+  \path
+  (app) edge[bend left] node[below] {Request} (tar)
+  (tar) edge[bend left] node[above] {Evidence} (app)
+  ;
+
+
+
+  
+\end{tikzpicture}
+ 
