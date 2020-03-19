@@ -134,9 +134,6 @@ services that perform measurement, generate cryptographic signatures,
 and make requests of other systems. These protocols are executed by an
 \emph{attestation manager} associated with the appraiser or target.
 
-\todo[inline] {Do we need to include the 5 principles of remote
-  attestation?}
-
 Figure~\ref{fig:sequence-fig} illustrates the process of negotiating
 and executing an attestation protocol.  An appraiser and target first
 establish a security association that identifies appraiser and target,
@@ -150,14 +147,30 @@ protocol from the proposal that the target then executes.  The
 resulting evidence is returned to the appraiser and evaluated to
 determine trust.
 
-%% just decribe whats in it. domain which defines vocabulary
+Negotiation is guided by the five principles of remote attestation created by  \citet{Coker::Principles-of-R,Coker:08:Attestation:-Ev} which include
 
-The negotiation of an attestation protocol satisfying the requirements
-of the appraiser and restrictions of the target is our objective here.
+\begin{itemize}
+\item Fresh information - attestation results reflect the running system
+\item Comprehensive information - measurement results satsify the appraiser's standards
+\item Constrained discloure - target governs what measurements are acceptable for attestation
+\item Semantic explicitness - logical and uniform semantics govern communication
+\item Trustworthy mechanism - attestation architecture must be proven trustworthy
+\end{itemize}
+
+Providing compreshensive information and maintaining constrained discloure are the foucs of negotiation as we aim to find a measuement that satisifies the requirements
+of the appraiser and restrictions of the target.
+
 Following we will formally define a negotiation process, define
 properties of an ideal protocol, and show that the negotiation process
 produces ideal protocols.  We will then instantiate the model for
-several systems to provide examples of its use.
+several systems to provide examples of its use. 
+
+%%The negotiation of an attestation protocol satisfying the requirements
+%%of the appraiser and restrictions of the target is our objective here.
+%%Following we will formally define a negotiation process, define
+%%properties of an ideal protocol, and show that the negotiation process
+%%produces ideal protocols.  We will then instantiate the model for
+%%several systems to provide examples of its use.
 
 \section{Attestation Protocols}
 
@@ -464,10 +477,6 @@ negotiation fails and target is deemed untrusted or negotiation must
 restart.
 
 \printglossary \glsaddallunused
-
-
-\todo[inline] {add seperate glossary for policies}
-
 
 \section{Conclusions}
 
