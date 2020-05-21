@@ -290,12 +290,17 @@ what the resulting evidence indicates.
 
 \section{Protocol Negotiation}
 
-To begin negotiation, a security association (SA) must be established to allow the parties communicate with the same vocabulary. More
-precisely, a SA establishes identification, keys, security labels, domain of interpretation, situational awareness and lifetime. To enstanciate
-the SA, an appriaser sends a request to the target where, through
-ISAKMP, the target responds with the certificate validating the
-security association. Communcation between the two parties can then
-occur under a common domain of interpretation.
+To begin negotiation, a security association (SA) must be established
+to allow the parties to communicate in the same vocabulary. More
+precisely, a SA is a multifaceted agreement between two communicating
+parties that establishes identification, keys, and security labels. A
+SA also includes headers that declare the domain of interpretation,
+the situational awareness and the duration the SA is valid. To
+enstanciate a SA, the internet standard ISAKMP is adopted. With this,
+an appriaser sends a request to the target and the target responds
+with the certificate validating the security association. Communcation
+between the two parties can then occur under a common domain of
+interpretation.
 
 For the purposes of this discussion we will assume the establishment
 of a security association between appraiser and target and begin with
@@ -326,6 +331,8 @@ returns some $q:\langle P \rangle$ whose protocols fully or partially
 satisfy the request. The target chooses and orders
 $q:\langle P\rangle$ by examining evidence produced by executing
 protocols defined by Copland's evidence semantics $\mathcal{E}$.
+
+
 
 Two factors influence the production of $p$.  The target's \emph{local
   policy} defines limits on the evidence it will provide.  Local
@@ -394,22 +401,31 @@ Figure \ref{fig:certification-fig}.
 
 \section{Negotiation Verification}
 
-Knowing that a request $r:R$ produces evidence, we can send a request
-through the attestation manager to generate all possible pieces of
-evidence. From that resulting vector of evidence, a situationally
-dependent ordering will be imposed and one piece of evidence will be
-deemed ``best''. This ``best'' piece of evidence represents the top of
-the lattice. As seen in figure 3, this procedure is described using
-the top arrow where the $r:R$ generates a vector of evidence. We will
-then move backwards through the certification figure to enforce an
-ordering over the possible pieces of evidence $\langle E \rangle$,
-undoing appraisal. We can take the ordering of evidence and order the
-possible protocols generated from the request. This repensents the
-appraiser's ordering of protocols, creating the appraiser's
-lattice. After the request is sent, we can then compare the
-appraiser's protocol ordering to the target's proposal. The protocol
-selected for attestation will be the one that is ``best'' for the
-appraiser and that is included in the target's proposal.
+Once the appriser has recieved a proposal from the target, determining
+the best protocol for attestation requires knowledge of the
+appriaser's attestation goals. Knowing that a request $r:R$ produces
+evidence, we can send a request through the attestation manager to
+generate all possible pieces of evidence. From that resulting vector
+of evidence, a situationally dependent ordering will be imposed and
+one piece of evidence will be deemed ``best''. This ``best'' piece of
+evidence represents the top of the lattice. As seen in figure 3, a
+$r:R$ generates a vector of evidence. We will then move backwards
+through the certification figure to enforce an ordering over the
+possible pieces of evidence $\langle E \rangle$, undoing appraisal. We
+can take the ordering of evidence and order the possible protocols
+generated from the request. This repensents the appraiser's ordering
+of protocols, creating the appraiser's lattice. After the request is
+sent, we can then compare the appraiser's protocol ordering to the
+target's proposal. The protocol selected for attestation will be the
+one that is ``best'' for the appraiser and that is included in the
+target's proposal.
+
+\begin{figure}[hbtp]
+  \centering \input{policy-fig-embed.tex}
+  \caption[Attestation process]{Policy figure.}
+  \Description{Policy figure.}
+  \label{fig:policy-fig-embed}
+\end{figure}
 
 \section{Applications}
 
