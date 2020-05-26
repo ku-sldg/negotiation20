@@ -300,21 +300,18 @@ what the resulting evidence indicates.
 
 \section{Protocol Negotiation}
 
-In order to find the optimal protocol for attestation, we introduce
-the concept of negotiation. Negotiation introduces a path for
-communication between a target and an appraiser to find a protocol
+Negotiation introduces a path for
+communication between target and appraiser. When successful, a protocol is identified
 that satifies the targets needs for constrained disclosure and the
-apprisers desire for comprehensive information. We refer to this
-optimal protocol as the ``best'' protocol.
+apprisers desire for comprehensive information.
 
-To authenicate communication between the negotiating parties, ISAKMP
-is employed to establish a security association (SA).  More precisely,
+To begin, it is critical to obtain a common vocabulary between appriaser and target for the success of negotiation. This can be accomplished by guiding the two negotiating parties through ISAKMP to establish a security association (SA).  More precisely,
 a SA is a multifaceted agreement between two communicating peers that
 establishes identification, keys, and security labels. The SA also
-includes headers that declare the domain of interpretation, the
+includes headers that declare the domain of interpretation, aspects of 
 situational awareness and the duration the SA is valid. The product
-the SA is a cerificate that is valid betwen appraiser and target to
-solidify a common domain of interpretation.
+the SA is a cerificate, valid betwen appraiser and target, to
+authenticate a common domain of interpretation.
 
 
 %% this paragraph kind of feels misplaced.
@@ -348,7 +345,7 @@ to the appraiser.  The evidence is then appraised to determine trust.
 Selection of $p$ is achieved by finding the ``best'' protocol that
 satisfies the needs of the appraiser while respecting the privacy of
 the target. The notion of ``best'' is situationally dependent and can
-change for different attestation scenarios, targets and appraisers.
+change for different attestation scenarios, targets, and appraisers.
 Furthermore, the preferences and policies of targets and appraisers
 are not and should not be globally known.  Thus, negotiation between
 $a$ and $t$ is essential for finding a ``best'' protocol.
@@ -365,16 +362,16 @@ $a$ and $t$ is essential for finding a ``best'' protocol.
 Once the appriser has recieved a proposal from the target, determining
 the best protocol for attestation requires knowledge of the
 appriaser's attestation goals. It is not initally obvious how the
-appriser should order the protocols to obtain the best protocol for
+appriser should order the protocols to obtain the ``best'' protocol for
 attestation. Here, we pose one way to generate the ordering over
 protocols.
 
 Knowing that an appraiser's request $r:R$ produces evidence, we can
 send a request through attestation to generate all possible pieces of
-evidence, $<E>$. In other words, each request made by the appraiser
+evidence. In other words, each request made by the appraiser
 results in possibly many different protocols that, when executed,
 result in distinct pieces of evidence. Combining those pieces of
-evidence results in the evidence vector from which a situationally
+evidence results in the evidence vector,  $<E>$, from which a situationally
 dependent ordering will arise and one piece of evidence will be deemed
 ``best''. The ``best'' piece of evidence corresponds to the ``best'' protocol. 
 
@@ -403,6 +400,13 @@ the appraiser and a lattice for the target, $(P_A,\preceq_A)$ and
 $(P_T,\preceq_T)$. The top of the interestion of the lattices,
 $(E_A,\preceq_A) \cdot (E_T,\preceq_T)$, will result in the correct
 protocol for attestation.
+
+\begin{figure}[hbtp]
+  \centering \input{policy-fig-embed.tex}
+  \caption[Attestation process]{Policy figure.}
+  \Description{Policy figure.}
+  \label{fig:policy-fig-embed}
+\end{figure}
 
 \begin{figure}[hbtp]
   \centering \input{certification-fig.tex}
@@ -448,13 +452,6 @@ $(\mathsf{map}\; \mathcal{E}\; \langle P\rangle)$ where $\mathcal{E}$
 is the Copland evidence semantics defined by \citet{Ramsdell:2019aa}.
 Thus, a proposal can be mapped onto the various evidence that each
 protocol produces.
-
-\begin{figure}[hbtp]
-  \centering \input{policy-fig-embed.tex}
-  \caption[Attestation process]{Policy figure.}
-  \Description{Policy figure.}
-  \label{fig:policy-fig-embed}
-\end{figure}
 
 \section{Applications}
 
