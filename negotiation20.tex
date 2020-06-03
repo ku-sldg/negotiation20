@@ -298,13 +298,15 @@ key. The subtle change:
 \noindent would cause \verb+q+ to sign evidence dramatically changing
 what the resulting evidence indicates.
 
-\section{Policies}
+\section{Policy}
 
-Two factors influence the production of $p$. The \emph{access control policy} is enforced to ensure information shared does not violate the system's privacy standards. The  \emph{selection policy} imposes an ordering over protocols. Both the target and appraiser invoke a unique \emph{access control policy} and \emph{selection policy} throughout the process of negotation.  
+Two policies influence the production of a protocol, $p$. The \emph{privacy policy} is enforced to protect a place's interest while the \emph{selection policy} is a relation that maps concrete actions to abstract goals. The \emph{privacy policy} and \emph{selection policy} are unique for each attestation system and can be conflated to \emph{local policy}.
 
-The target must be concerned with constrained discloure when sending the proposal. This is enforced with the \emph{access control policy} which is a relation among the target and evidence, represented as  $\pi_T : T\times E_T$. In other terms, $(t,e)\in\pi_T$ implies that target $t$ has permission to send protocol $p$ which can be evaluated to evidence $e$. Together, $\{e:E_T\mid (t,e)\in\pi_T\}$ is the evidence set $t$ has permission to send.
+The \emph{privacy policy} is an abstract collection of goals to protect a place's interest. It manifested throughout the negotiation process as the relation $\pi$ and exists between either the target or the appraiser and evidence. In some cases, the \emph{privacy policy} implies that the target $t$ has permission to send protocol $p$ which can be evaluated to evidence $e$. This relation can be represented as $\pi_T : T\times E_T$. The \emph{privacy policy} can also ensure the appraiser's privacy standards are met in the request. This can be represented as a relation  $\pi_A : A\times R$. In other terms, $(a,r)\in\pi_A$ which implies that appraiser $a$ has permission to send request $r$.
 
-The appraiser must be cautious about the information sent in the reqest. Therefore, the appraiser exercises its \emph{access control policy} to ensure its privacy standards are met. This can be represented as a relation  $\pi_A : A\times R$. In other terms, $(a,r)\in\pi_A$ which implies that appraiser $a$ has permission to send request $r$. 
+The \emph{selection policy} is a mapping of abstract goals to contrete implementation. The model of this is a partial order where the partial order is the realization of policy. 
+
+\section{Ordering Evidence}
 
 The selection policy defines an ordering over evidence and
 indirectly an ordering over protocols. The partially ordered set
@@ -354,16 +356,10 @@ To begin, it is critical to obtain a common vocabulary between appriaser and tar
 a SA is a multifaceted agreement between two communicating peers that
 establishes identification, keys, and security labels. The SA also
 includes headers that declare the domain of interpretation, aspects of 
-situational awareness and the duration the SA is valid. The product
-the SA is a cerificate, valid betwen appraiser and target, to
+situational awareness and the duration the SA is valid. The goal is to generate a  cerificate, valid betwen appraiser and target, to
 authenticate a common domain of interpretation.
 
-
-%% this paragraph kind of feels misplaced.
-
-For the latter part of this discussion we will assume the
-establishment of a security association between appraiser and target
-and begin with the appraiser sending a request to the target.  We
+With an established security association, the appraiser sends the request for an attestation protocol to the target.  We
 define $A$ as the type of appraisers and $T$ the type of targets.  $R$
 is the type of attestation requests that define the needs of the
 appraiser.  $P$ is the type of protocols represented as Copland
