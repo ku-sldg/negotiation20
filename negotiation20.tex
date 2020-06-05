@@ -300,7 +300,7 @@ what the resulting evidence indicates.
 
 \section{Ordering Evidence}
 
-One piece of evidence can be considered superior to another based on situationally dependent criteria (and policy?). This results in a partially ordered set $(E,\preceq)$ that illustrates an ordering over evidence descriptions. If $e_1$ and $e_2$ are evidence descriptions, or vectors of evidence, then $e_1\preceq e_2$ expresses a preference for $e_2$ over $e_1$. Taken further, $(E,\preceq,\top,\bot)$ defines a lattice where $E$ and every subset of $E$ has one or more maxima.  The maxima, or $\top$, defines the best or most preferred piece evidence.
+One piece of evidence can be considered superior to another based on situationally dependent criteria (and policy?). This criteria can be contingent on timing requirments, privacy limitations, or other things that result in a partially ordered set $(E,\preceq)$ that illustrates an ordering over evidence descriptions. If $e_1$ and $e_2$ are evidence descriptions, or vectors of evidence, then $e_1\preceq e_2$ expresses a preference for $e_2$ over $e_1$. Taken further, $(E,\preceq,\top,\bot)$ defines a lattice where $E$ and every subset of $E$ has one or more maxima.  The maxima, or $\top$, defines the best or most preferred piece evidence.
 
 The target and appraiser likely express different preferences for evidence and as such, the evidence lattice for the target and appraiser are distinct.  These unique lattices can be denoted $(E_T,\preceq,\top,\bot)$ and $(E_A,\preceq,\top,\bot)$ for the target and appraiser, respectively. (Should I talk here about where the lattices arise? Or why they are different?) 
 
@@ -337,16 +337,19 @@ protocol produces.
 
 Two policies influence the production of a protocol, $p$. The \emph{privacy policy} is enforced to protect a place's interest while the \emph{selection policy} is a relation that maps concrete actions to abstract goals. The \emph{privacy policy} and \emph{selection policy} are unique for each attestation system and can be conflated to \emph{local policy}.
 
-The \emph{privacy policy} is an abstract collection of goals to protect a place's interest. It manifested throughout the negotiation process as the relation $\pi$ and exists between either the target or the appraiser and evidence. In some cases, the \emph{privacy policy} implies that the target $t$ has permission to send protocol $p$ which can be evaluated to evidence $e$. This relation can be represented as $\pi_T : T\times E_T$. The \emph{privacy policy} can also ensure the appraiser's privacy standards are met in the request. This can be represented as a relation  $\pi_A : A\times R$. In other terms, $(a,r)\in\pi_A$ which implies that appraiser $a$ has permission to send request $r$.
+The \emph{privacy policy} is an abstract collection of goals to protect a place's interest. It manifested throughout the negotiation process as the relation $\pi$ and exists between either the target or appraiser and evidence. In some cases, the \emph{privacy policy} implies that the target $t$ has permission to send protocol $p$ which can be evaluated to evidence $e$. This relation can be represented as $\pi_T : T\times E_T$. The \emph{privacy policy} can also ensure the appraiser does not violate its privacy standards when sending the request. This can be represented as a relation  $\pi_A : A\times R$. In other terms, $(a,r)\in\pi_A$ which implies that appraiser $a$ has permission to send request $r$.
 
-The \emph{selection policy} is a mapping of abstract goals to contrete implementation. The model of this is a partial order where the partial order is the realization of policy. 
+The \emph{selection policy} is a mapping of abstract goals to concrete implementations. It exists in many different forms throughout the body of negotiation and can be represented as $\psi$. For instance, we know the appraiser's goal of negotiation is to find the ``best'' protocol for attestation. The realization of the ordering of protocols is the selection policy. In this case, $\psi$ is a relation, not a function, that maps the appraiser's desire for the ``best'' protocol to the concrete implementation of choosing the ``best'' protocol for attestation.
+
+(( where else can we see selection policy? Should I talk about target selection policy that choose protocols that satisfies PP? Do we need to mathematically describe selection cases by case?  )) 
+
 
 \section{Protocol Negotiation}
 
-Negotiation introduces a path for
-communication between target and appraiser. When successful, a protocol is identified
-that satifies the targets needs for constrained disclosure and the
-apprisers desire for comprehensive information.
+Negotiation introduces a path for communication between target and
+appraiser. When successful, a protocol is identified that satifies the
+targets needs for constrained disclosure and the apprisers desire for
+comprehensive information.
 
 To begin, it is critical to obtain a common vocabulary between appriaser and target for the success of negotiation. This can be accomplished by guiding the two negotiating parties through ISAKMP to establish a security association (SA).  More precisely,
 a SA is a multifaceted agreement between two communicating peers that
