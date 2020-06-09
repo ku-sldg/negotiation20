@@ -34,7 +34,7 @@ do we need some inductuve structure to describe the evidence?
 
 Definition place := nat.
 
-Inductive term : Set :=
+Inductive term : Type :=
 | KIM : nat -> term
 | USM : nat -> term
 | AT : place -> term -> term
@@ -44,7 +44,7 @@ Inductive term : Set :=
 
 Definition request := term. 
 
-Definition proposal := term -> term. 
+Definition proposal :Set := term.
 
 Definition privacypolicy (ev : Type) := place -> term -> Prop. 
 
