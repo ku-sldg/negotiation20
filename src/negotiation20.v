@@ -44,9 +44,35 @@ Inductive term : Type :=
 
 Definition request := term. 
 
-Definition proposal :Set := term.
 
-Definition privacypolicy (ev : Type) := place -> term -> Prop. 
+(*******
 
-Check privacypolicy. 
+    In the proposal, there will either be one 
+    term, or more than one term. 
+
+    We may need to touch more on ordering in the future? 
+    Could just make the proposal into a list? Not sure the benefit of either. 
+
+*******) 
+Inductive proposal :=
+| ONE : term -> proposal
+| ADD : proposal -> proposal -> proposal.
+                   
+
+Check request.  
+Check proposal.
+Check ADD. 
+Check (KIM 3). 
+Check (ONE (KIM 3)). 
+Check (ADD (ONE (KIM 3)) (ONE (USM 3))). 
+Check (ADD (ONE (KIM 3)) (ADD (ONE (USM 3)) (ONE (KIM 4)))).
+
+
+Record policy := {
+                        privacy : place -> term -> Prop; 
+                        selection_target : place -> request -> proposal;
+                        selection_app : place -> proposal -> term
+}.
+
+Check privacy. 
 
