@@ -40,6 +40,10 @@ do we need some inductuve structure to describe the evidence?
 
  ***)
 
+
+Require Import Poset.
+Require Import Lattice. 
+
 Definition place := nat.
 
 Inductive term : Type :=
@@ -110,3 +114,12 @@ Check privacy.
    the target or a selection for the appraiser. Can we do this in Coq? 
 
 *******) 
+
+
+
+Module term_lattice <: Lattice.
+
+  Definition t : Set := term.
+  Definition eq : t -> t -> Prop := (fun t1 t2 => t1 = t2).
+
+  Definition join : t -> t -> t := 

@@ -9,12 +9,13 @@
    defining a lattice as a class 
         https://github.com/coq-contribs/relation-algebra/blob/master/lattice.v
 
-
+   resource used to outline the lattice Module 
+        http://www.cs.ox.ac.uk/people/daniel.james/lattice/lattice.pdf
  *)
 
-(* Require Import poset. *)  
+Require Import Poset.  
 
-Module Lattice.
+Module Type Lattice.
 
   (* A lattice is a set, t *)
   Parameter t : Set. 
@@ -40,11 +41,15 @@ Module Lattice.
 
 End Lattice.
 
-(* What properties do we need? 
 
-  - intersection 
+  (* What properties do we need? 
+
+  - intersection
+  - subterms 
+  
 
  *)
+
 
 
   
