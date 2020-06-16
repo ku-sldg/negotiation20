@@ -4,11 +4,19 @@ Implementation of our work surrounding the concept of negotiation
 
 Anna Fritz and Perry Alexander 
 
+
+TO DO : 
+  -- add lattice stuff 
+  -- subset types such that a protocol statisfies the target's privacy policy
+            -- where do write privacy policy? 
+
+
+
 ***************)
 
 (*******************
 
-Appraiser: goal is to verify the target is not compromised and can perform attestation to be deemed trustworthy 
+Appraiser: goal is to verify the target is trustworthy 
 
 Target: body that is appraised to determine trustworthiness 
 
@@ -53,7 +61,8 @@ Definition request := term.
     We may need to touch more on ordering in the future? 
     Could just make the proposal into a list? Not sure the benefit of either. 
 
-*******) 
+ *******)
+
 Inductive proposal :=
 | ONE : term -> proposal
 | ADD : proposal -> proposal -> proposal.
@@ -72,7 +81,32 @@ Record policy := {
                         privacy : place -> term -> Prop; 
                         selection_target : place -> request -> proposal;
                         selection_app : place -> proposal -> term
-}.
+                }.
+
+Module Type Policy.
+
+  Parameter t : Type.
+  Parameter privacy : t -> t -> Prop.
+  Parameter selection : t -> t -> t.
+
+  Parameter min_priv : t -> t -> Prop. 
+
+End Policy. 
 
 Check privacy. 
 
+(*******
+
+   To access and create a member of a record, we have to use special syntax. 
+
+   To create we may say 
+             Definition system1 := {| privacy := _ ; 
+                                      selection_target := _ ; 
+                                      selection_app := _ |}
+
+   But this doesnt really make sense because we dont want the 
+   target and the appraiser to both have to have a selection 
+   policy, we want them only to have either a selection for 
+   the target or a selection for the appraiser. Can we do this in Coq? 
+
+*******) 
