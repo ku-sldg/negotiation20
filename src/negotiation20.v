@@ -39,6 +39,7 @@ Selection Policy: a relation that maps concrete goals to abstract implementation
 
 Require Import Poset.
 Require Import Lattice.
+Require Import Coq.Sets.Ensembles. 
 
 (* A place is the location where negotiation happens 
    Right now, a place describes who is participating 
@@ -58,7 +59,8 @@ Inductive term : Type :=
    The request is a term that describes the appraiser's
    desires for attestation. *)
 
-Definition request := term. 
+Definition request := Ensemble term. 
+Check request. 
 
 (*  The proposal is sent from target to appraiser. 
     It includes the terms the target is willing 
@@ -67,20 +69,39 @@ Definition request := term.
     In the proposal, there will either be one 
     term, or more than one term.  *)
 
-Inductive proposal :=
+Definition proposal := Ensemble term. 
+
+(* Inductive proposal :=
 | ONE : term -> proposal
 | ADD : proposal -> proposal -> proposal.
-                   
+Check proposal. *)
 
-Check request.  
-Check proposal.
-Check ADD. 
-Check (KIM 3). 
-Check (ONE (KIM 3)). 
-Check (ADD (ONE (KIM 3)) (ONE (USM 3))). 
-Check (ADD (ONE (KIM 3)) (ADD (ONE (USM 3)) (ONE (KIM 4)))).
+(***** EXAMPLES WITH INTERESTION AND TERMS *****)
+Module Examples. 
+  Check (KIM 3). 
+  Check (Singleton term (KIM 3)).  
+  Definition USM_3_KIM_3 := (Add term (Singleton term (USM 3)) (KIM 3)). 
+  Check (Add term (Singleton term (KIM 3)) (USM 3) (KIM 4)).
 
-(* A record is defined to hold both the target's policies and 
+  Definition proposal_1 := (Singleton _ (KIM 3)).
+  Definition request_1 := (Singleton _ (KIM 3)). 
+
+  Theorem test_intersection : Included _ proposal_1 request_1. 
+  Proof. 
+    unfold Included.   
+    unfold proposal_1. 
+    unfold request_1. 
+    intros. 
+    apply H.
+  Qed.
+
+
+  (* Do I want the proof to be of type True? *)
+  Check test_intersection.
+
+End Examples. 
+
+  (* A record is defined to hold both the target's policies and 
    the appraiser's policies. 
 
    For the appraiser, the privacy policy takes the place (the details 
@@ -118,14 +139,22 @@ Record target_policy := {
              Definition appraiser_1 := {| app_privacy := _ ;  
                                           app_selection := _ |}.   *) 
 
-(* Definition acceptableTerms (p:place) (pol:(privacy nat)) : Type := {t:term | (pol p t)}. *) 
 
 Definition first_app : app_policy := {|
-                                    app_privacy (p:place) (t:term)  := forall p, True;
-                                    app_selection (p:place) (pro:proposal) := proj1_sig  { KIM 0 | True }
+                                    app_privacy (p:place) (r:request)  := forall p r, True;
+                                    app_selection (p:place) (pro:proposal) (r:request) := forall pro r, In 
                                   |}.
 
-Check first_app. 
+Check first_app.
+
+
+
+
+
+(********************* WHERE CURRENT WORK ENDS ****************)
+
+(* Definition acceptableTerms (p:place) (pol:(privacy nat)) : Type := {t:term | (pol p t)}. *) 
+
 
 Module Type Policy.
 
