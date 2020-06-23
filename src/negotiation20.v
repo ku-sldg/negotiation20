@@ -69,15 +69,17 @@ Check request.
     In the proposal, there will either be one 
     term, or more than one term.  *)
 
-Definition proposal := Ensemble term. 
+Definition proposal := Ensemble term.
+Definition top : Ensemble term := Full_set term. 
+Definition bottom : Ensemble term := Empty_set term. 
 
-(* Inductive proposal :=
-| ONE : term -> proposal
-| ADD : proposal -> proposal -> proposal.
-Check proposal. *)
+Theorem top_includes_all : forall t:term, In term (top) t. 
+ Proof. 
 
+  
 (***** EXAMPLES WITH INTERESTION AND TERMS *****)
-Module Examples. 
+Module Examples.
+  Check top. 
   Check (KIM 3). 
   Check (Singleton term (KIM 3)).  
   Definition USM_3_KIM_3 := (Add term (Singleton term (USM 3)) (KIM 3)). 
