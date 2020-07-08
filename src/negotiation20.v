@@ -4,7 +4,17 @@ Implementation of our work surrounding the concept of negotiation
 
 Anna Fritz and Perry Alexander 
 
-CURRENT THOUGHTS (6/23) 
+CURRENT THOUGHTS (7/8)
+- Attempting to order the following three terms: 
+  1.  USM 3 
+  2.  KIM 3
+  3.  (USM 3) & (KIM 3)
+  I want to say that USM 3 and KIM 3 is the best followed by just KIM 3 followed by USM 3 
+  - Do I use an inductive structure or a Definition? 
+  - Currently, types aren't working, so I am messing with those. 
+
+
+THOUGHTS (6/23) 
 - Is the signature correct for the target's privacy policy? 
   Should work on terms or on the proposal? I am thinking the proposal 
   because then we can have a subset type but just needed to make sure. 
@@ -75,8 +85,18 @@ Definition bottom : Ensemble term := Empty_set term.
 
 Theorem top_includes_all : forall t:term, In term (top) t. 
  Proof. 
+   intros.
+   apply Full_intro.
+ Qed.
 
-  
+Theorem bottom_includes_none : forall t:term, ~(In term (Empty_set term) t). 
+Proof.
+  intros.
+  intros not. 
+  inversion not. 
+Qed.
+
+
 (***** EXAMPLES WITH INTERESTION AND TERMS *****)
 Module Examples.
   Check top. 
@@ -97,11 +117,70 @@ Module Examples.
     apply H.
   Qed.
 
-
   (* Do I want the proof to be of type True? *)
   Check test_intersection.
 
-End Examples. 
+End Examples.
+
+
+Module PosetTerm <: Poset. 
+  Definition t : Type := Ensemble term.
+  Definition eq : t -> t -> Prop := (fun t1 t2 => t1 = t2).
+
+  Hint Unfold eq.
+  
+  Notation " t1 '==' t2 " := (eq t1 t2) (at level 40). 
+
+  Theorem eq_refl : forall x, x == x.
+  Proof. reflexivity. Qed.
+    
+  Theorem eq_sym : forall x y, x == y -> y == x.
+  Proof. intros x y. intros H. auto. Qed.
+    
+  Theorem eq_trans : forall x y z,  x == y -> y == z -> x == z.
+  Proof. intros x y z. intros H1 H2. unfold eq in *. subst. reflexivity. Qed.
+  
+
+  (* Do I want a term or a Prop here? *)
+
+  (* need to figure out how to get the first element of the set *)
+
+  Check Ensemble term.
+
+  (* Polymorphic inductive types *)
+
+  (* I really dont know where to say that KIM 3 is greater than USM 3
+     I can build many different data types but then I cant figure out how 
+     to use them in an ordering relation. 
+  *)
+  
+  Inductive declared_term : Ensemble term -> Prop :=
+  | A : declared_term (Singleton _ (USM 3))
+  | B : declared_term (Singleton _ (KIM 3))
+  | C : declared_term (Add term (Singleton term (USM 3)) (KIM 3)).
+
+
+  Inductive declared_term_2 :=
+  | D : Ensemble term -> declared_term_2
+  | E : Ensemble term -> declared_term_2
+  | F : Ensemble term -> declared_term_2.                           
+  
+  Check declared_term. 
+  Check Ensemble term. 
+  
+  Inductive leq : declared_term -> declared_term -> Prop :=
+  | a_b : leq A B
+  | b_c : leq B C.  
+
+  
+  Inductive order (t1 t2 :Ensemble term) : Prop :=
+  | Match :  (In _ (Singleton _ (KIM 3)) (t2)) -> order t1 t2.
+
+
+  Check order (Singleton _ (KIM 3)) (KIM 3). 
+  
+
+  (* We must implement the leq ordering for *) 
 
   (* A record is defined to hold both the target's policies and 
    the appraiser's policies. 
