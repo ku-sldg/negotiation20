@@ -1,15 +1,5 @@
 (*
 
-This file contain various examples of data structures, and ordering relations. 
-It is a bit messy but help me (Anna) understand some of what is going on in Coq. 
-*)
-
-
-
-
-
-(*
-
   Musings about data structures 
 
   Records
@@ -21,8 +11,6 @@ It is a bit messy but help me (Anna) understand some of what is going on in Coq.
         - instance is a definition of the class
 
   Modules 
-        - Modules need parametes which then you implement when instantiating 
-          a module 
 
  *)
 
@@ -32,6 +20,7 @@ It is a bit messy but help me (Anna) understand some of what is going on in Coq.
  *)
 
 (* Set Implicit Arguments. *)
+Require Import Setoid.
 
 Inductive rectangle :=
 | length : nat -> rectangle
@@ -59,6 +48,13 @@ Definition rec_1 : rec_rectangle := {|
                                    |}.
 
 
+(* Class class_rectangle {
+        length : nat
+                   width : nat
+                             area : length -> width -> nat
+      }.
+*)
+
   
   Module Type mod_rectangle.
     Parameter length : nat.
@@ -79,14 +75,6 @@ Definition daRec := mkrec (proj1_sig term_prop).
 Check daRec. 
 Compute (daRec.(foo)).
 
-
-(***
-
-Here we looked at how to define orderings using Inductive Structures. 
-We worked with the Coq le definition and then moved on to creating our 
-own relation. 
-
-****)
 
 Inductive le (n:nat) : nat -> Prop :=
 | le_n : le n n
@@ -144,7 +132,62 @@ Inductive trc {A} (R : A -> A -> Prop) : A -> A -> Prop :=
   -> trc R x z.
 
 Check trc gte.
+Check le.
 
+Theorem le_Sm_n : forall m z, le (S m) z -> le m z. 
+Proof. 
+  intros. 
+  induction H.
+  apply le_S. apply le_n.  
+  apply le_S. apply IHle.
+Qed.
+
+
+Theorem le_trans_help : forall m z, le (S m) (S z) -> le m z. 
+Proof.
+  intros.  
+  inversion H.
+  apply le_n. 
+  subst. apply le_Sm_n in H1. 
+  apply H1.
+Qed.
+
+(* This proof works because of the way the le constructors are defined *)
+
+Theorem le_trans : forall x y z, le x y -> le y z -> le x z. 
+Proof.
+  intros.
+  induction H. apply H0.
+  apply IHle. apply le_Sm_n in H0.  
+  apply H0.
+Qed. 
+  
+(* In order to do this proof we have to prove that the relationship is reflexive. 
+   You also have to have the transitive relation defined like TrcFront. *)
+
+Theorem trans_gte : forall x y z, gte x y -> gte y z -> gte x z.
+Proof.
+  intros. induction H0.  
+  induction H. apply a_b. 
+Abort. 
+  
+Theorem gte_imp_trc : forall x y, gte x y -> trc gte x y. 
+Proof.
+  Abort. 
+  (* TRC gives you every possible relation you can define 
+   TRC give you the whole relation 
+   TRC gte is the partial order 
+ *)
+
+Theorem trc_trans' : forall x y z, gte x y
+  -> trc gte y z
+  -> trc gte x z.
+Proof.
+  intros. induction H. Abort.
+
+(*
+  play with proving antisymmetic 
+*)
 
 Theorem trc_trans : forall x y z, trc gte x y
   -> trc gte y z
@@ -158,5 +201,132 @@ Proof.
   
   apply IHtrc. 
   apply H0. 
-Qed.   
+Qed.
+
+Inductive empty_relation : my_type -> my_type -> Prop := .
+
+Theorem trc_empty : forall x y z, trc empty_relation x y
+                                  -> trc empty_relation y z
+                                  -> trc empty_relation x z.
+Proof.
+  intros. induction H.
+  apply H0.
+
+  eapply TrcFront. 
+  eapply H.
+  
+  apply IHtrc. 
+  apply H0. 
+Qed.
+
+Inductive gte_2 : my_type -> my_type -> Prop :=
+| a_c_2 : gte_2 A C
+| a_b_2 : gte_2 A B.
+
+Theorem trc_gte_2' : forall x y z, gte_2 x y
+                                  -> trc gte_2 y z
+                                  -> trc gte_2 x z.
+Proof.
+  intros; induction H. Abort .
+  
+Theorem trc_gte_2 : forall x y z, trc gte_2 x y
+                                  -> trc gte_2 y z
+                                  -> trc gte_2 x z.
+Proof.
+  intros. induction H.
+  apply H0.
+
+  eapply TrcFront. 
+  eapply H.
+  
+  apply IHtrc. 
+  apply H0. 
+Qed.
+
+Inductive eq_2 : my_type -> my_type -> Prop :=
+| eq_3x : forall x, eq_2 x x.
+
+  
+Theorem trc_gte_2_asym : forall x y, trc gte_2 x y
+                                  -> trc gte_2 y x
+                                  -> trc eq_2 x y.
+Proof.
+  intros. 
+
+
+
+  
+(* No rules to relate B and C so this proof will never work. *)
+Theorem gte_C_B : gte_2 B C. 
+Proof.
+  intros.
+  Abort. 
+
+Inductive eq_3 : my_type -> my_type -> Prop :=
+| eq_x : forall x, eq_3 x x.
+
+Eval compute in eq_3 A A. 
+
+(* Here I made a new data structure and tried to do the proof without trc *)
+
+Inductive gte_3 : my_type -> my_type -> Prop :=
+| refl_3 : forall x: my_type, gte_3 x x                                    
+| trans_3 : forall x y z : my_type, gte_3 x y -> gte_3 y z -> gte_3 x z 
+| a_b_3 : gte_3 A B
+| b_c_3 : gte_3 B C.
+
+(* Adding anti symmetic rule  
+     - if we want something to be antisymmetic, then we need an understanding of equality. 
+       we could make an equality data structure. However, the equality data structure is 
+       the same as the reflexive tactic. 
+       | antisym_3 : forall x y : my_type, gte_3 x y -> gte_3 y x -> gte_3 x y
+
+ *)
+
+Theorem eq_imp_gte : forall x y, eq_3 x y -> gte_3 x y.
+  Proof. 
+    intros.
+    induction H.
+    apply refl_3.
+Qed. 
+  
+(* I'm *)
+Theorem gte_antisym : forall x y, gte_3 x y -> gte_3 y x -> gte_3 x y. 
+  Proof. 
+    intros. 
+    apply H. 
+  Qed.
+  
+Theorem gte_antisym_eq : forall x y, gte_3 x y -> gte_3 y x -> eq_3 x y. 
+Proof.
+  intros.
+  induction H.
+  apply eq_x.
+
+  eapply IHgte_3_2. 
+  
+Qed.
+  
+Hint Constructors gte_3. 
+
+Theorem trans_gte_3 : forall x y z, gte_3 x y -> gte_3 y z -> gte_3 x z.
+Proof.
+   intros. destruct x; destruct y; destruct z; try eauto. 
+
+  
+    intros; induction H. 
+    apply H0.
+
+    apply IHgte_3_1. 
+    apply H0. 
+
+    eapply a_b_3. 
+    
+    eapply a_b_3 in H0. . 
+    
+    eapply TrcFront. 
+    
+    intros. destruct x; destruct y; destruct z; simpl; try apply H; try apply H0; try apply refl.
+
+    apply a_c_2. 
 
