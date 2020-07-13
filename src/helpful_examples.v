@@ -21,6 +21,7 @@
 
 (* Set Implicit Arguments. *)
 Require Import Setoid.
+Require Import Poset. 
 
 Inductive rectangle :=
 | length : nat -> rectangle
@@ -114,6 +115,7 @@ Inductive my_type :=
 | A : my_type
 | B : my_type
 | C : my_type.
+
 
 Check my_type. 
 (* my_type : Set *)
@@ -251,7 +253,8 @@ Theorem trc_gte_2_asym : forall x y, trc gte_2 x y
                                   -> trc gte_2 y x
                                   -> trc eq_2 x y.
 Proof.
-  intros. 
+  intros.
+Abort. 
 
 
 
@@ -302,31 +305,23 @@ Proof.
   intros.
   induction H.
   apply eq_x.
-
-  eapply IHgte_3_2. 
-  
-Qed.
+Abort.
   
 Hint Constructors gte_3. 
 
 Theorem trans_gte_3 : forall x y z, gte_3 x y -> gte_3 y z -> gte_3 x z.
 Proof.
    intros. destruct x; destruct y; destruct z; try eauto. 
+Qed. 
 
-  
-    intros; induction H. 
-    apply H0.
 
-    apply IHgte_3_1. 
-    apply H0. 
+Module PosetMyType <: Poset.
+  Definition t : Type := my_type.
+  Definition eq : t -> t -> Prop := (fun t1 t2 => eq t1 t1).
 
-    eapply a_b_3. 
-    
-    eapply a_b_3 in H0. . 
-    
-    eapply TrcFront. 
-    
-    intros. destruct x; destruct y; destruct z; simpl; try apply H; try apply H0; try apply refl.
+  Hint Unfold eq. 
 
-    apply a_c_2. 
+  Notation " t1 '==' t2 " := (eq t1 t2) (at level 40).
 
+  Theorem eq_refl : forall x, x == x.
+  Proof. reflexivity. Qed.
