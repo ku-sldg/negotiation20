@@ -4,27 +4,12 @@ Implementation of our work surrounding the concept of negotiation
 
 Anna Fritz and Perry Alexander 
 
-CURRENT THOUGHTS (7/8)
-- Attempting to order the following three terms: 
-  1.  USM 3 
-  2.  KIM 3
-  3.  (USM 3) & (KIM 3)
-  I want to say that USM 3 and KIM 3 is the best followed by just KIM 3 followed by USM 3 
-  - Do I use an inductive structure or a Definition? 
-  - Currently, types aren't working, so I am messing with those. 
 
-
-THOUGHTS (6/23) 
+Thoughts about Policy (6/23) 
 - Is the signature correct for the target's privacy policy? 
   Should work on terms or on the proposal? I am thinking the proposal 
   because then we can have a subset type but just needed to make sure. 
-- How do you actually write the privacy policy? 
-  I understand what it's supposed to say but I don't understand how 
-  to correctly encode it. 
 - I am wondering if the policies need additional information? 
-  Maybe more terms? It feels underspecified. 
-- Do we need min/max policy? Might just add to make 
-  it easier to begin. 
 - What about an environment? Do we want that to 
   better specify the system? Maybe that is how the 
   situational awareness is implemented? 
@@ -77,7 +62,10 @@ Check request.
     to share during attestation. 
 
     In the proposal, there will either be one 
-    term, or more than one term.  *)
+    term, or more than one term.  
+
+    The top includes all possible terms in 
+    the proposal and the bottom is no terms.*)
 
 Definition proposal := Ensemble term.
 Definition top : Ensemble term := Full_set term. 
@@ -123,7 +111,10 @@ Module Examples.
 End Examples.
 
 
-Module PosetTerm <: Poset. 
+Module PosetTerm <: Poset.
+  (* Module inherits from Poset which must prove 
+     reflexivity, antisymmetry, and transitivity *)
+  
   Definition t : Type := Ensemble term.
   Definition eq : t -> t -> Prop := (fun t1 t2 => t1 = t2).
 
@@ -140,49 +131,80 @@ Module PosetTerm <: Poset.
   Theorem eq_trans : forall x y z,  x == y -> y == z -> x == z.
   Proof. intros x y z. intros H1 H2. unfold eq in *. subst. reflexivity. Qed.
   
-
-  (* Do I want a term or a Prop here? *)
-
-  (* need to figure out how to get the first element of the set *)
+  Check Ensemble term.
+  Check top. 
+ 
+  (* We need to define the terms in the poset  *)
+  
+  Definition KIME (x:nat) : Ensemble term := (Singleton _ (KIM x)).
+  Definition USME (x:nat) : Ensemble term := (Singleton _ (USM x)).
+  Definition KIM_and_USM (x:nat) := (Add term (Singleton term (USM x)) (KIM x)).
 
   Check Ensemble term.
 
-  (* Polymorphic inductive types *)
-
-  (* I really dont know where to say that KIM 3 is greater than USM 3
-     I can build many different data types but then I cant figure out how 
-     to use them in an ordering relation. 
-  *)
+  (* Rules 
+     1. the top is always the greatest 
+     2. the empty set is always the least 
+     3. a USM of any number is less than a KIM of any number 
+     4. a KIM of any number is less than a KIM and USM of any number *)
   
-  Inductive declared_term : Ensemble term -> Prop :=
-  | A : declared_term (Singleton _ (USM 3))
-  | B : declared_term (Singleton _ (KIM 3))
-  | C : declared_term (Add term (Singleton term (USM 3)) (KIM 3)).
+  Inductive leq : Ensemble term -> Ensemble term -> Prop :=
+  | leq_y_top : forall (y:Ensemble term), leq y top 
+  | leq_empty_y : forall (y:Ensemble term), leq bottom y
+  | leq_USME_KIME : forall (x:nat), leq (USME x) (KIME x)
+  | leq_KIME_KIMandUSM : forall (x:nat), leq (KIME x) (KIM_and_USM x). 
 
+  Definition order := leq. 
 
-  Inductive declared_term_2 :=
-  | D : Ensemble term -> declared_term_2
-  | E : Ensemble term -> declared_term_2
-  | F : Ensemble term -> declared_term_2.                           
+  Notation " t1 '<<=' t2 " := (order t1 t2) (at level 40).
+
+  Hint Unfold order.
+
+  (* If I inductively define terms in the leq relation, do I also need 
+     constructors for reflexivity, transitivity, and anti sym*)
   
-  Check declared_term. 
-  Check Ensemble term. 
+  Theorem order_refl : forall x y, x == y -> x <<= y.
+  Proof.
+    intros x y.
+    Admitted. 
+    
+  Theorem order_antisym: forall x y, x <<= y -> y <<= x -> x == y.
+  Proof.
+    intros x y. intros H1 H2.
+    Admitted. 
+
+  Theorem order_trans : forall x y z, x <<= y -> y <<= z ->  x <<= z.
+  Proof.
+    intros x y z. intros H1 H2.
+    Admitted. 
+
+
+(* We could use the TRC to get to any set of terms from a Proposal *) 
+Inductive trc {A} (R : A -> A -> Prop) : A -> A -> Prop :=
+  | TrcRefl : forall x, (trc R) x x
+  | TrcFront : forall x y z,
+      R x y
+      -> trc R y z
+      -> trc R x z.
+
+
+  Theorem trc_trans : forall x y z, trc leq x y
+                                    -> trc leq y z
+                                    -> trc leq x z.
+  Proof.
+      intros. induction H. 
+      apply H0.
+
+      eapply TrcFront. 
+      eapply H.
   
-  Inductive leq : declared_term -> declared_term -> Prop :=
-  | a_b : leq A B
-  | b_c : leq B C.  
+      apply IHtrc. 
+      apply H0. 
+  Qed.
 
+End PosetTerm.
   
-  Inductive order (t1 t2 :Ensemble term) : Prop :=
-  | Match :  (In _ (Singleton _ (KIM 3)) (t2)) -> order t1 t2.
-
-
-  Check order (Singleton _ (KIM 3)) (KIM 3). 
-  
-
-  (* We must implement the leq ordering for *) 
-
-  (* A record is defined to hold both the target's policies and 
+   (* A record is defined to hold both the target's policies and 
    the appraiser's policies. 
 
    For the appraiser, the privacy policy takes the place (the details 
@@ -218,7 +240,7 @@ Record target_policy := {
 
    To create we may say 
              Definition appraiser_1 := {| app_privacy := _ ;  
-                                          app_selection := _ |}.   *) 
+                                          app_selection := _ |}.  
 
 
 Definition first_app : app_policy := {|
@@ -226,7 +248,7 @@ Definition first_app : app_policy := {|
                                     app_selection (p:place) (pro:proposal) (r:request) := forall pro r, In 
                                   |}.
 
-Check first_app.
+Check first_app. *) 
 
 
 
@@ -258,5 +280,3 @@ Module term_lattice <: Lattice <: Poset.
   Definition order : n -> n -> Prop := (fun x y => x <= y).
 
   Check n. 
-
-  Definition join : t -> t -> t := order x y -> order y z -> order x (join y z). 
