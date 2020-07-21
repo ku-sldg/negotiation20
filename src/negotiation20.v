@@ -148,13 +148,18 @@ Module PosetTerm <: Poset.
      3. a USM of any number is less than a KIM of any number 
      4. a KIM of any number is less than a KIM and USM of any number *)
   
-  Inductive leq : Ensemble term -> Ensemble term -> Prop :=
+  Inductive leq : t -> t -> Prop :=
   | leq_y_top : forall (y:Ensemble term), leq y top 
   | leq_empty_y : forall (y:Ensemble term), leq bottom y
   | leq_USME_KIME : forall (x:nat), leq (USME x) (KIME x)
-  | leq_KIME_KIMandUSM : forall (x:nat), leq (KIME x) (KIM_and_USM x). 
+  | leq_KIME_KIMandUSM : forall (x:nat), leq (KIME x) (KIM_and_USM x).
 
-  Definition order := leq. 
+  Inductive leq' (t1:t) : t -> Prop :=
+  | base_case : leq' t1 t1
+  | inductive_case : forall t2:t, leq' t1 t2.
+  
+
+  Definition order := leq'. 
 
   Notation " t1 '<<=' t2 " := (order t1 t2) (at level 40).
 
@@ -162,12 +167,19 @@ Module PosetTerm <: Poset.
 
   (* If I inductively define terms in the leq relation, do I also need 
      constructors for reflexivity, transitivity, and anti sym*)
+
+  (* I dont really have an ordering bc I haven't defined all cases. 
+     Do I need a fall through? How do I prove term = term without that
+     as a constructor? It's impossible to generalize it to a forall 
+     with the way I defined things *)
   
   Theorem order_refl : forall x y, x == y -> x <<= y.
   Proof.
-    intros x y.
-    Admitted. 
-    
+    intros x y. intros H. unfold eq in *.
+    unfold order in *. apply inductive_case.
+  Qed.
+  
+        
   Theorem order_antisym: forall x y, x <<= y -> y <<= x -> x == y.
   Proof.
     intros x y. intros H1 H2.
