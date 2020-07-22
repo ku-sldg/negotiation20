@@ -34,7 +34,8 @@ Selection Policy: a relation that maps concrete goals to abstract implementation
 
 Require Import Poset.
 Require Import Lattice.
-Require Import Coq.Sets.Ensembles. 
+Require Import Coq.Sets.Ensembles.
+Require Import Coq.Classes.RelationClasses.
 
 (* A place is the location where negotiation happens 
    Right now, a place describes who is participating 
@@ -111,16 +112,16 @@ Module Examples.
 End Examples.
 
 
+(* 7/22 Dr. A suggested it may be easier to 
+        work on ordering just terms and not Ensembles*)
 Module PosetTerm <: Poset.
-  (* Module inherits from Poset which must prove 
-     reflexivity, antisymmetry, and transitivity *)
-  
-  Definition t : Type := Ensemble term.
-  Definition eq : t -> t -> Prop := (fun t1 t2 => t1 = t2).
+
+  Definition t : Type := term.
+  Definition eq: t -> t -> Prop := (fun t1 t2 => t1 = t2).  
 
   Hint Unfold eq.
   
-  Notation " t1 '==' t2 " := (eq t1 t2) (at level 40). 
+  Notation " t1 '==' t2 " := (eq t1 t2) (at level 40).
 
   Theorem eq_refl : forall x, x == x.
   Proof. reflexivity. Qed.
@@ -130,91 +131,91 @@ Module PosetTerm <: Poset.
     
   Theorem eq_trans : forall x y z,  x == y -> y == z -> x == z.
   Proof. intros x y z. intros H1 H2. unfold eq in *. subst. reflexivity. Qed.
+
+  (* got stuck here, had to move on. No proofs done. *)
+  Inductive order' : t -> t -> Prop := . 
+
+  Definition order := order'. 
   
-  Check Ensemble term.
-  Check top. 
- 
-  (* We need to define the terms in the poset  *)
-  
-  Definition KIME (x:nat) : Ensemble term := (Singleton _ (KIM x)).
-  Definition USME (x:nat) : Ensemble term := (Singleton _ (USM x)).
-  Definition KIM_and_USM (x:nat) := (Add term (Singleton term (USM x)) (KIM x)).
-
-  Check Ensemble term.
-
-  (* Rules 
-     1. the top is always the greatest 
-     2. the empty set is always the least 
-     3. a USM of any number is less than a KIM of any number 
-     4. a KIM of any number is less than a KIM and USM of any number *)
-  
-  Inductive leq : t -> t -> Prop :=
-  | leq_y_top : forall (y:Ensemble term), leq y top 
-  | leq_empty_y : forall (y:Ensemble term), leq bottom y
-  | leq_USME_KIME : forall (x:nat), leq (USME x) (KIME x)
-  | leq_KIME_KIMandUSM : forall (x:nat), leq (KIME x) (KIM_and_USM x).
-
-  Inductive leq' (t1:t) : t -> Prop :=
-  | base_case : leq' t1 t1
-  | inductive_case : forall t2:t, leq' t1 t2.
-  
-
-  Definition order := leq'. 
-
   Notation " t1 '<<=' t2 " := (order t1 t2) (at level 40).
-
-  Hint Unfold order.
-
-  (* If I inductively define terms in the leq relation, do I also need 
-     constructors for reflexivity, transitivity, and anti sym*)
-
-  (* I dont really have an ordering bc I haven't defined all cases. 
-     Do I need a fall through? How do I prove term = term without that
-     as a constructor? It's impossible to generalize it to a forall 
-     with the way I defined things *)
   
   Theorem order_refl : forall x y, x == y -> x <<= y.
   Proof.
-    intros x y. intros H. unfold eq in *.
-    unfold order in *. apply inductive_case.
-  Qed.
-  
-        
+    Admitted. 
+    
   Theorem order_antisym: forall x y, x <<= y -> y <<= x -> x == y.
   Proof.
-    intros x y. intros H1 H2.
     Admitted. 
 
   Theorem order_trans : forall x y z, x <<= y -> y <<= z ->  x <<= z.
   Proof.
-    intros x y z. intros H1 H2.
     Admitted. 
 
-
-(* We could use the TRC to get to any set of terms from a Proposal *) 
-Inductive trc {A} (R : A -> A -> Prop) : A -> A -> Prop :=
-  | TrcRefl : forall x, (trc R) x x
-  | TrcFront : forall x y z,
-      R x y
-      -> trc R y z
-      -> trc R x z.
-
-
-  Theorem trc_trans : forall x y z, trc leq x y
-                                    -> trc leq y z
-                                    -> trc leq x z.
-  Proof.
-      intros. induction H. 
-      apply H0.
-
-      eapply TrcFront. 
-      eapply H.
   
-      apply IHtrc. 
-      apply H0. 
-  Qed.
+End PosetTerm. 
 
-End PosetTerm.
+  
+
+Module PosetEnsemble <: Poset.
+  (* Module inherits from Poset which must prove 
+     reflexivity, antisymmetry, and transitivity *)
+
+
+  (* Equality for the Ensemble is defined if the two are the same set *)
+  Definition t : Type := Ensemble term.
+  Definition eq (t1 t2 : t) : Prop := (Same_set _ t1 t2).
+
+  Hint Unfold eq.
+  
+  Notation " t1 '==' t2 " := (eq t1 t2) (at level 40). 
+
+  Theorem eq_refl : forall x, x == x.
+     Proof. unfold eq. intros. simpl. unfold Same_set. split.
+         + unfold Included.  intros. apply H.
+         + unfold Included. intros. apply H.
+     Qed.
+     
+  Theorem eq_sym : forall x y, x == y -> y == x.
+      Proof. intros x y. intros H. unfold eq. unfold Same_set. split.
+         + inversion H. apply H1.
+         + inversion H. apply H0.
+       Qed. 
+           
+  Theorem eq_trans : forall x y z,  x == y -> y == z -> x == z.
+     Proof. intros x y z. intros H1 H2.
+         unfold eq in *. unfold Same_set in *. inversion H1.  inversion H2. split.
+            + unfold Included in H. unfold Included. intros.
+              apply H in H5. unfold Included in H3. apply H3 in H5. apply H5.
+            + unfold Included in H4. unfold Included. intros.
+              apply H4 in H5. unfold Included in H0. apply H0 in H5. apply H5.
+     Qed.
+
+  (* Order implies one set of terms is greater than another set of terms. 
+     So the set  with more elements is greater *)
+  Definition order := Included term. 
+     
+  Notation " t1 '<<=' t2 " := (order t1 t2) (at level 40).
+  
+  Theorem order_refl : forall x y, x == y -> x <<= y.
+  Proof.
+    intros. unfold order. inversion H. apply H0. 
+  Qed.
+  
+  Theorem order_antisym: forall x y, x <<= y -> y <<= x -> x == y.
+  Proof.
+    intros. unfold order in *. unfold eq. unfold Same_set. split.
+    apply H. apply H0.
+  Qed.
+  
+  Theorem order_trans : forall x y z, x <<= y -> y <<= z ->  x <<= z.
+  Proof.
+    intros. 
+    unfold order in *. 
+    unfold Included in *. 
+    intros. apply H0.  apply H. apply H1. 
+  Qed. 
+
+End PosetEnsemble.
   
    (* A record is defined to hold both the target's policies and 
    the appraiser's policies. 
@@ -244,25 +245,7 @@ Record target_policy := {
                          tar_privacy : place -> proposal -> Prop;
                          tar_selection : place -> request -> proposal
                        }.
-
-(* We want to use a record to keep track of what policy needs to be enforced for each 
-   system. The simplist and most direct way is with a record. 
-
-   To access and create a member of a record, we have to use special syntax. 
-
-   To create we may say 
-             Definition appraiser_1 := {| app_privacy := _ ;  
-                                          app_selection := _ |}.  
-
-
-Definition first_app : app_policy := {|
-                                    app_privacy (p:place) (r:request)  := forall p r, True;
-                                    app_selection (p:place) (pro:proposal) (r:request) := forall pro r, In 
-                                  |}.
-
-Check first_app. *) 
-
-
+ 
 
 
 
