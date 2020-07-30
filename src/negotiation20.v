@@ -5,11 +5,16 @@ Implementation of our work surrounding the concept of negotiation
 Anna Fritz and Perry Alexander 
 
 
-Thoughts about Policy (6/23) 
-- Is the signature correct for the target's privacy policy? 
-  Should work on terms or on the proposal? I am thinking the proposal 
-  because then we can have a subset type but just needed to make sure. 
-- I am wondering if the policies need additional information? 
+Thoughts (7/30) 
+- We now have an ordering of terms based on length (the 
+  most preferred term is the most detailed) but now what. 
+  We have policy signatures but how do we put it all 
+  together? 
+- Does the PosetEnsemble need to be a Module or 
+  a Module Type? Nothing is going to inherit from 
+  PosetEnsemble but we need to be able to reuse it. 
+  How do we do that? 
+
 - What about an environment? Do we want that to 
   better specify the system? Maybe that is how the 
   situational awareness is implemented? 
@@ -133,7 +138,10 @@ Module PosetTerm <: Poset.
   Proof. intros x y z. intros H1 H2. unfold eq in *. subst. reflexivity. Qed.
 
   (* got stuck here, had to move on. No proofs done. *)
-  Inductive order' : t -> t -> Prop := . 
+  Fixpoint order' (t1 t2 : term) : Prop :=
+    match t1 with
+    | _ => False
+    end. 
 
   Definition order := order'. 
   
@@ -155,7 +163,7 @@ Module PosetTerm <: Poset.
 End PosetTerm. 
 
   
-
+(* How do i think use this module in a lattice? *)
 Module PosetEnsemble <: Poset.
   (* Module inherits from Poset which must prove 
      reflexivity, antisymmetry, and transitivity *)
@@ -170,15 +178,15 @@ Module PosetEnsemble <: Poset.
   Notation " t1 '==' t2 " := (eq t1 t2) (at level 40). 
 
   Theorem eq_refl : forall x, x == x.
-     Proof. unfold eq. intros. simpl. unfold Same_set. split.
-         + unfold Included.  intros. apply H.
-         + unfold Included. intros. apply H.
-     Qed.
+  Proof.
+    unfold eq. intros. simpl. unfold Same_set.
+    split; unfold Included; intros; apply H.
+  Qed.
      
   Theorem eq_sym : forall x y, x == y -> y == x.
-      Proof. intros x y. intros H. unfold eq. unfold Same_set. split.
-         + inversion H. apply H1.
-         + inversion H. apply H0.
+      Proof. intros x y. intros H. unfold eq. unfold Same_set. split; inversion H.
+         + apply H1.
+         + apply H0.
        Qed. 
            
   Theorem eq_trans : forall x y z,  x == y -> y == z -> x == z.
@@ -203,7 +211,7 @@ Module PosetEnsemble <: Poset.
   
   Theorem order_antisym: forall x y, x <<= y -> y <<= x -> x == y.
   Proof.
-    intros. unfold order in *. unfold eq. unfold Same_set. split.
+    intros; unfold order in *; unfold eq; unfold Same_set; split.
     apply H. apply H0.
   Qed.
   
