@@ -49,7 +49,7 @@ Definition area_function (n1 n2 : nat) : nat :=
 Definition rec_1 : rec_rectangle := {|
                                       rec_length := 1;
                                       rec_width := 2;
-                                      rec_area := area_function 1 2
+                                      rec_area := area_function
                                    |}.
 
 
