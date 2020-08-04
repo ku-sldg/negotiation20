@@ -14,6 +14,7 @@ Thoughts (7/30)
   a Module Type? Nothing is going to inherit from 
   PosetEnsemble but we need to be able to reuse it. 
   How do we do that? 
+- Do we move onto making a lattice? 
 
 - What about an environment? Do we want that to 
   better specify the system? Maybe that is how the 
@@ -51,6 +52,8 @@ Definition place := nat.
 Inductive term : Type :=
 | KIM : nat -> term
 | USM : nat -> term
+| HSH : term -> term
+| NONCE : term -> term
 | AT : place -> term -> term
 | SEQ : term -> term -> term
 | PAR : term -> term -> term
@@ -60,7 +63,7 @@ Inductive term : Type :=
    The request is a term that describes the appraiser's
    desires for attestation. *)
 
-Definition request := Ensemble term. 
+Definition request := term. 
 Check request. 
 
 (*  The proposal is sent from target to appraiser. 
@@ -73,7 +76,7 @@ Check request.
     The top includes all possible terms in 
     the proposal and the bottom is no terms.*)
 
-Definition proposal := Ensemble term.
+Definition proposal := term.
 Definition top : Ensemble term := Full_set term. 
 Definition bottom : Ensemble term := Empty_set term. 
 
@@ -141,9 +144,27 @@ Module PosetTerm <: Poset.
   Fixpoint order' (t1 t2 : term) : Prop :=
     match t1 with
     | _ => False
-    end. 
+    end.
 
-  Definition order := order'. 
+ (*  Inductive term : Type :=
+| KIM : nat -> term
+| USM : nat -> term
+| AT : place -> term -> term
+| SEQ : term -> term -> term
+| PAR : term -> term -> term
+| SIG : term -> term.*) 
+
+  Inductive order'' (t1 t2 : term) : Prop :=
+  | KIM_ord : forall x y : nat, x < y ->
+                                (t1 = KIM x) ->
+                                (t2 = KIM y) ->
+                                order'' t1 t2
+  | SEQ_ord : forall t3 t4 t5 t6, order'' t3 t4 ->
+                                  order'' t5 t6 ->
+                                  (t1 = SEQ t3 t5) ->
+                                  (t2 = SEQ t4 t6) -> order'' t1 t2. 
+
+  Definition order := order''. 
   
   Notation " t1 '<<=' t2 " := (order t1 t2) (at level 40).
   
@@ -244,16 +265,89 @@ End PosetEnsemble.
    terms inside the proposal. The proposal is returned to the appraiser. *)
 
 
-Record app_policy := {
-                       app_privacy : place -> request -> Prop;
+    (* Inductive term : Type :=
+       | KIM : nat -> term
+       | USM : nat -> term
+       | HSH : term -> term
+       | NONCE : term -> term
+       | AT : place -> term -> term
+       | SEQ : term -> term -> term
+       | PAR : term -> term -> term
+       | SIG : term -> term.*)
+
+(* In Chlipala's TransitionSystems.v file, he uses Inductive definitions 
+   to implement his record. However, his record must be recursive (not obviously possible)
+   where our privacy policy doesn't need to be. *)
+
+Record target_policy := {
+                         tar_selection : place -> term -> term -> Prop;
+                         tar_privacy : place -> term -> Prop
+                        
+                       }.
+
+(* Let's say the target allows a hash of the virus checker. 
+   Let's also assume the virus checker is at place 3. *)
+Inductive tar_privacy_policy : place -> term -> Prop :=
+| USM_HSH_vc : forall (pl : place) (t : term), pl = 3 -> t = HSH (USM (pl)) -> tar_privacy_policy pl t.
+
+Inductive tar_selection_policy : place -> term -> term -> Prop :=
+| select_USM : forall (pl : place) (t1 t2 : term), pl = 3 -> t1 = (USM pl) -> tar_selection_policy pl t1 t2. 
+
+Definition tar_1 : target_policy := {|
+                                  tar_privacy :=  tar_privacy_policy;
+                                  tar_selection :=  tar_selection_policy
+                                |}.
+
+
+Inductive privacy_init : place -> term -> Prop :=
+| PrivacyAll : forall (pl : place) (t : term), privacy_init pl t.
+
+Inductive app_selection_ind : place -> proposal -> Prop :=
+| SelectAll : forall (pl : place) (pr : proposal), app_selection_ind pl pr.  
+
+Record app_policy := mkrec {
+                       app_privacy : place -> term -> Prop;
                        app_selection : place -> proposal -> term
                     }.
 
+(* We can create an instance of the 
+   Appriser's privacy policy *)
+
+Check place.
+Check PrivacyAll.
+
+(* This definition uses subset types to say 
+   the only term that fits the definition is KIM 3*)
+Definition privacy_sub : {t:term | t = (KIM 3)}. 
+Proof.
+  econstructor. reflexivity. 
+Qed.
+
+(* What if the proposal is empty? What is the fail case? *)
+
+Definition app_selection_def (pl : place) (pr : proposal) : term :=
+  (KIM 3). 
+
+Definition app_1 : app_policy := {|
+                                  app_privacy := privacy_init;
+                                  app_selection := app_selection_def
+                                |}. 
+                                                    
+
 Record target_policy := {
-                         tar_privacy : place -> proposal -> Prop;
-                         tar_selection : place -> request -> proposal
+                         tar_privacy : place -> term -> Prop;
+                         tar_selection : place -> term -> term -> Prop
                        }.
- 
+
+(**)
+
+
+(* Now, we will try to work on an attestation example. 
+   We will mimic the example found in "A Copland Attestation 
+   Manager" *)
+
+
+
 
 
 
