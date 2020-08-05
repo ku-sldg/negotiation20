@@ -47,24 +47,36 @@ Require Import Coq.Classes.RelationClasses.
    Right now, a place describes who is participating 
    in the negotiation. *)
 
-Definition place := nat.
+Definition Plc := nat.
+Definition ASP_ID := nat. 
 
-Inductive term : Type :=
-| KIM : nat -> term
-| USM : nat -> term
-| HSH : term -> term
-| NONCE : term -> term
-| AT : place -> term -> term
-| SEQ : term -> term -> term
-| PAR : term -> term -> term
-| SIG : term -> term.
+
+Inductive ASP: Set :=
+| CPY: ASP
+| ASPC: ASP_ID -> ASP
+| SIG: ASP
+| HSH: ASP.
+
+(** The method by which data is split is specified by a natural number. *)
+
+Inductive SP: Set :=
+| ALL
+| NONE.
+
+Definition Split: Set := (SP * SP).
+
+Inductive Term: Set :=
+| asp: ASP -> Term
+| att: Plc -> Term -> Term
+| lseq: Term -> Term -> Term                       
+| bseq: Split -> Term -> Term -> Term 
+| bpar: Split -> Term -> Term -> Term.
 
 (* A request is sent from appraiser to target. 
    The request is a term that describes the appraiser's
    desires for attestation. *)
 
-Definition request := term. 
-Check request. 
+Definition Request := Term. 
 
 (*  The proposal is sent from target to appraiser. 
     It includes the terms the target is willing 
@@ -76,122 +88,30 @@ Check request.
     The top includes all possible terms in 
     the proposal and the bottom is no terms.*)
 
-Definition proposal := term.
-Definition top : Ensemble term := Full_set term. 
-Definition bottom : Ensemble term := Empty_set term. 
+Definition Proposal := Ensemble Term.
+Definition Top : Ensemble Term := Full_set Term. 
+Definition Bottom : Ensemble Term := Empty_set Term. 
 
-Theorem top_includes_all : forall t:term, In term (top) t. 
+Theorem top_includes_all : forall t:Term, In Term (Top) t. 
  Proof. 
    intros.
    apply Full_intro.
  Qed.
 
-Theorem bottom_includes_none : forall t:term, ~(In term (Empty_set term) t). 
+Theorem bottom_includes_none : forall t:Term, ~(In Term (Empty_set Term) t). 
 Proof.
   intros.
   intros not. 
   inversion not. 
 Qed.
 
-
-(***** EXAMPLES WITH INTERESTION AND TERMS *****)
-Module Examples.
-  Check top. 
-  Check (KIM 3). 
-  Check (Singleton term (KIM 3)).  
-  Definition USM_3_KIM_3 := (Add term (Singleton term (USM 3)) (KIM 3)). 
-  Check (Add term (Singleton term (KIM 3)) (USM 3) (KIM 4)).
-
-  Definition proposal_1 := (Singleton _ (KIM 3)).
-  Definition request_1 := (Singleton _ (KIM 3)). 
-
-  Theorem test_intersection : Included _ proposal_1 request_1. 
-  Proof. 
-    unfold Included.   
-    unfold proposal_1. 
-    unfold request_1. 
-    intros. 
-    apply H.
-  Qed.
-
-  (* Do I want the proof to be of type True? *)
-  Check test_intersection.
-
-End Examples.
-
-
-(* 7/22 Dr. A suggested it may be easier to 
-        work on ordering just terms and not Ensembles*)
-Module PosetTerm <: Poset.
-
-  Definition t : Type := term.
-  Definition eq: t -> t -> Prop := (fun t1 t2 => t1 = t2).  
-
-  Hint Unfold eq.
-  
-  Notation " t1 '==' t2 " := (eq t1 t2) (at level 40).
-
-  Theorem eq_refl : forall x, x == x.
-  Proof. reflexivity. Qed.
-    
-  Theorem eq_sym : forall x y, x == y -> y == x.
-  Proof. intros x y. intros H. auto. Qed.
-    
-  Theorem eq_trans : forall x y z,  x == y -> y == z -> x == z.
-  Proof. intros x y z. intros H1 H2. unfold eq in *. subst. reflexivity. Qed.
-
-  (* got stuck here, had to move on. No proofs done. *)
-  Fixpoint order' (t1 t2 : term) : Prop :=
-    match t1 with
-    | _ => False
-    end.
-
- (*  Inductive term : Type :=
-| KIM : nat -> term
-| USM : nat -> term
-| AT : place -> term -> term
-| SEQ : term -> term -> term
-| PAR : term -> term -> term
-| SIG : term -> term.*) 
-
-  Inductive order'' (t1 t2 : term) : Prop :=
-  | KIM_ord : forall x y : nat, x < y ->
-                                (t1 = KIM x) ->
-                                (t2 = KIM y) ->
-                                order'' t1 t2
-  | SEQ_ord : forall t3 t4 t5 t6, order'' t3 t4 ->
-                                  order'' t5 t6 ->
-                                  (t1 = SEQ t3 t5) ->
-                                  (t2 = SEQ t4 t6) -> order'' t1 t2. 
-
-  Definition order := order''. 
-  
-  Notation " t1 '<<=' t2 " := (order t1 t2) (at level 40).
-  
-  Theorem order_refl : forall x y, x == y -> x <<= y.
-  Proof.
-    Admitted. 
-    
-  Theorem order_antisym: forall x y, x <<= y -> y <<= x -> x == y.
-  Proof.
-    Admitted. 
-
-  Theorem order_trans : forall x y z, x <<= y -> y <<= z ->  x <<= z.
-  Proof.
-    Admitted. 
-
-  
-End PosetTerm. 
-
-  
-(* How do i think use this module in a lattice? *)
 Module PosetEnsemble <: Poset.
   (* Module inherits from Poset which must prove 
      reflexivity, antisymmetry, and transitivity *)
 
 
   (* Equality for the Ensemble is defined if the two are the same set *)
-  Definition t : Type := Ensemble term.
+  Definition t : Type := Ensemble Term.
   Definition eq (t1 t2 : t) : Prop := (Same_set _ t1 t2).
 
   Hint Unfold eq.
@@ -221,7 +141,7 @@ Module PosetEnsemble <: Poset.
 
   (* Order implies one set of terms is greater than another set of terms. 
      So the set  with more elements is greater *)
-  Definition order := Included term. 
+  Definition order := Included Term. 
      
   Notation " t1 '<<=' t2 " := (order t1 t2) (at level 40).
   
@@ -264,116 +184,92 @@ End PosetEnsemble.
    satisfy the request and the privacy policy and places those 
    terms inside the proposal. The proposal is returned to the appraiser. *)
 
-
-    (* Inductive term : Type :=
-       | KIM : nat -> term
-       | USM : nat -> term
-       | HSH : term -> term
-       | NONCE : term -> term
-       | AT : place -> term -> term
-       | SEQ : term -> term -> term
-       | PAR : term -> term -> term
-       | SIG : term -> term.*)
-
 (* In Chlipala's TransitionSystems.v file, he uses Inductive definitions 
    to implement his record. However, his record must be recursive (not obviously possible)
    where our privacy policy doesn't need to be. *)
 
-Record target_policy := {
-                         tar_selection : place -> term -> term -> Prop;
-                         tar_privacy : place -> term -> Prop
-                        
-                       }.
+Record Tpolicy := {
+                   T_selection : Plc -> Term -> Term -> Prop;
+                   T_privacy : Plc -> Term -> Prop
+                 }.
 
-(* Let's say the target allows a hash of the virus checker. 
-   Let's also assume the virus checker is at place 3. *)
-Inductive tar_privacy_policy : place -> term -> Prop :=
-| USM_HSH_vc : forall (pl : place) (t : term), pl = 3 -> t = HSH (USM (pl)) -> tar_privacy_policy pl t.
+Record Apolicy := {
+                   A_privacy : Plc -> Term -> Prop;
+                   A_selection : Plc -> Term -> Proposal -> Term -> Prop
+                 }.
 
-Inductive tar_selection_policy : place -> term -> term -> Prop :=
-| select_USM : forall (pl : place) (t1 t2 : term), pl = 3 -> t1 = (USM pl) -> tar_selection_policy pl t1 t2. 
+Module VirusCheckerEx. 
+  (* Simplist example is to ask place 1 to return a hash of its virus checker *)
+  Definition req1 := att 1 (asp (HSH)). 
 
-Definition tar_1 : target_policy := {|
-                                  tar_privacy :=  tar_privacy_policy;
-                                  tar_selection :=  tar_selection_policy
-                                |}.
-
-
-Inductive privacy_init : place -> term -> Prop :=
-| PrivacyAll : forall (pl : place) (t : term), privacy_init pl t.
-
-Inductive app_selection_ind : place -> proposal -> Prop :=
-| SelectAll : forall (pl : place) (pr : proposal), app_selection_ind pl pr.  
-
-Record app_policy := mkrec {
-                       app_privacy : place -> term -> Prop;
-                       app_selection : place -> proposal -> term
-                    }.
-
-(* We can create an instance of the 
-   Appriser's privacy policy *)
-
-Check place.
-Check PrivacyAll.
-
-(* This definition uses subset types to say 
-   the only term that fits the definition is KIM 3*)
-Definition privacy_sub : {t:term | t = (KIM 3)}. 
-Proof.
-  econstructor. reflexivity. 
-Qed.
-
-(* What if the proposal is empty? What is the fail case? *)
-
-Definition app_selection_def (pl : place) (pr : proposal) : term :=
-  (KIM 3). 
-
-Definition app_1 : app_policy := {|
-                                  app_privacy := privacy_init;
-                                  app_selection := app_selection_def
-                                |}. 
-                                                    
-
-Record target_policy := {
-                         tar_privacy : place -> term -> Prop;
-                         tar_selection : place -> term -> term -> Prop
-                       }.
-
-(**)
+  (* Here are the possible terms (pt) the target sends in the proposal *)
+  Definition pt1 := att 1 (asp (HSH)).
+  Definition pt2 := lseq (att 1 (asp (HSH))) (asp (SIG)).
+  Definition pt3 := lseq (att 0 (asp (ASPC 0))) (lseq (bpar (ALL, NONE) (asp CPY) (asp HSH)) (asp SIG)).  
 
 
-(* Now, we will try to work on an attestation example. 
-   We will mimic the example found in "A Copland Attestation 
-   Manager" *)
+  (* The appraiser's privacy policy must allow for the hash request *)
+  Inductive A_PP : Plc -> Term -> Prop :=
+  | HSH_A_PP : forall (p : Plc) (t : Term), t = att 1 (asp HSH) -> A_PP p t. 
+
+  (* The target selects any terms that match hsh *)
+  (* Not entirely certain what t2 should be here, I just want a term that has an ASP in it? 
+     Is there an "IN" operation for sets? *)
+  Inductive T_SP : Plc -> Term -> Term -> Prop :=
+  | HSH1_T_SP : forall (p : Plc) (t1 t2: Term), t1 = att 1 (asp HSH) -> t2 = att 1 (asp HSH) -> T_SP p t1 t2 
+  | HSH2_T_SP : forall (p : Plc) (t1 t2: Term), t1 = att 1 (asp HSH) ->
+                                                t2 = lseq (att 1 (asp (HSH))) (asp (SIG)) ->
+                                                T_SP p t1 t2
+  | HSH3_T_SP : forall (p : Plc) (t1 t2: Term), t1 = att 1 (asp HSH) ->
+                                                t2 = lseq (att 0 (asp (ASPC 0))) (lseq (bpar (ALL, NONE) (asp CPY) (asp HSH)) (asp SIG)) ->
+                                                T_SP p t1 t2.
+
+  
+  (* The target must ensure all terms satisfy its 
+     Privacy Policy before sending the proposal back *)
+  Inductive T_PP : Plc -> Term -> Prop :=
+  | HSH_T_PP : forall (p : Plc) (t : Term), t = att 1 (asp HSH) -> T_PP p t. 
+
+  (* The appraiser looks at the proposal and selects the "best term"
+     Here, best is the one that matches most closely to the request. *)
+  (* Let t1 be the request, pr the proposal and t2 be the selected term. *)
+  (* Does the appraiser need to take into account the request here? *)
+  Inductive A_SP : Plc -> Term -> Proposal -> Term -> Prop :=
+  | HSH1_A_SP : forall (pl : Plc) (pr : Proposal) (t1 t2: Term), t1 = att 1 (asp HSH) ->
+                                                                 pr = Add _ (Add _ (Singleton _ pt1) pt2) pt3 ->
+                                                                 t2 = att 1 (asp HSH) ->
+                                                                 A_SP pl t1 pr t2.
+  
+  
+  Definition t_1 : Tpolicy := {|
+                                T_privacy := T_PP;
+                                T_selection := T_SP
+                              |}.
+
+  Definition a_1 : Apolicy := {|
+                               A_privacy := A_PP;
+                               A_selection := A_SP
+                             |}.
 
 
+  (* (* What if the proposal is empty? What is the fail case?
+     *) What can you prove about this?   
+     *)
 
-
-
-
-(********************* WHERE CURRENT WORK ENDS ****************)
-
-(* Definition acceptableTerms (p:place) (pol:(privacy nat)) : Type := {t:term | (pol p t)}. *) 
-
-
-Module Type Policy.
-
-  Parameter t : Type.
-  Parameter privacy : t -> t -> Prop.
-  Parameter selection : t -> t -> t.
-
-  Parameter min_priv : t -> t -> Prop. 
-
-End Policy.  
+End VirusCheckerEx. 
+  
+  (* This definition uses subset types to say 
+     the only term that fits the definition is KIM 3*)
+  Definition privacy_sub : {t:term | t = (KIM 3)}. 
+  Proof.
+    econstructor. reflexivity. 
+  Qed.
+                                    
 
 
 
 
-Module term_lattice <: Lattice <: Poset.
 
-  Definition t : Set := term.
-  Definition n : Type := nat. 
-  Definition eq : t -> t -> Prop := (fun t1 t2 => t1 = t2).
-  Definition order : n -> n -> Prop := (fun x y => x <= y).
 
-  Check n. 
+
+
