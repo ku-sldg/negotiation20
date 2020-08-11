@@ -202,7 +202,12 @@ Module VirusCheckerEx.
   (* Simplist example is to ask place 1 to return a hash of its virus checker *)
   Definition req1 := att 1 (asp (HSH)). 
 
-  (* Here are the possible terms (pt) the target sends in the proposal *)
+  (* Here are the possible terms (pt) the target sends in the proposal
+     pt1 returns the Copland phrase to hash the virus checker
+     pt2 asks place 1 to return a signed hash of the virus checker 
+     pt3 ensures freshness by introducing a nonce that becomes inital evidence 
+         passed to the @1 term where the nonce evidence is sent to CPY and 
+         the USM measures a hash of the virus checker *)
   Definition pt1 := att 1 (asp (HSH)).
   Definition pt2 := lseq (att 1 (asp (HSH))) (asp (SIG)).
   Definition pt3 := lseq (att 0 (asp (ASPC 0))) (lseq (bpar (ALL, NONE) (asp CPY) (asp HSH)) (asp SIG)).  
@@ -252,10 +257,39 @@ Module VirusCheckerEx.
                              |}.
 
 
-  (* (* What if the proposal is empty? What is the fail case?
-     *) What can you prove about this?   
-     *)
+  (* 1. What if the proposal is empty? What is the fail case?
+        - empty set is the fail case, we just need that case to prove false
+     2. What can you prove about this? What kinds of proofs can you do over relations?   
+     3. Do I need to write a function? If so, where does that function fit? I am 
+     thinking a function that selects the term for attestation based on the policies? 
+   *)
 
+  (* Lets introduce a term that would violate the target's privacy policy and prove that 
+     that term wouldn't work. *)
+  Definition na_1 := (att 1 (asp (ASPC 1))).
+
+  Lemma tar_allows_hsh_vc : T_PP (1) (att 1 (asp HSH)). 
+  Proof. 
+    apply HSH_T_PP. reflexivity.
+  Qed.
+
+  Lemma tar_notallow_cpy : T_PP (1) (att 1 (asp CPY)) -> False. 
+  Proof. 
+    intros. inversion H. discriminate H0.
+  Qed.
+
+  Lemma tar_notallow_cpy' : T_PP (1) (att 1 (asp CPY)).
+  Proof. 
+    apply HSH_T_PP.
+  Abort. 
+
+  (* I think we also need a function that selects the 
+     correct term in the proposal. *)
+
+
+
+
+  
 End VirusCheckerEx. 
   
   (* This definition uses subset types to say 
