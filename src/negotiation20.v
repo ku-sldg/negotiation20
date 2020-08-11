@@ -284,13 +284,25 @@ Module VirusCheckerEx.
   Abort. 
 
   (* I think we also need a function that selects the 
-     correct term in the proposal. *)
+     correct term in the proposal. But, we need to match 
+     on the equality relation. *)
+
+  Fixpoint selection (pl: Plc) (t: Term) (pr: Proposal) : Term :=
+    match (In _  pr t) with
+    | True  => (att 1 (asp HSH))    
+    end.
+
+  Lemma selection_correct : selection 1 req1 (Add _ (Add _ (Singleton _ pt1) pt2) pt3) = (att 1 (asp HSH)).  
+  Proof. 
+    simpl. reflexivity.
+  Qed. .
+    
+End VirusCheckerEx.
+
+  (* For the selection policy, we need to be able to say either a term is in 
+     the proposal or it's not in the proposal. *)
 
 
-
-
-  
-End VirusCheckerEx. 
   
   (* This definition uses subset types to say 
      the only term that fits the definition is KIM 3*)
