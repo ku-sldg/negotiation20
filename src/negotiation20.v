@@ -287,9 +287,81 @@ Module VirusCheckerEx.
      correct term in the proposal. But, we need to match 
      on the equality relation. *)
 
+  (* Prove that (In _ pr t) is decidable 
+     {A} + {B} is the same as saying sumbool A B
+
+
+
+   *)
+  Definition in_decidable : forall (pr:Proposal) (t:Term), {In _ pr t} + {~ In _ pr t}. 
+  Proof. 
+    intros pr t. induction t.
+    +  Fail destruct pr. left. simpl. Fail Reflect. Fail decide equality. 
+  Abort.
+
+  (* I don't think this inital definition of decidability will work. I think we need
+     to have some precondition to get to the hypothesis.
+
+     An example I found is here : https://www.cs.princeton.edu/courses/archive/fall07/cos595/stdlib/html/Coq.Lists.List.html *)
+
+  Theorem test_in:  In _ (Add _ (Add _ (Singleton _ pt1) pt2) pt3) pt1. 
+  Proof. 
+    simpl. unfold In. unfold Add. apply Union_introl.
+    apply Union_introl. unfold In. apply In_singleton.
+  Qed.
+  
+  Theorem test_included:  Included _ (Singleton _ pt1) (Add _ (Add _ (Singleton _ pt1) pt2) pt3). 
+  Proof. 
+    simpl. unfold Included.  unfold In. unfold Add. intros.
+    apply Union_introl. apply Union_introl. apply H.
+   Qed. 
+
+  (* We could have the first part be In implies that Included is possible *)
+
+  (* Equality of t is decidable 
+     proposals (ensembles) are functions 
+     may need to pull in functionally extensionality *)
+
+  (* Likely need a REFINE 
+     - need to find a way to recurse through the list. *)
+
+  Definition included_decidable : forall (t:Term) (pr:Proposal),
+      {Included _ pr (Singleton _ t)} + {pr <> (Singleton _ t)}. 
+  Proof. 
+    unfold Included.  unfold In. intros.
+  Abort.
+
+  Definition t_eq_dec : forall (x y : Term), {x = y} + {x <> y}. 
+  Proof.
+    repeat decide equality.
+  Defined.  
+
+  (* You cant match on the proposal, it's a function.
+     The ensemble is some function applied to a term, I need
+     to figure out a way to get the first element out of the proposal
+     to match on it. *)
+  
+  Definition In_dec : forall (t : Term) (pr : Proposal), 
+    {In _ pr (t)} + {~In _ pr (t)}. 
+    refine (fix f (t:Term) (pr : Proposal) : {In _ pr (t)} + {~In _ pr (t)} :=
+              match pr with
+                | _ => 
+                
+              
+
+    (* All the proofs just use decide equality. What is that!!! 
+      solves term of the form : Solves a goal of the form {term1=term2}+{~term1=term2}.*)
+
+    (* It's impossible to destruct the proposal so I dont think we can do this. 
+     If we were using lists, we would be able to prove that it's in the list
+     or it's not in the list but with Ensembles, I'm not sure what the proposal is*)
+  
+    (* then use an if then else 
+    if indecidable pr t then t else .... *)
+  
   Fixpoint selection (pl: Plc) (t: Term) (pr: Proposal) : Term :=
     match (In _  pr t) with
-    | True  => (att 1 (asp HSH))    
+    | True  => (att 1 (asp HSH))           
     end.
 
   Lemma selection_correct : selection 1 req1 (Add _ (Add _ (Singleton _ pt1) pt2) pt3) = (att 1 (asp HSH)).  
