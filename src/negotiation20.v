@@ -291,4 +291,4 @@ Module term_lattice <: Lattice <: Poset.
   Definition eq : t -> t -> Prop := (fun t1 t2 => t1 = t2).
   Definition order : n -> n -> Prop := (fun x y => x <= y).
 
-  Check n. 
+  Check n.
