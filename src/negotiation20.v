@@ -5,20 +5,18 @@ Implementation of our work surrounding the concept of negotiation
 Anna Fritz and Perry Alexander 
 
 
-Thoughts (7/30) 
-- We now have an ordering of terms based on length (the 
-  most preferred term is the most detailed) but now what. 
-  We have policy signatures but how do we put it all 
-  together? 
-- Does the PosetEnsemble need to be a Module or 
-  a Module Type? Nothing is going to inherit from 
-  PosetEnsemble but we need to be able to reuse it. 
-  How do we do that? 
-- Do we move onto making a lattice? 
+Thoughts (9/8/20)
 
-- What about an environment? Do we want that to 
-  better specify the system? Maybe that is how the 
-  situational awareness is implemented? 
+- Previously, we were using place in the record for the 
+  Target and Appraiser's policies as a way to identify 
+  who is communicating. When Negotiation enters this point, 
+  the Target and Appraiser should already know one another
+  through the SA. This would mean that the policies are 
+  developed after the SA is established. That is what 
+  we want because the policies are situationally dependent. 
+  - Policies result after the SA is established. 
+    They are situationally dependent and therefore have
+    some implicit notion of place. 
 
 ***************)
 
@@ -168,16 +166,35 @@ End PosetEnsemble.
 
 Module Decidability.
 
-  (* two terms are decidable. *)
+  (* Two terms are decidable. *)
   
   Definition t_eq_dec : forall (x y : Term), {x = y} + {x <> y}. 
   Proof.
     repeat decide equality.
   Defined. 
 
+  (* Either a term is in the proposal or not in the proposal *)
   Definition in_dec : forall (pr : Proposal) (t: Term),
-      {pr t} + {~(pr t)} -> {In _ pr t} + {~In _ pr t}. 
+      {pr t} + {~(pr t)} -> {In _ pr t} + {~(In _ pr t)}.
+  Proof. 
+    intros. inversion H.
+    + left. apply H0.
+    + right. apply H0. 
+  Defined. 
 
+  Check t_eq_dec (asp (HSH)) (asp (HSH)).
+
+  (* Definition in_dec' :  forall (pr : Proposal) (t: Term),
+      {pr t} + {~(pr t)} -> {In _ pr t} + {~(In _ pr t)}.
+    refine (fix f (t : Term) (pr : Proposal) : {pr t} + {~(pr t)} -> {In _ pr t} + {~(In _ pr t)} :=
+              match pr t with
+              |
+              |
+              end. 
+    intros. inversion H.
+    + left. apply H0.
+    + right. apply H0. 
+  Defined. *)
   
 End Decidability. 
   
@@ -214,7 +231,10 @@ Record Apolicy := {
                    A_selection : Plc -> Term -> Proposal -> Term -> Prop
                  }.
 
-Module VirusCheckerEx. 
+Module VirusCheckerEx.
+
+  Import Decidability.
+  
   (* Simplist example is to ask place 1 to return a hash of its virus checker *)
   Definition req1 := att 1 (asp (HSH)). 
 
@@ -226,42 +246,88 @@ Module VirusCheckerEx.
          the USM measures a hash of the virus checker *)
   Definition pt1 := att 1 (asp (HSH)).
   Definition pt2 := lseq (att 1 (asp (HSH))) (asp (SIG)).
-  Definition pt3 := lseq (att 0 (asp (ASPC 0))) (lseq (bpar (ALL, NONE) (asp CPY) (asp HSH)) (asp SIG)).  
+  Definition pt3 := lseq (att 0 (asp (ASPC 0))) (lseq (bpar (ALL, NONE) (asp CPY) (asp HSH)) (asp SIG)).
+
+  (* The following are terms that the target generates as a result of the request  with
+     but for some reason are unacceptable. 
+     
+     Lets say that att 1 (asp CPY) satisfies the target's privacy policy but 
+     isn't valueable for fulfilling the request. 
+
+     Lets say that lseq (att 2 (asp (HSH))) (asp (SIG)) and  att 2 (asp HSH) 
+     violate the target's privacy policy because it wants to keep the information 
+     at place 2 private. 
+
+   *)
+  Definition npt1 := (att 1 (asp (ASPC 1))).
+  Definition npt2 := lseq (att 2 (asp (HSH))) (asp (SIG)).
+  Definition npt3 := att 2 (asp HSH). 
 
 
-  (* The appraiser's privacy policy must allow for the hash request *)
+  (* The proposal would include some not possible terms and all possible terms *)
+  Definition pr1 := Add _ (Add _ (Add _ (Add _ (Singleton _ pt1) pt2) pt3) npt3) npt2.  
+
+  (* The appraiser's privacy policy must allow for the HSH request *)
   Inductive A_PP : Plc -> Term -> Prop :=
   | HSH_A_PP : forall (p : Plc) (t : Term), t = att 1 (asp HSH) -> A_PP p t. 
 
-  (* The target selects any terms that match hsh *)
-  (* Not entirely certain what t2 should be here, I just want a term that has an ASP in it? 
-     Is there an "IN" operation for sets? *)
+  (* This relation is the selection policy. Lets say the target selects any protocols with a HSH term  *)
   Inductive T_SP : Plc -> Term -> Term -> Prop :=
-  | HSH1_T_SP : forall (p : Plc) (t1 t2: Term), t1 = att 1 (asp HSH) -> t2 = att 1 (asp HSH) -> T_SP p t1 t2 
+  | HSH1_T_SP : forall (p : Plc) (t1 t2: Term), t1 = att 1 (asp HSH) ->
+                                                (* pt1 *)
+                                                t2 = att 1 (asp HSH) ->
+                                                T_SP p t1 t2 
   | HSH2_T_SP : forall (p : Plc) (t1 t2: Term), t1 = att 1 (asp HSH) ->
+                                                (* pt2 *)
                                                 t2 = lseq (att 1 (asp (HSH))) (asp (SIG)) ->
                                                 T_SP p t1 t2
   | HSH3_T_SP : forall (p : Plc) (t1 t2: Term), t1 = att 1 (asp HSH) ->
+                                                (* pt3 *)
                                                 t2 = lseq (att 0 (asp (ASPC 0))) (lseq (bpar (ALL, NONE) (asp CPY) (asp HSH)) (asp SIG)) ->
-                                                T_SP p t1 t2.
-
+                                                T_SP p t1 t2
+  | HSH4_T_SP : forall (p : Plc) (t1 t2: Term), t1 = att 1 (asp HSH) ->
+                                                (* npt2 *)
+                                                t2 = lseq (att 2 (asp (HSH))) (asp (SIG)) ->
+                                                T_SP p t1 t2                                                 
+  | HSH5_T_SP : forall (p : Plc) (t1 t2: Term), t1 = att 1 (asp HSH) ->
+                                                (* npt3 *)
+                                                t2 = att 2 (asp HSH) ->
+                                                T_SP p t1 t2. 
   
-  (* The target must ensure all terms satisfy its 
-     Privacy Policy before sending the proposal back *)
+  (* Lets assume the target's privacy policy will only allow measuments from place 1 and place 0 *)
   Inductive T_PP : Plc -> Term -> Prop :=
-  | HSH_T_PP : forall (p : Plc) (t : Term), t = att 1 (asp HSH) -> T_PP p t. 
+  | PL0_T_PP : forall (p : Plc) (t1 t2 : Term), t1 = (att 0 (t2)) -> T_PP p t1
+  | PL1_T_PP : forall (p : Plc) (t1 t2 : Term), t1 = (att 1 (t2)) -> T_PP p t1. 
 
+  (* Here we need some function for privacy policy. We have the policy written out but 
+     where do we actually generate the proposal? I think this is the main problem 
+     because we aren't actually generating anything so we can't select from anything. *)
+
+  (* WHAT: 
+     - What are we trying to do? 
+       - Trying to take a term (?) or an ensemble of terms (?) 
+     MISSING: 
+     - Where what the proposal (or the precursor to the proposal)
+       generated? 
+       - We need to pattern match on that*)
+  Fixpoint T_Select_Proposal (t:Term) : Ensemble Term:=
+    match t with
+    | _ => Bottom
+    end.
+  
+  
+  
+  
   (* The appraiser looks at the proposal and selects the "best term"
      Here, best is the one that matches most closely to the request. *)
-  (* Let t1 be the request, pr the proposal and t2 be the selected term. *)
-  (* Does the appraiser need to take into account the request here? *)
   Inductive A_SP : Plc -> Term -> Proposal -> Term -> Prop :=
   | HSH1_A_SP : forall (pl : Plc) (pr : Proposal) (t1 t2: Term), t1 = att 1 (asp HSH) ->
                                                                  pr = Add _ (Add _ (Singleton _ pt1) pt2) pt3 ->
                                                                  t2 = att 1 (asp HSH) ->
                                                                  A_SP pl t1 pr t2.
   
-  
+  (* We situationally define the privacy policy and the selection policy for the 
+     target an appraiser by implementing an instance of the record. *)
   Definition t_1 : Tpolicy := {|
                                 T_privacy := T_PP;
                                 T_selection := T_SP
@@ -273,35 +339,41 @@ Module VirusCheckerEx.
                              |}.
 
 
-  (* 1. What if the proposal is empty? What is the fail case?
-        - empty set is the fail case, we just need that case to prove false
-     2. What can you prove about this? What kinds of proofs can you do over relations?   
-     3. Do I need to write a function? If so, where does that function fit? I am 
-     thinking a function that selects the term for attestation based on the policies? 
-   *)
-
   (* Lets introduce a term that would violate the target's privacy policy and prove that 
      that term wouldn't work. *)
-  Definition na_1 := (att 1 (asp (ASPC 1))).
 
   Lemma tar_allows_hsh_vc : T_PP (1) (att 1 (asp HSH)). 
   Proof. 
-    apply HSH_T_PP. reflexivity.
+    apply PL1_T_PP. . reflexivity.
   Qed.
 
-  Lemma tar_notallow_cpy : T_PP (1) (att 1 (asp CPY)) -> False. 
+  (* Interesting proof because the target allows this term to be selected 
+     but it doesn't allow it in the proposal becuase 
+     it violates the target's privacy policy. *) 
+  Lemma tar_notallow_cpy : T_PP (2) (att 2 (asp HSH)). 
   Proof. 
-    intros. inversion H. discriminate H0.
+    apply PL1_T_PP. reflexivity.
   Qed.
 
-  Lemma tar_notallow_cpy' : T_PP (1) (att 1 (asp CPY)).
+  
+  Lemma tar_notallow_cpy' : T_PP (1) (att 2 (asp CPY)).
   Proof. 
     apply HSH_T_PP.
-  Abort. 
+  Abort.
+
+  (* Now we would like to have a function that selects the term for the proposal *)
+  
+  Check in_dec (pr1) (pt1).
+  Compute in_dec (pr1) (pt1). 
+
+  (* Now I have decidability. I want to match on the term if it's in the proposal or 
+     not and generate a list of terms. This is best done with refine. *)
+
   
   Fixpoint selection (pl: Plc) (t: Term) (pr: Proposal) : Term :=
-    match (In _  pr t) with
-    | True  => (att 1 (asp HSH))           
+    match (in_dec  pr t) with
+    | Left _ _   => (att 1 (asp HSH))
+    | _ => (att 1 (asp HSH))
     end.
 
   Lemma selection_correct : selection 1 req1 (Add _ (Add _ (Singleton _ pt1) pt2) pt3) = (att 1 (asp HSH)).  
