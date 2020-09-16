@@ -1,3 +1,5 @@
+Set Implicit Arguments.
+
 Module DepCopland.
 
   Definition place : Type := nat.
@@ -19,11 +21,15 @@ Module DepCopland.
   | TSeq : forall e f, term e -> term f -> term (ESeq e f)
   | TPar : forall e f, term e -> term f -> term (EPar e f).
 
-  (* Each of these types captures the kind of thing evaluting results in.*)
+  (* Each of these types captures the kind of thing evaluting results in. 
+     Note that THash obfuscates results by one-way encryption which is
+     exactly what we want. *)  
   Check TMeas.
-  Check THash _ TMeas.
-  Check THash _ (TSig _ 2 TMeas).
-  Check (TSig _ 2 TMeas).
+  Check (TSeq (TSig 1 TMeas) (TPar TMeas (TPar TMeas TMeas))).
+  Check (TSeq (TSig 1 TMeas) (THash (TPar TMeas (TPar TMeas TMeas)))).
+  Check THash TMeas.
+  Check THash (TSig 2 TMeas).
+  Check (TSig 2 TMeas).
 
   (* A function that checks signatures.  Basically, if the signed thing is
      signed by the provided place, the check is true. *)
@@ -33,15 +39,15 @@ Module DepCopland.
   (* This will not typecheck.  Trying to check the signature of a thing
      that is not signed. Note this is caught in _typechecking_ *)
   
-  (* Example e0: checkSig _ _ 1 (THash _ TMeas). *)
+  (* Example e0: checkSig 1 (THash TMeas). *)
   
-  Example e1: checkSig _ _ 1 (TSig _ 1 TMeas).
+  Example e1: checkSig 1 (TSig 1 TMeas).
   Proof.
     unfold checkSig.
     congruence.
   Qed.
     
-  Example e2: checkSig _ _ 2 (TSig _ 1 TMeas) -> False.
+  Example e2: checkSig 2 (TSig 1 TMeas) -> False.
   Proof.
     unfold checkSig.
     intros.
