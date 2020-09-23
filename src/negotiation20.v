@@ -5,18 +5,13 @@ Implementation of our work surrounding the concept of negotiation
 Anna Fritz and Perry Alexander 
 
 
-Thoughts (9/8/20)
+Thoughts (9/11/20)
 
-- Previously, we were using place in the record for the 
-  Target and Appraiser's policies as a way to identify 
-  who is communicating. When Negotiation enters this point, 
-  the Target and Appraiser should already know one another
-  through the SA. This would mean that the policies are 
-  developed after the SA is established. That is what 
-  we want because the policies are situationally dependent. 
-  - Policies result after the SA is established. 
-    They are situationally dependent and therefore have
-    some implicit notion of place. 
+- How do we take terms to capabilites?? 
+  - where does the target keep the list of everything it can generate? 
+  - Do we need some kind of function that could take a term (request) and 
+    match all possible terms that could be generated? 
+    
 
 ***************)
 
@@ -70,7 +65,8 @@ Inductive Term: Set :=
 | bseq: Split -> Term -> Term -> Term 
 | bpar: Split -> Term -> Term -> Term.
 
-(* A request is sent from appraiser to target. 
+
+  (* A request is sent from appraiser to target. 
    The request is a term that describes the appraiser's
    desires for attestation. *)
 
@@ -231,41 +227,12 @@ Record Apolicy := {
                    A_selection : Plc -> Term -> Proposal -> Term -> Prop
                  }.
 
-Module VirusCheckerEx.
+Module VirusCheckerRelations.
 
   Import Decidability.
   
   (* Simplist example is to ask place 1 to return a hash of its virus checker *)
-  Definition req1 := att 1 (asp (HSH)). 
-
-  (* Here are the possible terms (pt) the target sends in the proposal
-     pt1 returns the Copland phrase to hash the virus checker
-     pt2 asks place 1 to return a signed hash of the virus checker 
-     pt3 ensures freshness by introducing a nonce that becomes inital evidence 
-         passed to the @1 term where the nonce evidence is sent to CPY and 
-         the USM measures a hash of the virus checker *)
-  Definition pt1 := att 1 (asp (HSH)).
-  Definition pt2 := lseq (att 1 (asp (HSH))) (asp (SIG)).
-  Definition pt3 := lseq (att 0 (asp (ASPC 0))) (lseq (bpar (ALL, NONE) (asp CPY) (asp HSH)) (asp SIG)).
-
-  (* The following are terms that the target generates as a result of the request  with
-     but for some reason are unacceptable. 
-     
-     Lets say that att 1 (asp CPY) satisfies the target's privacy policy but 
-     isn't valueable for fulfilling the request. 
-
-     Lets say that lseq (att 2 (asp (HSH))) (asp (SIG)) and  att 2 (asp HSH) 
-     violate the target's privacy policy because it wants to keep the information 
-     at place 2 private. 
-
-   *)
-  Definition npt1 := (att 1 (asp (ASPC 1))).
-  Definition npt2 := lseq (att 2 (asp (HSH))) (asp (SIG)).
-  Definition npt3 := att 2 (asp HSH). 
-
-
-  (* The proposal would include some not possible terms and all possible terms *)
-  Definition pr1 := Add _ (Add _ (Add _ (Add _ (Singleton _ pt1) pt2) pt3) npt3) npt2.  
+  Definition req1 := att 1 (asp (HSH)).   
 
   (* The appraiser's privacy policy must allow for the HSH request *)
   Inductive A_PP : Plc -> Term -> Prop :=
@@ -299,32 +266,16 @@ Module VirusCheckerEx.
   | PL0_T_PP : forall (p : Plc) (t1 t2 : Term), t1 = (att 0 (t2)) -> T_PP p t1
   | PL1_T_PP : forall (p : Plc) (t1 t2 : Term), t1 = (att 1 (t2)) -> T_PP p t1. 
 
-  (* Here we need some function for privacy policy. We have the policy written out but 
-     where do we actually generate the proposal? I think this is the main problem 
-     because we aren't actually generating anything so we can't select from anything. *)
-
-  (* WHAT: 
-     - What are we trying to do? 
-       - Trying to take a term (?) or an ensemble of terms (?) 
-     MISSING: 
-     - Where what the proposal (or the precursor to the proposal)
-       generated? 
-       - We need to pattern match on that*)
-  Fixpoint T_Select_Proposal (t:Term) : Ensemble Term:=
-    match t with
-    | _ => Bottom
-    end.
-  
-  
-  
   
   (* The appraiser looks at the proposal and selects the "best term"
      Here, best is the one that matches most closely to the request. *)
   Inductive A_SP : Plc -> Term -> Proposal -> Term -> Prop :=
-  | HSH1_A_SP : forall (pl : Plc) (pr : Proposal) (t1 t2: Term), t1 = att 1 (asp HSH) ->
-                                                                 pr = Add _ (Add _ (Singleton _ pt1) pt2) pt3 ->
+  | HSH1_A_SP : forall (pl : Plc) (pr : Proposal) (r t2: Term),  r = att 1 (asp HSH) ->
+                                                                 pr = Add _ (Add _ (Singleton _  (att 1 (asp (HSH))))
+                                                                          (lseq (att 1 (asp (HSH))) (asp (SIG))))
+                                                                          (lseq (att 0 (asp (ASPC 0))) (lseq (bpar (ALL, NONE) (asp CPY) (asp HSH)) (asp SIG))) ->
                                                                  t2 = att 1 (asp HSH) ->
-                                                                 A_SP pl t1 pr t2.
+                                                                 A_SP pl r pr t2.
   
   (* We situationally define the privacy policy and the selection policy for the 
      target an appraiser by implementing an instance of the record. *)
@@ -337,56 +288,82 @@ Module VirusCheckerEx.
                                A_privacy := A_PP;
                                A_selection := A_SP
                              |}.
+    
+End VirusCheckerRelations.
+
+Module VirusCheckFunction. 
+
+  Import VirusCheckerRelations. 
+
+  Check req1. 
+  (*att 1 (asp (HSH))*) 
 
 
-  (* Lets introduce a term that would violate the target's privacy policy and prove that 
-     that term wouldn't work. *)
+  (* The terms are everything that is possible from the data structure *)
 
-  Lemma tar_allows_hsh_vc : T_PP (1) (att 1 (asp HSH)). 
-  Proof. 
-    apply PL1_T_PP. . reflexivity.
-  Qed.
+  Definition terms := Term.
+  Definition capabilities := Term.
 
-  (* Interesting proof because the target allows this term to be selected 
-     but it doesn't allow it in the proposal becuase 
-     it violates the target's privacy policy. *) 
-  Lemma tar_notallow_cpy : T_PP (2) (att 2 (asp HSH)). 
-  Proof. 
-    apply PL1_T_PP. reflexivity.
-  Qed.
+  (* capabilites are a set *)
+  Check capabilities.
 
+  (* The capabilites are all possible terms the target can generate *)
+
+  (* Here are the possible terms (pt) the target sends in the proposal
+     c1 returns the Copland phrase to hash the virus checker
+     c2 asks place 1 to return a signed hash of the virus checker 
+     c3 ensures freshness by introducing a nonce that becomes inital evidence 
+         passed to the @1 term where the nonce evidence is sent to CPY and 
+         the USM measures a hash of the virus checker 
+     c4 should not be selected as it doesnt fulfill the request 
+     c5-c6 violate the target's privacy policy. The target cannot 
+           send information about place 2. 
+   *)
+
+  (* Do i want capabilites to be an inductive structure then? *)
+
+
+  Inductive cap' : Set :=
+  |  c1' : cap'.
+
+   Inductive cap'' : Term -> Prop :=
+   | c1'' : cap'' (att 1 (asp (HSH)))
+   | c2'' : cap'' (lseq (att 1 (asp (HSH))) (asp (SIG)))
+   | c3'' : cap'' (lseq (att 0 (asp (ASPC 0))) (lseq (bpar (ALL, NONE) (asp CPY) (asp HSH)) (asp SIG)))
+   | c4'' : cap'' (att 1 (asp (ASPC 1)))
+   | c5'' : cap'' (lseq (att 2 (asp (HSH))) (asp (SIG)))
+   | c6'' : cap'' ( att 2 (asp HSH)).
+
+   Check cap''. 
+
+   
+
+   (*Now I dont think you can combine terms in the cap'' in an ensemble *)
   
-  Lemma tar_notallow_cpy' : T_PP (1) (att 2 (asp CPY)).
-  Proof. 
-    apply HSH_T_PP.
-  Abort.
+  Definition c1 := att 1 (asp (HSH)).
+  Definition c2 := lseq (att 1 (asp (HSH))) (asp (SIG)).
+  Definition c3 := lseq (att 0 (asp (ASPC 0))) (lseq (bpar (ALL, NONE) (asp CPY) (asp HSH)) (asp SIG)).
+  Definition c4 := (att 1 (asp (ASPC 1))).
+  Definition c5 := lseq (att 2 (asp (HSH))) (asp (SIG)).
+  Definition c6 := att 2 (asp HSH). 
 
-  (* Now we would like to have a function that selects the term for the proposal *)
-  
-  Check in_dec (pr1) (pt1).
-  Compute in_dec (pr1) (pt1). 
-
-  (* Now I have decidability. I want to match on the term if it's in the proposal or 
-     not and generate a list of terms. This is best done with refine. *)
-
-  
-  Fixpoint selection (pl: Plc) (t: Term) (pr: Proposal) : Term :=
-    match (in_dec  pr t) with
-    | Left _ _   => (att 1 (asp HSH))
-    | _ => (att 1 (asp HSH))
+  Definition cap_set (r:Request) : Ensemble capabilities :=
+    match r with
+    | att 1 (asp (HSH)) =>  (Add _ (Add _  (Add _ (Add _ (Add _ (Singleton _ c1'') c2'') c3'') c4'') c5'') c6'')
+    | _ => Bottom
     end.
 
-  Lemma selection_correct : selection 1 req1 (Add _ (Add _ (Singleton _ pt1) pt2) pt3) = (att 1 (asp HSH)).  
-  Proof. 
-    simpl. reflexivity.
-  Qed. .
-    
-End VirusCheckerEx.
+  (* Next, we need to turn capabilites into selectable terms 
+     This is where we get rid of c6 
+   *)
 
-  (* For the selection policy, we need to be able to say either a term is in 
-     the proposal or it's not in the proposal. *)
-
-
+   Definition select_set (c : Term) : Ensemble Term :=
+    match c with
+    | att 1 (asp (HSH)) =>  (Singleton _ c1)
+    | c2 => Bottom
+    | c3 => Bottom 
+    end.
+  
   
   (* This definition uses subset types to say 
      the only term that fits the definition is KIM 3*)
