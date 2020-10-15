@@ -167,4 +167,33 @@ Module DepCopland.
     inversion H.
   Qed.
   
+  Fixpoint privPolicy (e:evidence): Prop :=
+    match e with
+    | EHash => True
+    | EBlob _ => False
+    | EPrivKey _ => False
+    | EPubKey _ => True
+    | ESessKey _ => False
+    | ESig e' _ => privPolicy e'
+    | ECrypt _ _ => True
+    | ESeq l r => privPolicy l /\ privPolicy r
+    | EPar l r => privPolicy l /\ privPolicy r
+    end.
+                                   
+  Definition selectDep e (t:term e):term e:=
+    match t as q in (term e) return (match e with
+                                | EHash => term e
+                                | EBlob n => term e
+                                | EPrivKey _ => term e
+                                | EPubKey _ => term e
+                                | ESessKey _ => term e
+                                | ESig _ _ => term e
+                                | ECrypt _ _ => term e
+                                | ESeq l r => term e
+                                | EPar l r => term e
+                                end) with
+    | THash _ => THash
+    | TMeas e => TMeas (EBlob 0)
+    end.
+  
 End DepCopland.
