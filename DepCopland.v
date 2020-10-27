@@ -240,6 +240,27 @@ Module DepCopland.
   Compute privPolicyType (ESig (EBlob Green) AA).
   Compute privPolicyType (ECrypt (EBlob Red) AA).
 
+  (* [policyCheck] returns [Some] if policy is satisfied and [None] otherwise.
+     This is very crude and doesn't work, but is getting closer.
+   *)
+  Fixpoint policyCheck e (t:term e) :=
+    match t with
+    | THash t' => Some EHash t'
+    | TMeas ev => match ev in evidence return (privPolicyType ev) with
+                 | EBlob Green => Some (EBlob Green)
+                 | EBlob Red => None
+                 | EHash => Some EHash
+                 | EPrivKey _ => None
+                 | EPubKey p => Some (EPubKey p)
+                 | ESessKey n => None
+                 | ECrypt p e => Some (ECrypt p e)
+                 | ESig (EBlob Red) p => None
+                 | ESig (EBlob Green) p => Some (EBlob Green)
+                 end
+    | _ => None
+    end.
+                                             
+  
   (* This is an attempt to mimic CPDT that is not working.  I believe due to
      the inability to match on [e], but I'm not 100% certain.
    *)
