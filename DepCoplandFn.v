@@ -250,6 +250,7 @@ Module DepCopland.
     fun p => TMeas (e).
 
   Compute selectDepFn (THash (TMeas (EBlob green))).
+  Compute selectDepFn (THash (TMeas (EBlob red))). 
   
   Example s1: (selectDepFn (THash (TMeas (EBlob green))) pp0) = TMeas EHash.
   auto. Qed.
@@ -265,4 +266,20 @@ Module DepCopland.
   
   Definition goodTerm := forall e, {t:(term e) | privPolicyT t = true}.
 
+  Check goodTerm.
+
+  Lemma redfalse : false <> privPolicyT (TMeas (EBlob red)) -> False. 
+  Proof.
+    intros. 
+    unfold privPolicyT in H. unfold privPolicy in H.
+    destruct H. reflexivity.
+  Qed. 
+
+  Definition select_strong e (t: term e) : false <> privPolicyT (TMeas (EBlob red)) -> term e := 
+    match t with
+    | (TMeas (EBlob red)) => fun pf: (false <> privPolicyT (TMeas (EBlob red))) => match redfalse pf with end
+    | _ => fun _ => t
+    end.
+    
+  
 End DepCopland.
