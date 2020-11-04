@@ -258,28 +258,31 @@ Module DepCopland.
     themselves?  No proof, no term.
    *)
 
-  Inductive term' : evidence -> Type :=
-  | TMeas' : forall e, term' e
-  | THash' : forall e, term' e -> privPolicySat EHash -> term' EHash
-  | TCrypt' : forall e p, term' e -> privPolicySat (ECrypt e p) -> term' (ECrypt e p)
-  | TSig' : forall e p, term' e -> privPolicySat e -> term' (ESig e p)
-  | TSeq' : forall e f,
-      term' e -> privPolicySat e -> term' f -> privPolicySat f -> term' (ESeq e f)
-  | TPar' : forall e f,
-      term' e -> privPolicySat e -> term' f -> privPolicySat f -> term' (EPar e f).
+  Inductive term' : place -> evidence -> Type :=
+  | TMeas' : forall p e, term' p e
+  | THash' : forall p e, term' p e -> privPolicySat EHash -> term' p EHash
+  | TCrypt' :
+      forall p e, term' p e -> privPolicySat (ECrypt e p) -> term' p (ECrypt e p)
+  | TSig'(p:place):
+      forall p e, term' p e -> privPolicySat (ESig e p) -> term' p (ESig e p)
+  | TSeq' : forall p e pe pf f,
+      term' pe e -> privPolicySat e -> term' pf f -> privPolicySat f -> term' p (ESeq e f)
+  | TPar' : forall p e pe pf f,
+      term' pe e -> privPolicySat e -> term' pf f -> privPolicySat f -> term' p (EPar e f).
 
   Lemma l1: privPolicySat (EBlob green). unfold privPolicySat; auto. Qed.
   Lemma l2: privPolicySat (ECrypt (EBlob red) AA). unfold privPolicySat; auto. Qed.
   Lemma l3: privPolicySat EHash. unfold privPolicySat; auto. Qed.
   
-  Compute TMeas' (EBlob green).
-  Compute TMeas' (EBlob red).
-  Compute THash' (TMeas' (EBlob red)) l3.
-  Compute TCrypt' (TMeas' (EBlob red)) l2.
-  Compute TSig' AA (TMeas' (EBlob green)) l1.
-  Compute TSig' AA (TMeas' (EBlob red)). (* No proof [EBlob red] satisfies policy *)
-  Compute TSeq' (TSig' AA (TMeas' (EBlob green)) l1) l1
-          (TCrypt' (TMeas' (EBlob red)) l2) l2.
+  Compute TMeas' AA (EBlob green).
+  Compute TMeas' AA (EBlob red).
+  Compute THash' (TMeas' AA (EBlob red)) l3.
+  Check TCrypt'.
+  Compute TCrypt' (TMeas' AA (EBlob red)) l2.
+  Compute TSig' AA (TMeas' BB (EBlob green)) l1.
+  Compute TSig' BB (TMeas' AA (EBlob red)). (* No proof [EBlob red] satisfies policy *)
+  Compute TSeq' AA (TSig' BB (TMeas' AA (EBlob green)) l1) l1
+          (TCrypt' (TMeas' BB (EBlob red)) l2) l2.
 
   (*
   This would require every term to have a proof that it's evidence
