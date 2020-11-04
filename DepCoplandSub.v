@@ -253,40 +253,92 @@ Module DepCopland.
 
   Compute selectDep''' (THash (TMeas (EBlob green))).
 
+End DepCopland.
   (*
     What if we include privacy policy satisfaction proofs in the terms
     themselves?  No proof, no term.
    *)
 
-  Inductive term' : place -> evidence -> Type :=
-  | TMeas' : forall p e, term' p e
-  | THash' : forall p e, term' p e -> privPolicySat EHash -> term' p EHash
-  | TCrypt' :
-      forall p e, term' p e -> privPolicySat (ECrypt e p) -> term' p (ECrypt e p)
-  | TSig'(p:place):
-      forall p e, term' p e -> privPolicySat (ESig e p) -> term' p (ESig e p)
-  | TSeq' : forall p e pe pf f,
-      term' pe e -> privPolicySat e -> term' pf f -> privPolicySat f -> term' p (ESeq e f)
-  | TPar' : forall p e pe pf f,
-      term' pe e -> privPolicySat e -> term' pf f -> privPolicySat f -> term' p (EPar e f).
 
-  Lemma l1: privPolicySat (EBlob green). unfold privPolicySat; auto. Qed.
-  Lemma l2: privPolicySat (ECrypt (EBlob red) AA). unfold privPolicySat; auto. Qed.
-  Lemma l3: privPolicySat EHash. unfold privPolicySat; auto. Qed.
-  
-  Compute TMeas' AA (EBlob green).
-  Compute TMeas' AA (EBlob red).
-  Compute THash' (TMeas' AA (EBlob red)) l3.
-  Check TCrypt'.
-  Compute TCrypt' (TMeas' AA (EBlob red)) l2.
-  Compute TSig' AA (TMeas' BB (EBlob green)) l1.
-  Compute TSig' BB (TMeas' AA (EBlob red)). (* No proof [EBlob red] satisfies policy *)
-  Compute TSeq' AA (TSig' BB (TMeas' AA (EBlob green)) l1) l1
-          (TCrypt' (TMeas' BB (EBlob red)) l2) l2.
+Module IndexedCopland.
+
+  (* Define three places named [AA], [BB], and [CC] *)
+  Inductive place : Type :=
+  | AA : place
+  | BB : place
+  | CC : place.
+
+  (* Define two classification levels.  [red] is classified and [green] is
+     unclassified. *)
+  Inductive class : Type :=
+  | red : class
+  | green : class.
+
+  Definition eq_class_dec: forall x y:class, {x=y}+{x<>y}.
+  Proof.
+    repeat decide equality.
+  Defined.
+
+  Inductive evidence : place -> Type :=
+  | EBlob : forall p, class -> evidence p
+  | EHash : forall p, evidence p
+  | EPrivKey : forall p, evidence p
+  | EPubKey : forall p, evidence p
+  | ESessKey : forall p, nat -> evidence p
+  | ECrypt : forall p q, evidence q -> place -> evidence p
+  | ESig : forall p q, evidence q -> place -> evidence p
+  | ESeq : forall p q r, evidence p -> evidence q -> evidence r
+  | EPar : forall p q r, evidence p -> evidence q -> evidence r.
 
   (*
-  This would require every term to have a proof that it's evidence
-  preserves privacy policy.  That can be done with [refine] in constructions.
-   *)
+  Definition eq_ev_dec: forall p, forall x y:evidence p, {x=y}+{x<>y}.
+  Proof.
+    intros p x y.
+    repeat decide equality.
+  Defined.
+  *) 
+
+  Fixpoint privPolicy p (e:evidence p): Prop :=
+    match e with
+    | EHash _ => True
+    | EBlob _ red => True
+    | EBlob _ green => True
+    | EPrivKey _ => False
+    | EPubKey _ => True
+    | ESessKey _ _ => False
+    | ESig _ e' _ => privPolicy e'
+    | ECrypt _ _ _ => True
+    | ESeq _ l r => (privPolicy l) /\ (privPolicy r)
+    | EPar _ l r => (privPolicy l) /\ (privPolicy r)
+    end.
     
-End DepCopland.
+  Inductive term p : (evidence p) -> Type :=
+  | TMeas : forall e, term e
+  | THash : forall e, term e -> privPolicy (EHash p) -> term (EHash p)
+  | TCrypt :
+      forall e q, term e -> privPolicy (ECrypt p e q) -> term (ECrypt p e q)
+  | TSig :
+      forall e q, term e -> privPolicy (ESig p e q) -> term (ESig p e q)
+  | TSeq : forall e f,
+      term e -> privPolicy e -> term f -> privPolicy f -> term (ESeq p e f)
+  | TPar : forall e f,
+      term e -> privPolicy e -> term f -> privPolicy f -> term (EPar p e f).
+
+  Lemma l1: forall p, privPolicy (EBlob p green). unfold privPolicy; auto. Qed.
+  Lemma l2: forall p q, privPolicy (ECrypt q (EBlob p red) AA). unfold privPolicy; auto. Qed.
+  Lemma l3: forall p, privPolicy (EHash p). unfold privPolicy; auto. Qed.
+
+  (* Good AST *)
+  Compute TMeas (EBlob AA green).
+  Compute TMeas (EBlob AA red).
+  Compute THash (TMeas (EBlob AA red)) (l3 AA).
+  Compute TCrypt (TMeas (EBlob AA red)) (l2 AA AA).
+  Compute TSig AA (TMeas (EBlob AA green)) (l1 AA).
+  Compute TSeq (TSig BB (TMeas (EBlob BB green)) (l1 BB)) (l1 BB)
+               (TCrypt (TMeas (EBlob BB red)) (l2 BB BB)) (l2 BB BB).
+
+  (* Bad AST *)
+  Compute TSig BB (TMeas (EBlob AA red)).
+
+End IndexedCopland.
+    
