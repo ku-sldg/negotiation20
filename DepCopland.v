@@ -292,7 +292,7 @@ Module DepCopland.
                                           | _ => (option unit)
                                           end).
    *)
-
+  
   (* All these examples compute the type as [option evidence] which makes sense
      given the [privPolicyType] function above.
   Compute privPolicyType EHash.
@@ -303,9 +303,7 @@ Module DepCopland.
   Compute privPolicyType (ECrypt (EBlob red) AA)
    *)
 
-  (* [policyCheck] returns [Some] if policy is satisfied and [None] otherwise.
-     This is very crude and doesn't work, but is getting closer.
-   *)
+  (* [privPolEx] returns the classification level of evidence. *)
 
   Fixpoint privPolEx (e:evidence):class :=
     match e with
@@ -325,13 +323,16 @@ Module DepCopland.
                  | green => (privPolEx r)
                  end
     end.
-                    
+
+  (* [policyCheck] computes the classfication level of evidence produced by some term, [t].
+     It uses [privPolEx] on the evidence index.
+   *)
   Fixpoint policyCheck e (t:term e):class :=
     match t with
     | TMeas e' => privPolEx e'
     | THash t' => green
     | TCrypt _ _ => green
-    | TSig _ t' => if eq_class_dec (policyCheck t') green then green else red
+    | TSig _ t' => policyCheck t'
     | TSeq l r => match policyCheck l with
                  | red => red
                  | green => policyCheck r
@@ -354,33 +355,21 @@ Module DepCopland.
   Compute policyCheck (TSeq (THash (TMeas (EPrivKey AA))) (TCrypt AA (TMeas (EBlob red)))).
   Compute policyCheck (TSeq (TMeas (EPrivKey AA)) (TCrypt AA (TMeas (EBlob red)))).
 
-  Definition goodTerm := forall e, {t:(term e) | policyCheck t = green}.
-
-  Fixpoint policyCheck e (t:term e) :=
-    match t with
-    | THash t' => Some EHash t'
-    | TMeas ev => match ev in evidence return (privPolicyType ev) with
-                 | EBlob green => Some (EBlob green)
-                 | EBlob red => None
-                 | EHash => Some EHash
-                 | EPrivKey _ => None
-                 | EPubKey p => Some (EPubKey p)
-                 | ESessKey n => None
-                 | ECrypt p e => Some (ECrypt p e)
-                 | ESig (EBlob red) p => None
-                 | ESig (EBlob green) p => Some (EBlob green)
-                 end
-    | _ => None
-    end.
-                                             
+  (* A [goodTerm] is a term that generates [green] terms. *)
   
+  Definition goodTerm := forall e, {t:term e | policyCheck t = green}.
+  
+  (* A [goodTermEv] is a term that generates [green] evidence. *)
+
+  Definition goodTermEv := forall e, {t:term e | privPolEx e = green}.
+
   (* This is an attempt to mimic CPDT that is not working.  I believe due to
      the inability to match on [e], but I'm not 100% certain.
    *)
   Definition selectDep' e (t:(term e)) := 
-    match t in (term e') return (privPolicyType e') with
-    | THash _ => Some EHash
+    match t with
     | TMeas t => Some tt
+    | THash _ => EHash
     | _ => Some EHash
     end.
 

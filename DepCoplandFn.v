@@ -264,7 +264,7 @@ Module DepCopland.
   Proof.
   Abort.
   
-  Definition goodTerm := forall e, {t:(term e) | privPolicyT t = true}.
+  Definition goodTerm e := {t:(term e) | privPolicyT t = true}.
 
   Check goodTerm.
 

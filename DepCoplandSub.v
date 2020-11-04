@@ -254,8 +254,36 @@ Module DepCopland.
   Compute selectDep''' (THash (TMeas (EBlob green))).
 
   (*
-  Definition selectDep'' e (_:term e) : {t:term e | (privPolicyTSat t)} :=
-    (exist _ (TMeas (EBlob green)) ex2).
+    What if we include privacy policy satisfaction proofs in the terms
+    themselves?  No proof, no term.
    *)
+
+  Inductive term' : evidence -> Type :=
+  | TMeas' : forall e, term' e
+  | THash' : forall e, term' e -> privPolicySat EHash -> term' EHash
+  | TCrypt' : forall e p, term' e -> privPolicySat (ECrypt e p) -> term' (ECrypt e p)
+  | TSig' : forall e p, term' e -> privPolicySat e -> term' (ESig e p)
+  | TSeq' : forall e f,
+      term' e -> privPolicySat e -> term' f -> privPolicySat f -> term' (ESeq e f)
+  | TPar' : forall e f,
+      term' e -> privPolicySat e -> term' f -> privPolicySat f -> term' (EPar e f).
+
+  Lemma l1: privPolicySat (EBlob green). unfold privPolicySat; auto. Qed.
+  Lemma l2: privPolicySat (ECrypt (EBlob red) AA). unfold privPolicySat; auto. Qed.
+  Lemma l3: privPolicySat EHash. unfold privPolicySat; auto. Qed.
   
+  Compute TMeas' (EBlob green).
+  Compute TMeas' (EBlob red).
+  Compute THash' (TMeas' (EBlob red)) l3.
+  Compute TCrypt' (TMeas' (EBlob red)) l2.
+  Compute TSig' AA (TMeas' (EBlob green)) l1.
+  Compute TSig' AA (TMeas' (EBlob red)). (* No proof [EBlob red] satisfies policy *)
+  Compute TSeq' (TSig' AA (TMeas' (EBlob green)) l1) l1
+          (TCrypt' (TMeas' (EBlob red)) l2) l2.
+
+  (*
+  This would require every term to have a proof that it's evidence
+  preserves privacy policy.  That can be done with [refine] in constructions.
+   *)
+    
 End DepCopland.
