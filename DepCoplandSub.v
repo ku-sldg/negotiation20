@@ -223,8 +223,9 @@ Module DepCopland.
   Qed.
 
   (* Subset domain type defining all policies that satisfy [privPolicyT].
-     Defined the signature for such functions, but not actual example functions yet.
-     Coq type checker is stopping me from doing anything reasonable.
+     Defined the signature for such functions, but not actual example
+     functions yet. Coq type checker is stopping me from doing anything
+     reasonable.
    *)
 
   Lemma ex1: privPolicySat (EBlob green).
@@ -296,7 +297,7 @@ Module IndexedCopland.
     intros p x y.
     repeat decide equality.
   Defined.
-  *) 
+   *)
 
   Fixpoint privPolicy p (e:evidence p): Prop :=
     match e with
