@@ -326,7 +326,7 @@ Module IndexedCopland.
       term e -> privPolicy e -> term f -> privPolicy f -> term (EPar p e f).
 
   Lemma l1: forall p, privPolicy (EBlob p green). unfold privPolicy; auto. Qed.
-  Lemma l2: forall p q, privPolicy (ECrypt q (EBlob p red) AA). unfold privPolicy; auto. Qed.
+  Lemma l2: forall p q, privPolicy (ECrypt q (EBlob p red) p). unfold privPolicy; auto. Qed.
   Lemma l3: forall p, privPolicy (EHash p). unfold privPolicy; auto. Qed.
 
   (* Good AST *)
