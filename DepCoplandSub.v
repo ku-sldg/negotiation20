@@ -42,6 +42,8 @@ Module DepCopland.
        [l] and [r] are [green].
      - [EPar l r] - Parallel composition of evidence [l] and [r].  [green] if
        [l] and [r] are [green].
+     - [EAt p e] - Evidence [e] is gathered from place [p]. This could be 
+       red if the place should not be measured.  
 
      [evidence] is the type corresponding with these definitions.
    *)
@@ -55,7 +57,8 @@ Module DepCopland.
   | ECrypt : evidence -> place -> evidence
   | ESig : evidence -> place -> evidence
   | ESeq : evidence -> evidence -> evidence
-  | EPar : evidence -> evidence -> evidence.
+  | EPar : evidence -> evidence -> evidence
+  | EAt : place -> evidence -> evidence.
 
   Definition eq_ev_dec: forall x y:evidence, {x=y}+{x<>y}.
   Proof.
@@ -72,6 +75,7 @@ Module DepCopland.
    - [TSig e p] - results in a signed thing using place [p]'s local signing key.
    - [TSeq e f] - [e] followed by [f]
    - [TPar e f] - [e] in parallel with [f]
+   - [TAt p e] - gather evidence [e] from place [p]
    *)
   Inductive term : evidence -> Type :=
   | TMeas : forall e, term e
@@ -79,7 +83,14 @@ Module DepCopland.
   | TCrypt : forall e p, term e -> term (ECrypt e p)
   | TSig : forall e p, term e -> term (ESig e p)
   | TSeq : forall e f, term e -> term f -> term (ESeq e f)
-  | TPar : forall e f, term e -> term f -> term (EPar e f).
+  | TPar : forall e f, term e -> term f -> term (EPar e f)
+  | TAt : forall e p, term e -> term (EAt p e).
+  
+  (* | TPlace : forall p e, place p -> term e -> term (EPlace p e).
+      This construstor didn't work. Although, I think it is what we 
+      would like to say. 
+  
+  *)
 
   (* [term e] is indexed on [evidence] in a manner similar to an indexed abstract
      syntax for a programming language.  Every term is accompanied by the evidence
@@ -98,6 +109,7 @@ Module DepCopland.
   Check TSeq (THash (TMeas (EBlob red))) (TCrypt AA (TMeas (EBlob red))).
   Check TSeq (THash (TMeas (EPrivKey AA))) (TCrypt AA (TMeas (EBlob red))).
   Check TSeq (TMeas (EPrivKey AA)) (TCrypt AA (TMeas (EBlob red))).
+  Check TAt AA (THash (blob)). 
 
   (* Blobs are things that may or may not need to be protected.  A hash
      typically will not need protection but a private key will.  There
@@ -181,7 +193,14 @@ Module DepCopland.
     | ECrypt _ _ => true
     | ESeq l r => andb (privPolicy l) (privPolicy r)
     | EPar l r => andb (privPolicy l) (privPolicy r)
+    | EAt p e' => privPolicy e' 
     end.
+
+    (* 
+      Do we need to check that the place is okay to meausre from? 
+      For that, I think we would need a whole other data structure 
+      saying if the place can be measured or not. 
+    *)
 
   (* Privacy policy defined over [term] rather than [evidence] if such a thing
      is ever needed.
@@ -203,6 +222,8 @@ Module DepCopland.
   Compute privPolicyT (TCrypt AA (TMeas (EBlob red))).
   Compute privPolicyT (TSig AA (TMeas (EBlob red))).
   Compute privPolicyT (TSig BB (TCrypt AA (TMeas (EBlob red)))).
+  Compute privPolicyT (TAt AA (TMeas (EBlob red))).
+  Compute privPolicyT (TAt AA (THash (TMeas (EBlob red)))).
 
   (* Some helper proofs used as input to the selection function. *)
   Lemma pp0: privPolicy (EBlob green) = true.
@@ -221,6 +242,11 @@ Module DepCopland.
   Proof.
     auto.
   Qed.
+
+  Lemma pp3 : forall p : place, privPolicyT (TAt p (THash (TMeas (EBlob red)))) = true.
+  Proof. 
+    auto. 
+  Qed.  
 
   (* Subset domain type defining all policies that satisfy [privPolicyT].
      Defined the signature for such functions, but not actual example
@@ -275,6 +301,7 @@ Module IndexedCopland.
   | red : class
   | green : class.
 
+  (* Proof that the class is decidable *)
   Definition eq_class_dec: forall x y:class, {x=y}+{x<>y}.
   Proof.
     repeat decide equality.
@@ -289,7 +316,8 @@ Module IndexedCopland.
   | ECrypt : forall p q, evidence q -> place -> evidence p
   | ESig : forall p q, evidence q -> place -> evidence p
   | ESeq : forall p q r, evidence p -> evidence q -> evidence r
-  | EPar : forall p q r, evidence p -> evidence q -> evidence r.
+  | EPar : forall p q r, evidence p -> evidence q -> evidence r
+  | EAt : forall q, place -> evidence q -> evidence q.
 
   (*
   Definition eq_ev_dec: forall p, forall x y:evidence p, {x=y}+{x<>y}.
@@ -311,6 +339,7 @@ Module IndexedCopland.
     | ECrypt _ _ _ => True
     | ESeq _ l r => (privPolicy l) /\ (privPolicy r)
     | EPar _ l r => (privPolicy l) /\ (privPolicy r)
+    | EAt _ e' => privPolicy e'
     end.
     
   Inductive term p : (evidence p) -> Type :=
@@ -323,11 +352,18 @@ Module IndexedCopland.
   | TSeq : forall e f,
       term e -> privPolicy e -> term f -> privPolicy f -> term (ESeq p e f)
   | TPar : forall e f,
-      term e -> privPolicy e -> term f -> privPolicy f -> term (EPar p e f).
+      term e -> privPolicy e -> term f -> privPolicy f -> term (EPar p e f)
+  | TAt : forall p' e, 
+      term e -> privPolicy e -> term (EAt p' e).
 
   Lemma l1: forall p, privPolicy (EBlob p green). unfold privPolicy; auto. Qed.
   Lemma l2: forall p q, privPolicy (ECrypt q (EBlob p red) p). unfold privPolicy; auto. Qed.
   Lemma l3: forall p, privPolicy (EHash p). unfold privPolicy; auto. Qed.
+
+  (* try a lemma with place *)
+  Lemma l4: forall p, privPolicy (EAt p (EBlob p green)).
+    unfold privPolicy; auto.
+  Qed.   
 
   (* Good AST *)
   Compute TMeas (EBlob AA green).
@@ -337,6 +373,7 @@ Module IndexedCopland.
   Compute TSig AA (TMeas (EBlob AA green)) (l1 AA).
   Compute TSeq (TSig BB (TMeas (EBlob BB green)) (l1 BB)) (l1 BB)
                (TCrypt (TMeas (EBlob BB red)) (l2 BB BB)) (l2 BB BB).
+  Compute TAt BB (TMeas (EBlob AA green)) (l4 BB).
 
   (* Bad AST *)
   Compute TSig BB (TMeas (EBlob AA red)).
