@@ -377,6 +377,7 @@ Module IndexedCopland.
 
   (* Bad AST *)
   Compute TSig BB (TMeas (EBlob AA red)).
+  Compute THash (TMeas (EPrivKey AA)).
 
 End IndexedCopland.
     
