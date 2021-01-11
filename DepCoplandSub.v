@@ -58,7 +58,7 @@ Module DepCopland.
   | ESig : evidence -> place -> evidence
   | ESeq : evidence -> evidence -> evidence
   | EPar : evidence -> evidence -> evidence
-  | EAt : place -> evidence -> evidence.
+  | EAt : place -> evidence -> evidence. 
 
   Definition eq_ev_dec: forall x y:evidence, {x=y}+{x<>y}.
   Proof.
@@ -208,8 +208,13 @@ Module DepCopland.
   
   Definition privPolicyT e (t:term e) := privPolicy e.
 
+  (* This privacy policy is defined over evidence *)
   Definition privPolicySat e := (privPolicy e = true).
   Check privPolicySat.
+
+  Compute privPolicySat (EHash). 
+  Compute privPolicySat (EBlob red). 
+  (* this give us " = false = true " which is an impossible proof *)
 
   Definition privPolicyTSat e (t:term e) := (privPolicyT t = true).
   Check privPolicyTSat.
@@ -278,6 +283,46 @@ Module DepCopland.
   Definition selectDep''' e (t:term e) : {e:evidence | (privPolicySat e)} :=
     (exist privPolicySat (EBlob green) ex2).
 
+  Fixpoint privPolicyProp (e:evidence): Prop :=
+    match e with
+    | EHash => True
+    | EBlob red => False
+    | EBlob green => True
+    | EPrivKey _ => False
+    | EPubKey _ => True
+    | ESessKey _ => False
+    | ESig e' _ => privPolicyProp e'
+    | ECrypt _ _ => True
+    | ESeq l r => and (privPolicyProp l) (privPolicyProp r)
+    | EPar l r => and (privPolicyProp l) (privPolicyProp r)
+    | EAt p e' => privPolicyProp e' 
+    end.
+
+  Compute privPolicyProp (EBlob red). 
+
+  Definition red_is_False : term (EBlob red) -> False.
+  Proof.
+    intros. inversion H. Abort.
+
+
+  (* in CPDT on pg 104 where pred_strong is defined, Chipila has a 
+     construstor for every case. *)
+     
+  (* I would like to say {e : evidence} | privPolicy e : term e := *)   
+  (* Definition select_strong e (t : term e): {e : evidence  | privPolicySat e} :=
+    match e with 
+    | exist (EBlob red) pf => match pp1 pf with end 
+    | exist e' _ => e' 
+    end. *)
+
+
+  (* It is the EBlob red where I can't get false = true to prove. Need to look more into how to 
+     prove that. *)  
+  Definition selectDep'''' e (t : term e) : {e : evidence | (privPolicyProp e)}.
+    Proof. exists e. induction e.
+    + destruct c.
+    ++ simpl. apply pp1. simpl. discriminate.    Abort.
+  
   Compute selectDep''' (THash (TMeas (EBlob green))).
 
 End DepCopland.
@@ -380,4 +425,9 @@ Module IndexedCopland.
   Compute THash (TMeas (EPrivKey AA)).
 
 End IndexedCopland.
-    
+
+Module SubCopland. 
+
+  
+
+
