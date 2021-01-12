@@ -321,7 +321,7 @@ Module DepCopland.
   Definition selectDep'''' e (t : term e) : {e : evidence | (privPolicyProp e)}.
     Proof. exists e. induction e.
     + destruct c.
-    ++ simpl. apply pp1. simpl. discriminate.    Abort.
+    ++ simpl. apply pp1. simpl. Abort.
   
   Compute selectDep''' (THash (TMeas (EBlob green))).
 
@@ -409,6 +409,12 @@ Module IndexedCopland.
   Lemma l4: forall p, privPolicy (EAt p (EBlob p green)).
     unfold privPolicy; auto.
   Qed.   
+
+  (* Here we could generalize the lemma to work for all t that satisfy the privacy policy *)
+  Lemma l5: forall (p:place) (e:evidence p), privPolicy e = True -> term e.
+  Proof.
+    induction e; intros; apply TMeas.
+  Qed.
 
   (* Good AST *)
   Compute TMeas (EBlob AA green).
