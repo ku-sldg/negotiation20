@@ -14,5 +14,5 @@ This file also includes the module `IndexedCopland`. Here, terms are indexed by 
 
 ## DepCoplandFn.v 
 
-This file includes the module `DepCopland`. In this module, there is a fixpoint function for Privacy Policy, `privPolicy`, that maps evidence to [true] or [false]; the boolean values. There is also a function `privPolicyT` that allows the privacy policy to be defined over terms rather than evidence. The selection function is defined next, `selectDepFn`. This function takes a proof that the evidence satisfies the privacy policy before producing the evidence. It is a way to filter terms that do not satisfy the privacy policy. A `goodTerm` means that the term satisfies the privacy policy.  
+This file includes the module `DepCopland`. In this module, there is a fixpoint function for Privacy Policy, `privPolicy`, that maps evidence to `true` or `false`; the boolean values. There is also a function `privPolicyT` that allows the privacy policy to be defined over terms rather than evidence. The selection function is defined next, `selectDepFn`. This function takes a proof that the evidence satisfies the privacy policy before producing the evidence. It is a way to filter terms that do not satisfy the privacy policy. A `goodTerm` means that the term satisfies the privacy policy.  
 
