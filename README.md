@@ -22,8 +22,8 @@ This file includes the module `DepCopland`. In this module, there is a fixpoint 
 
 There are two ways to weave together the subset type and the indexed type that should be considered:
 
-1. Index `term` over evidence type and use the subset type predicate to determine `red`/`green` or go straight to `false`/`true`.  Something like `{x:term(e)|(privPolicy e)}`
-2. Index `term` over `red`/`green` and check that status in the subset type predicate.  Something like `{x:term(c)|(fun c => c=green)}`. 
+1. Index `term` over evidence type and use the subset type predicate to determine `red`/`green` or go straight to `false`/`true`.  Something like `{x:(term e)|(privPolicy e)}`
+2. Index `term` over `red`/`green` and check that status in the subset type predicate.  Something like `{x:(term c)|(fun c => c=green)}`. 
 
 Are there others?
 
