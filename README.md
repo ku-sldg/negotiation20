@@ -16,3 +16,17 @@ This file also includes the module `IndexedCopland`. Here, terms are indexed by 
 
 This file includes the module `DepCopland`. In this module, there is a fixpoint function for Privacy Policy, `privPolicy`, that maps evidence to `true` or `false`; the boolean values. There is also a function `privPolicyT` that allows the privacy policy to be defined over terms rather than evidence. The selection function is defined next, `selectDepFn`. This function takes a proof that the evidence satisfies the privacy policy before producing the evidence. It is a way to filter terms that do not satisfy the privacy policy. A `goodTerm` means that the term satisfies the privacy policy.  
 
+## Discussion
+
+### Subset Type and Index Type
+
+There are two ways to weave together the subset type and the indexed type that should be considered:
+
+1. Index `term` over evidence type and use the subset type predicate to determine `red`/`green` or go straight to `false`/`true`.  Something like `{x:term(e)|(privPolicy e)}`
+2. Index `term` over `red`/`green` and check that status in the subset type predicate.  Something like `{x:term(c)|(fun c => c=green)}`. 
+
+Are there others?
+
+### Wiki
+
+Do we want to leave this discussion in `README.md` or move it to the wiki area for the repo?
