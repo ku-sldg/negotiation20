@@ -195,8 +195,8 @@ Module DepCopland.
   Fixpoint privPolicy (e:evidence): bool :=
     match e with
     | EHash => true
-    | EBlob red => false
-    | EBlob green => true
+    | EBlob Red => false
+    | EBlob Green => true
     | EPrivKey _ => false
     | EPubKey _ => true
     | ESessKey _ => false
@@ -245,6 +245,38 @@ Module DepCopland.
      Coq type checker is stopping me from doing anything reasonable.
    *)
 
+     (*
+  Definition selectDep'' e (_:term e) : {t:term e | true = (privPolicyT t)} :=
+    (exist _ (TMeas (EBlob green)) _).
+   *)
+
+  (*
+  Definition selectDep''' e (t:term e) : {t:term e | true = (privPolicy e)} :=
+    (exist _ (TMeas (EBlob green)) pp2).
+   *)  
+  
+  (* Alternative definition of a selection function that uses a proof term
+     to guard the return value like we did with `pred_strong` in Chlipala. This
+     is a very silly function that always returns [TMeas], but it is our first
+     selection policy.  Specifically, no matter what the request, [r], is the protocol
+     [TMeas] will be returned as long as the evidence requested is [green].
+   *)
+  
+  (* Definition selectDepFn e (r:term e) : true = privPolicy e -> term e :=
+    fun p => TMeas (e).
+
+  Compute selectDepFn (THash (TMeas (EBlob green))).
+  
+  Example s1: (selectDepFn (THash (TMeas (EBlob green))) pp0) = TMeas EHash.
+  auto. Qed.
+  Example s2: (selectDepFn (THash (TMeas (EBlob red))) pp0) = TMeas EHash.
+  auto. Qed.
+  (* There is no proof that [(TMeas (EBlog red))] is [green], so this calculation
+     will not complete.
+   *)
+  Example s3: (selectDepFn (TMeas (EBlob red))) =
+              fun _ : true = privPolicy (EBlob red) => TMeas (EBlob red). *)
+
   (*
   Definition selectDep'' e (_:term e) : {t:term e | true = (privPolicyT t)} :=
     (exist _ (TMeas (EBlob green)) _).
@@ -275,6 +307,11 @@ Module DepCopland.
    *)
   Example s3: (selectDepFn (TMeas (EBlob red))) =
               fun _ : true = privPolicy (EBlob red) => TMeas (EBlob red).
+  Definition selectDep'' e (t:term e) : {t:term e | privPolicyT t = true}.
+  Proof.
+  Abort.
+                                        
+  Definition selectDep''' e (t:term e) : {t:term e | privPolicy e = true}.
   Proof.
   Abort.
   
@@ -289,7 +326,8 @@ Module DepCopland.
                                        | ESessKey _ => (option class)
                                        | ESig e p => privPolicyType e
                                           | ECrypt e p => (option evidence)
-                                          | _ => (option unit)
+                                          | ESeq e1 e2 => andb (privPolicyType e1) (privPolicyType e2)
+                                          (*| _ => (option unit)*)
                                           end).
    *)
   
@@ -326,10 +364,8 @@ Module DepCopland.
 
   (* [policyCheck] computes the classfication level of evidence produced by some term, [t].
      It uses [privPolEx] on the evidence index.
-   *)
-  Fixpoint policyCheck e (t:term e):class :=
-    match t with
-    | TMeas e' => privPolEx e'
+
+     | TMeas e' => privPolEx e'
     | THash t' => green
     | TCrypt _ _ => green
     | TSig _ t' => policyCheck t'
@@ -340,6 +376,21 @@ Module DepCopland.
     | TPar l r => match policyCheck l with
                  | red => red
                  | green => policyCheck r
+   *)
+  Fixpoint policyCheck e (t:term e):class :=
+    match t with
+    | THash t' => Some EHash t'
+    | TMeas ev => match ev in evidence return (privPolicyType ev) with
+                 | EBlob Green => Some (EBlob Green)
+                 | EBlob Red => None
+                 | EHash => Some EHash
+                 | EPrivKey _ => None
+                 | EPubKey p => Some (EPubKey p)
+                 | ESessKey n => None
+                 | ECrypt p e => Some (ECrypt p e)
+                 | ESig (EBlob Red) p => None
+                 | ESig (EBlob Green) p => Some (EBlob Green) 
+                 | _ => None           
                  end
     end.
   
