@@ -152,6 +152,8 @@ Fixpoint privPolicy (e:evidence): bool :=
       destruct H. reflexivity.
     Qed. 
   
+    (* selection function that filters the terms that do not 
+       satisfy the privacy policy *)
     Definition select_strong e (t: term e) : false <> privPolicyT (TMeas (EBlob red)) -> term e := 
       match t with
       | (TMeas (EBlob red)) => fun pf: (false <> privPolicyT (TMeas (EBlob red))) => match redfalse pf with end
