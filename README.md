@@ -4,8 +4,6 @@ Currently untargetted paper on negotiation of attestation protocols.
 Assumes the `acmart` class is in the LaTeX load path.  The MacTeX 2019
 automatically provides this.
 
-$$\alpha$$
-
 ## DepCoplandSub.v
 
 This file includes the module `DepCopland`. In this module, there is a Privacy Policy that maps evidence to `True` or `False`. It is a fixpoint function and returns a `Prop` rather than a boolean. There is also a helper function `privPolicyT` defines the privacy policy over terms rather than evidence.  
