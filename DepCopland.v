@@ -195,8 +195,8 @@ Module DepCopland.
   Fixpoint privPolicy (e:evidence): bool :=
     match e with
     | EHash => true
-    | EBlob Red => false
-    | EBlob Green => true
+    | EBlob red => false
+    | EBlob green => true
     | EPrivKey _ => false
     | EPubKey _ => true
     | ESessKey _ => false
@@ -307,6 +307,9 @@ Module DepCopland.
    *)
   Example s3: (selectDepFn (TMeas (EBlob red))) =
               fun _ : true = privPolicy (EBlob red) => TMeas (EBlob red).
+              auto. Qed. 
+  
+  
   Definition selectDep'' e (t:term e) : {t:term e | privPolicyT t = true}.
   Proof.
   Abort.
@@ -315,9 +318,9 @@ Module DepCopland.
   Proof.
   Abort.
   
-  (* An attempt to create a type for proviacy policy using techniques from CPDT.
-     No longer using subset type.  This is not working.
-  Fixpoint privPolicyType(c:class) := (match e with
+  (* An attempt to create a type for privacy policy using techniques from CPDT.
+     No longer using subset type.  This is not working. *)
+  Fixpoint privPolicyType (e:evidence) := (match e with
                                        | EHash => (option class)
                                        | EBlob green => (option class)
                                        | EBlob red => (option class)
@@ -325,11 +328,11 @@ Module DepCopland.
                                        | EPubKey _ => (option class)
                                        | ESessKey _ => (option class)
                                        | ESig e p => privPolicyType e
-                                          | ECrypt e p => (option evidence)
-                                          | ESeq e1 e2 => andb (privPolicyType e1) (privPolicyType e2)
+                                       | ECrypt e p => (option evidence)
+                                       | ESeq e1 e2 => if (privPolicyType e1) = (Some e1) then (privPolicyType e2) else None
                                           (*| _ => (option unit)*)
-                                          end).
-   *)
+                                       end).
+   
   
   (* All these examples compute the type as [option evidence] which makes sense
      given the [privPolicyType] function above.
