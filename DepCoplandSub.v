@@ -375,7 +375,7 @@ Module IndexedCopland.
   Fixpoint privPolicy p (e:evidence p): Prop :=
     match e with
     | EHash _ => True
-    | EBlob _ red => True
+    | EBlob _ red => False
     | EBlob _ green => True
     | EPrivKey _ => False
     | EPubKey _ => True
@@ -430,9 +430,7 @@ Module IndexedCopland.
   Compute TSig BB (TMeas (EBlob AA red)).
   Compute THash (TMeas (EPrivKey AA)).
 
-End IndexedCopland.
-
-Module SubCopland. 
+End IndexedCopland. 
 
   
 
