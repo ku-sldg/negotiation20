@@ -265,6 +265,7 @@ Module DepCopland.
   Abort.
   
   Definition goodTerm e := {t:(term e) | privPolicyT t = true}.
+  (* Do some examples here *)
 
   Check goodTerm.
 

@@ -68,6 +68,8 @@ Module IndexedCopland.
     Lemma l2: forall p q, privPolicy (ECrypt q (EBlob p red) p). unfold privPolicy; auto. Qed.
     Lemma l3: forall p, privPolicy (EHash p). unfold privPolicy; auto. Qed.
     Lemma l4: forall p, privPolicy (EAt p (EBlob p green)). unfold privPolicy; auto. Qed. 
+    
+    (* this lemma is written to include all pieces of evidence *)
     Lemma l5: forall (p:place) (e:evidence p), privPolicy e = True -> term e. Proof. induction e; intros; apply TMeas. Qed.
 
     Compute TMeas (EBlob AA green).
@@ -102,9 +104,6 @@ Defined.
 Inductive evidence : Type :=
 | EBlob : class -> evidence
 | EHash : evidence
-| EPrivKey : place -> evidence
-| EPubKey : place -> evidence
-| ESessKey : nat -> evidence
 | ECrypt : evidence -> place -> evidence
 | ESig : evidence -> place -> evidence
 | ESeq : evidence -> evidence -> evidence
@@ -126,15 +125,14 @@ Inductive term : evidence -> Type :=
 | TPar : forall e f, term e -> term f -> term (EPar e f)
 | TAt : forall e p, term e -> term (EAt p e).
 
+Check TMeas (EBlob green). 
+
 (* privacy policy mapping from evidence to boolean *)
 Fixpoint privPolicy (e:evidence): bool :=
     match e with
     | EHash => true
     | EBlob red => false
     | EBlob green => true
-    | EPrivKey _ => false
-    | EPubKey _ => true
-    | ESessKey _ => false
     | ESig e' _ => privPolicy e'
     | ECrypt _ _ => true
     | ESeq l r => andb (privPolicy l) (privPolicy r)
@@ -142,8 +140,39 @@ Fixpoint privPolicy (e:evidence): bool :=
     | EAt p e' => privPolicy e' 
     end.
 
+Fixpoint privPolicyProp (e:evidence): Prop :=
+    match e with
+    | EHash => True
+    | EBlob red => False
+    | EBlob green => True
+    | ECrypt _ _ => True
+    | ESig e' _ => privPolicyProp e'
+    | ESeq l r => and (privPolicyProp l) (privPolicyProp r)
+    | EPar l r => and (privPolicyProp l) (privPolicyProp r)
+    | EAt p e' => privPolicyProp e' 
+    end.
+
+    (*Fixpoint privPolicyProT (e:evidence) (t:term e): Prop :=
+      match t with
+      | EHash => True
+      | EBlob red => False
+      | EBlob green => True
+      | ECrypt _ _ => True
+      | ESig e' _ => privPolicyProp e'
+      | ESeq l r => and (privPolicyProp l) (privPolicyProp r)
+      | EPar l r => and (privPolicyProp l) (privPolicyProp r)
+      | EAt p e' => privPolicyProp e' 
+      end.*)
+
     (* privacy policy defined over terms *)
     Definition privPolicyT e (t:term e) := privPolicy e.
+
+    Definition privPolicyTProp e (t:term e) := privPolicyProp e.
+
+    Lemma redfalse' : False = privPolicyProp ((EBlob red)).
+    Proof.
+        unfold privPolicyProp. reflexivity.
+    Qed.     
 
     Lemma redfalse : false <> privPolicyT (TMeas (EBlob red)) -> False. 
     Proof.
@@ -151,13 +180,80 @@ Fixpoint privPolicy (e:evidence): bool :=
       unfold privPolicyT in H. unfold privPolicy in H.
       destruct H. reflexivity.
     Qed. 
+
+    Definition selectDep'' e (_:term e) : {t:term e | true = (privPolicyT t)}.
+      induction e. destruct c. Abort. 
+  
+     (* HELP cannot seem to recurse here. Are we going to have to use sumbool??? No sumbool. We aren't comparing things.
+          BUT could do a proof that it is in the privPolicy or not in the privPolicy   *)
+    Definition selectDep : forall e (t:term e), false <> privPolicyT t -> {t1: term e | privPolicyProp e}.  
+    refine (fun t =>
+      match t with 
+      | EHash => fun _ => exist _ TMeas (EHash) _
+      | (EBlob red) => fun pf => match redfalse pf with end
+      | (EBlob green) => exist _ TMeas (EBlob green) _
+      | ECrypt e' p => exist _ TMeas (ECrypt e' p) _
+      | ESig e' _ => privPolicyProp e'
+      | ESeq l r => and (privPolicyProp l) (privPolicyProp r)
+      | EPar l r => and (privPolicyProp l) (privPolicyProp r)
+      | EAt p e' => privPolicyProp e' 
+    end). *)
+    
+    Compute privPolicyT (TMeas (EBlob red)).
+
+    Notation "’Yes’" := (left _ _ _).
+    Notation "’No’" := (right _ _ _).
+    (*Notation "’Reduce’ x" := (if x then Yes else No) (at level 50).*)
+
+    Definition selectDep'' : forall e (t1:term e),  {t:term e | (privPolicyProp e)}. 
+      refine ( fix f (e:evidence) (t:term e) : {t:term e | (privPolicyProp e)} := 
+      match t with 
+        | TMeas (EHash) => fun _ => exist _ TMeas (EHash) _
+        | TMeas (EBlob red) => fun pf => match redfalse pf with end
+        | TMeas (EBlob green) => exist _ TMeas (EBlob green) _
+        | TMeas (ECrypt e' p) => exist _ TMeas (ECrypt e' p) _
+        | TMeas (ESig e' _) => privPolicyProp e'
+        | TMeas (ESeq l r) => and (privPolicyProp l) (privPolicyProp r)
+        | TMeas (EPar l r) => and (privPolicyProp l) (privPolicyProp r)
+        | TMeas (EAt p e') => privPolicyProp e' 
+        end).
+
+    Definition select_strong3 e (t:term e) : {t1 : term e | privPolicyProp e}. 
+      (exist _ t).
+
+
   
     (* selection function that filters the terms that do not 
        satisfy the privacy policy *)
     Definition select_strong e (t: term e) : false <> privPolicyT (TMeas (EBlob red)) -> term e := 
       match t with
       | (TMeas (EBlob red)) => fun pf: (false <> privPolicyT (TMeas (EBlob red))) => match redfalse pf with end
+      (*| THash e => fun _ => t
+      | TCrypt e p => fun _ => t 
+      | TSig e p => fun _ => select_strong e
+      | TSeq l r => fun _ => (select_strong l) and (select_strong r)
+      | TPar l r => fun _ => (select_strong l) and (select_strong r)
+      | TAt p e => fun _ => select_strong e *)
       | _ => fun _ => t
       end.
+
+    Compute select_strong (TMeas (EBlob red)).
+    Compute select_strong (TSeq (TMeas (EBlob red)) (TMeas (EBlob green))). 
+
+    (*  privPolicy e <> false *)
+    Lemma allredfalse e (t:term e) : false <> privPolicyT t -> False.
+    Proof.
+        induction e.
+        + intros. destruct H. destruct c. 
+        ++ simpl. reflexivity.
+        ++ simpl. reflexivity. 
+
+
+    Definition select_strong' e (s: {t: (term e) | false <> privPolicyT (TMeas (EBlob red)) }) : term e := 
+        match s with
+        | exist (TMeas (EBlob red)) pf => match redfalse pf with end
+        | exist _ _  => t
+        end. 
+
     
 End SubCopland.
