@@ -72,15 +72,22 @@ Module IndexedCopland.
     (* this lemma is written to include all pieces of evidence *)
     Lemma l5: forall (p:place) (e:evidence p), privPolicy e = True -> term e. Proof. induction e; intros; apply TMeas. Qed.
 
+    (* to write a term, you pass the TERM and a PROOF that the 
+       term satisfies the privacy policy. *)
     Compute TMeas (EBlob AA green).
     Compute TMeas (EBlob AA red).
-    Compute THash (TMeas (EBlob AA red)) (l3 AA).
+    Compute THash (TMeas (EBlob AA red)). 
+
+    (* something about l5 doesn't work right *)
+    (* Compute THash (TMeas (EBlob AA red)) (l5 (EHash AA) AA ). *)
+    Compute THash (TMeas (EBlob AA red)) (l3 AA ).
     Compute TCrypt (TMeas (EBlob AA red)) (l2 AA AA).
     Compute TSig AA (TMeas (EBlob AA green)) (l1 AA).
     Compute TSeq (TSig BB (TMeas (EBlob BB green)) (l1 BB)) (l1 BB)
                  (TCrypt (TMeas (EBlob BB red)) (l2 BB BB)) (l2 BB BB).
+    Compute TPar (TSig BB (TMeas (EBlob BB green)) (l1 BB)) (l1 BB)
+                 (TCrypt (TMeas (EBlob BB red)) (l2 BB BB)) (l2 BB BB).
     Compute TAt BB (TMeas (EBlob AA green)) (l4 BB).
-
 
 End IndexedCopland. 
 
@@ -127,19 +134,9 @@ Inductive term : evidence -> Type :=
 
 Check TMeas (EBlob green). 
 
-(* privacy policy mapping from evidence to boolean *)
-Fixpoint privPolicy (e:evidence): bool :=
-    match e with
-    | EHash => true
-    | EBlob red => false
-    | EBlob green => true
-    | ESig e' _ => privPolicy e'
-    | ECrypt _ _ => true
-    | ESeq l r => andb (privPolicy l) (privPolicy r)
-    | EPar l r => andb (privPolicy l) (privPolicy r)
-    | EAt p e' => privPolicy e' 
-    end.
-
+(* privacy policy mapping from evidence to Proposition *)
+(* we MUST define privacy policy over evidence bc we need to make 
+   sure the evidence doesn't evalute to expose sensitive information *)
 Fixpoint privPolicyProp (e:evidence): Prop :=
     match e with
     | EHash => True
@@ -152,108 +149,62 @@ Fixpoint privPolicyProp (e:evidence): Prop :=
     | EAt p e' => privPolicyProp e' 
     end.
 
-    (*Fixpoint privPolicyProT (e:evidence) (t:term e): Prop :=
-      match t with
-      | EHash => True
-      | EBlob red => False
-      | EBlob green => True
-      | ECrypt _ _ => True
-      | ESig e' _ => privPolicyProp e'
-      | ESeq l r => and (privPolicyProp l) (privPolicyProp r)
-      | EPar l r => and (privPolicyProp l) (privPolicyProp r)
-      | EAt p e' => privPolicyProp e' 
-      end.*)
-
-    (* privacy policy defined over terms *)
-    Definition privPolicyT e (t:term e) := privPolicy e.
-
     Definition privPolicyTProp e (t:term e) := privPolicyProp e.
 
-    Lemma redfalse' : False = privPolicyProp ((EBlob red)).
-    Proof.
-        unfold privPolicyProp. reflexivity.
-    Qed.     
+    Definition selectDep e (_:term e) := {t:term e | privPolicyProp e}.
 
-    Lemma redfalse : false <> privPolicyT (TMeas (EBlob red)) -> False. 
+    Compute selectDep (TMeas (EBlob green)).
+    Compute selectDep (TMeas (EBlob red)).
+    Compute selectDep (TPar (TMeas (EBlob green)) (TMeas (EBlob red))).
+
+    Lemma greengood : privPolicyTProp (TMeas (EBlob green)).
+    Proof. simpl. reflexivity. Qed.  
+
+    Lemma greenandred : privPolicyTProp (TPar (TMeas (EBlob green)) (TMeas (EBlob red))).
     Proof.
-      intros. 
-      unfold privPolicyT in H. unfold privPolicy in H.
-      destruct H. reflexivity.
+      unfold privPolicyTProp. unfold privPolicyProp. split. reflexivity. Abort.   
+
+
+    (* tried... but this doesn't work lol *)
+    (*Eval compute in selectDep (exist _ (TMeas (EBlob green)) greengood).*)
+    
+    (* not really sure what this gets us except that with the : we need 
+       a proof and with the := we are just set to go. *)
+    Example selectDep1 : selectDep (TMeas (EBlob green)).
+    Proof. 
+      unfold selectDep. exists (TMeas (EBlob green)). reflexivity.
+    Qed.
+    
+    Check selectDep1.
+    
+    Lemma redfalseP : privPolicyProp ((EBlob red)) -> False.
+    Proof.
+      unfold privPolicyProp. intros. apply H. 
+    Qed.
+    
+    Definition select_term e (s: {t: (term e) | privPolicyTProp t}) : term e := 
+        match s with
+        | exist _ (TMeas (EBlob red)) pf => match redfalseP pf with end
+        | exist _ t _  => t
+        end. 
+    
+    Eval compute in select_term (exist _ (TMeas (EBlob green)) greengood).
+
+    (* this term will not work. 
+    Eval compute in select_term (exist _ (TPar (TMeas (EBlob green)) (TMeas (EBlob red))) greengood).*) 
+
+    Lemma hashred : privPolicyTProp (THash (TMeas (EBlob red))).
+    Proof. 
+      unfold privPolicyTProp. unfold privPolicyProp. reflexivity.
     Qed. 
 
-    Definition selectDep'' e (_:term e) : {t:term e | true = (privPolicyT t)}.
-      induction e. destruct c. Abort. 
-  
-     (* HELP cannot seem to recurse here. Are we going to have to use sumbool??? No sumbool. We aren't comparing things.
-          BUT could do a proof that it is in the privPolicy or not in the privPolicy   *)
-    Definition selectDep : forall e (t:term e), false <> privPolicyT t -> {t1: term e | privPolicyProp e}.  
-    refine (fun t =>
-      match t with 
-      | EHash => fun _ => exist _ TMeas (EHash) _
-      | (EBlob red) => fun pf => match redfalse pf with end
-      | (EBlob green) => exist _ TMeas (EBlob green) _
-      | ECrypt e' p => exist _ TMeas (ECrypt e' p) _
-      | ESig e' _ => privPolicyProp e'
-      | ESeq l r => and (privPolicyProp l) (privPolicyProp r)
-      | EPar l r => and (privPolicyProp l) (privPolicyProp r)
-      | EAt p e' => privPolicyProp e' 
-    end). *)
-    
-    Compute privPolicyT (TMeas (EBlob red)).
-
-    Notation "’Yes’" := (left _ _ _).
-    Notation "’No’" := (right _ _ _).
-    (*Notation "’Reduce’ x" := (if x then Yes else No) (at level 50).*)
-
-    Definition selectDep'' : forall e (t1:term e),  {t:term e | (privPolicyProp e)}. 
-      refine ( fix f (e:evidence) (t:term e) : {t:term e | (privPolicyProp e)} := 
-      match t with 
-        | TMeas (EHash) => fun _ => exist _ TMeas (EHash) _
-        | TMeas (EBlob red) => fun pf => match redfalse pf with end
-        | TMeas (EBlob green) => exist _ TMeas (EBlob green) _
-        | TMeas (ECrypt e' p) => exist _ TMeas (ECrypt e' p) _
-        | TMeas (ESig e' _) => privPolicyProp e'
-        | TMeas (ESeq l r) => and (privPolicyProp l) (privPolicyProp r)
-        | TMeas (EPar l r) => and (privPolicyProp l) (privPolicyProp r)
-        | TMeas (EAt p e') => privPolicyProp e' 
-        end).
-
-    Definition select_strong3 e (t:term e) : {t1 : term e | privPolicyProp e}. 
-      (exist _ t).
+    Eval compute in select_term (exist _ (THash (TMeas (EBlob red))) hashred).
 
 
-  
-    (* selection function that filters the terms that do not 
-       satisfy the privacy policy *)
-    Definition select_strong e (t: term e) : false <> privPolicyT (TMeas (EBlob red)) -> term e := 
-      match t with
-      | (TMeas (EBlob red)) => fun pf: (false <> privPolicyT (TMeas (EBlob red))) => match redfalse pf with end
-      (*| THash e => fun _ => t
-      | TCrypt e p => fun _ => t 
-      | TSig e p => fun _ => select_strong e
-      | TSeq l r => fun _ => (select_strong l) and (select_strong r)
-      | TPar l r => fun _ => (select_strong l) and (select_strong r)
-      | TAt p e => fun _ => select_strong e *)
-      | _ => fun _ => t
+    Definition select_term_all e (s: {t: (term e) | privPolicyTProp t}) : {m: (term e) | privPolicyTProp m} := 
+      match s return {m: (term e) | privPolicyTProp m} with
+      | exist _ (TMeas (EBlob red)) pf => match redfalseP pf with end
+      | exist _ t _  => t
       end.
-
-    Compute select_strong (TMeas (EBlob red)).
-    Compute select_strong (TSeq (TMeas (EBlob red)) (TMeas (EBlob green))). 
-
-    (*  privPolicy e <> false *)
-    Lemma allredfalse e (t:term e) : false <> privPolicyT t -> False.
-    Proof.
-        induction e.
-        + intros. destruct H. destruct c. 
-        ++ simpl. reflexivity.
-        ++ simpl. reflexivity. 
-
-
-    Definition select_strong' e (s: {t: (term e) | false <> privPolicyT (TMeas (EBlob red)) }) : term e := 
-        match s with
-        | exist (TMeas (EBlob red)) pf => match redfalse pf with end
-        | exist _ _  => t
-        end. 
-
     
 End SubCopland.
