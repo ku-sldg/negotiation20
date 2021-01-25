@@ -223,13 +223,82 @@ Fixpoint privPolicyProp (e:evidence): Prop :=
     Qed. 
 
     Eval compute in select_term (exist _ (THash (TMeas (EBlob red))) hashred).
-
-    Definition allterms e (t:term e):= (fun m : term e => privPolicyTProp m) t.
  
-    Definition select_term_all e (s: {t: (term e) | privPolicyTProp t}) : {m: (term e) | privPolicyTProp m} := 
+    (* Definition select_term_all e (s: {t: (term e) | privPolicyTProp t}) : {m: (term e) | privPolicyTProp m} := 
       match s return {m: (term e) | privPolicyTProp m} with
       | exist _ (TMeas (EBlob red)) pf => match redfalseP pf with end
       | exist _ t _  => exist _ t (allterms _)
-      end.
-    
+      end. *) 
+      
 End SubCopland.
+      
+Module FnCopland. 
+      
+      Inductive place : Type :=
+      | AA : place
+      | BB : place
+      | CC : place.
+      
+      Inductive class : Type :=
+      | red : class
+      | green : class.
+      
+      Definition eq_class_dec: forall x y:class, {x=y}+{x<>y}.
+      Proof.
+      repeat decide equality.
+      Defined.
+      
+      (* evidence as a type *)
+      Inductive evidence : Type :=
+      | EBlob : class -> evidence
+      | EHash : evidence
+      | ECrypt : evidence -> place -> evidence
+      | ESig : evidence -> place -> evidence
+      | ESeq : evidence -> evidence -> evidence
+      | EPar : evidence -> evidence -> evidence
+      | EAt : place -> evidence -> evidence. 
+      
+      Definition eq_ev_dec: forall x y:evidence, {x=y}+{x<>y}.
+      Proof.
+      repeat decide equality.
+      Defined.
+      
+      (* terms indexed based on the evidence they produce *)
+      Inductive term : evidence -> Type :=
+      | TMeas : forall e, term e
+      | THash : forall e, term e -> term EHash
+      | TCrypt : forall e p, term e -> term (ECrypt e p)
+      | TSig : forall e p, term e -> term (ESig e p)
+      | TSeq : forall e f, term e -> term f -> term (ESeq e f)
+      | TPar : forall e f, term e -> term f -> term (EPar e f)
+      | TAt : forall e p, term e -> term (EAt p e).
+      
+      Check TMeas (EBlob green). 
+      
+      (* privacy policy mapping from evidence to Proposition *)
+      (* we MUST define privacy policy over evidence bc we need to make 
+      sure the evidence doesn't evalute to expose sensitive information *)
+      Fixpoint privPolicyProp (e:evidence): Prop :=
+        match e with
+        | EHash => True
+        | EBlob red => False
+        | EBlob green => True
+        | ECrypt _ _ => True
+        | ESig e' _ => privPolicyProp e'
+        | ESeq l r => and (privPolicyProp l) (privPolicyProp r)
+        | EPar l r => and (privPolicyProp l) (privPolicyProp r)
+        | EAt p e' => privPolicyProp e' 
+        end.
+        
+     Definition privPolicyTProp e (t:term e) := privPolicyProp e.
+        
+     Definition allterms e (t:term e):= (fun m : term e => privPolicyTProp m) t.
+      
+     Check allterms. 
+     Compute allterms (TMeas (EBlob green)).
+     Compute allterms (TMeas (EBlob red)).
+     Compute allterms (TPar (TMeas (EBlob red)) (TMeas (EBlob green))).
+
+End FnCopland. 
+        
+        
