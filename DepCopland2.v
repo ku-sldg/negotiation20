@@ -1,4 +1,5 @@
 Set Implicit Arguments.
+Require Import Ensembles. 
 
 Module IndexedCopland.
 
@@ -89,6 +90,15 @@ Module IndexedCopland.
                  (TCrypt (TMeas (EBlob BB red)) (l2 BB BB)) (l2 BB BB).
     Compute TAt BB (TMeas (EBlob AA green)) (l4 BB).
 
+
+    (* because the privacy policy is already included in the term structure... 
+       how do we generate all terms that are true?? *)
+    Definition selectDep p (e:evidence p) := {t:term e | privPolicy e}.
+    
+    Compute selectDep (EBlob BB red).
+    Compute selectDep (EAt BB (EBlob AA green)).
+    Compute selectDep (ECrypt BB (EBlob BB red) BB). 
+
 End IndexedCopland. 
 
 Module SubCopland.
@@ -151,31 +161,45 @@ Fixpoint privPolicyProp (e:evidence): Prop :=
 
     Definition privPolicyTProp e (t:term e) := privPolicyProp e.
 
+    (* This is our selection policy which creates a set of terms. 
+       It builds the set based on privacy policy satisfaction.   *)
     Definition selectDep e (_:term e) := {t:term e | privPolicyProp e}.
 
-    Compute selectDep (TMeas (EBlob green)).
-    Compute selectDep (TMeas (EBlob red)).
-    Compute selectDep (TPar (TMeas (EBlob green)) (TMeas (EBlob red))).
-
-    Lemma greengood : privPolicyTProp (TMeas (EBlob green)).
-    Proof. simpl. reflexivity. Qed.  
-
-    Lemma greenandred : privPolicyTProp (TPar (TMeas (EBlob green)) (TMeas (EBlob red))).
-    Proof.
-      unfold privPolicyTProp. unfold privPolicyProp. split. reflexivity. Abort.   
-
-
-    (* tried... but this doesn't work lol *)
-    (*Eval compute in selectDep (exist _ (TMeas (EBlob green)) greengood).*)
+    Check selectDep. 
+    (* selectDep
+       : forall e : evidence, term e -> Set*) 
+    (* the return type of selectDep is a SET. *)
     
-    (* not really sure what this gets us except that with the : we need 
-       a proof and with the := we are just set to go. *)
+    
+    Compute selectDep (TMeas (EBlob green)).
+    (* = {_ : term (EBlob green) | True}
+       : Set *)
+    Check selectDep (TMeas (EBlob green)).
+
     Example selectDep1 : selectDep (TMeas (EBlob green)).
     Proof. 
       unfold selectDep. exists (TMeas (EBlob green)). reflexivity.
     Qed.
     
     Check selectDep1.
+
+
+    (* When selectDep is applied to this term it returns type `set` *)
+    (* we have the subset type.... next need to make it a dependent pair? *)
+
+    Lemma greengood : privPolicyTProp (TMeas (EBlob green)).
+    Proof. simpl. reflexivity. Qed.  
+
+    (* This proof ends with ABORT. Note this term violates the PP and should not be possible, 
+       therefore the term is impossible to write. *)
+    Lemma greenandred : privPolicyTProp (TPar (TMeas (EBlob green)) (TMeas (EBlob red))).
+    Proof.
+      unfold privPolicyTProp. unfold privPolicyProp. split. reflexivity. Abort.   
+
+    (* check set membership. This doesn't work for now.  *)
+    (* Definition is_included : In (selectDep) (TMeas (EBlob green)). *) 
+    
+
     
     Lemma redfalseP : privPolicyProp ((EBlob red)) -> False.
     Proof.
@@ -200,11 +224,12 @@ Fixpoint privPolicyProp (e:evidence): Prop :=
 
     Eval compute in select_term (exist _ (THash (TMeas (EBlob red))) hashred).
 
-
+    Definition allterms e (t:term e):= (fun m : term e => privPolicyTProp m) t.
+ 
     Definition select_term_all e (s: {t: (term e) | privPolicyTProp t}) : {m: (term e) | privPolicyTProp m} := 
       match s return {m: (term e) | privPolicyTProp m} with
       | exist _ (TMeas (EBlob red)) pf => match redfalseP pf with end
-      | exist _ t _  => t
+      | exist _ t _  => exist _ t (allterms _)
       end.
     
 End SubCopland.
