@@ -48,7 +48,7 @@ Module IndexedCopland.
         | ESeq _ l r => (privPolicy l) /\ (privPolicy r)
         | EPar _ l r => (privPolicy l) /\ (privPolicy r)
         | EAt _ e' => privPolicy e'
-        end.    
+        end.
 
     (* terms are indexed on the evidence they produce *)
     Inductive term p : (evidence p) -> Type :=
@@ -68,7 +68,7 @@ Module IndexedCopland.
     Lemma l1: forall p, privPolicy (EBlob p green). unfold privPolicy; auto. Qed.
     Lemma l2: forall p q, privPolicy (ECrypt q (EBlob p red) p). unfold privPolicy; auto. Qed.
     Lemma l3: forall p, privPolicy (EHash p). unfold privPolicy; auto. Qed.
-    Lemma l4: forall p, privPolicy (EAt p (EBlob p green)). unfold privPolicy; auto. Qed. 
+    Lemma l4: forall p, privPolicy (EAt p (EBlob p green)). unfold privPolicy; auto. Qed.
     
     (* this lemma is written to include all pieces of evidence *)
     Lemma l5: forall (p:place) (e:evidence p), privPolicy e = True -> term e. Proof. induction e; intros; apply TMeas. Qed.
@@ -77,10 +77,10 @@ Module IndexedCopland.
        term satisfies the privacy policy. *)
     Compute TMeas (EBlob AA green).
     Compute TMeas (EBlob AA red).
-    Compute THash (TMeas (EBlob AA red)). 
+    Compute THash (TMeas (EBlob AA red)).
 
     (* something about l5 doesn't work right *)
-    (* Compute THash (TMeas (EBlob AA red)) (l5 (EHash AA) AA ). *)
+    (* Compute THash (TMeas (EBlob AA red)) (l5 (EHash AA) AA). *)
     Compute THash (TMeas (EBlob AA red)) (l3 AA ).
     Compute TCrypt (TMeas (EBlob AA red)) (l2 AA AA).
     Compute TSig AA (TMeas (EBlob AA green)) (l1 AA).
@@ -89,7 +89,6 @@ Module IndexedCopland.
     Compute TPar (TSig BB (TMeas (EBlob BB green)) (l1 BB)) (l1 BB)
                  (TCrypt (TMeas (EBlob BB red)) (l2 BB BB)) (l2 BB BB).
     Compute TAt BB (TMeas (EBlob AA green)) (l4 BB).
-
 
     (* because the privacy policy is already included in the term structure... 
        how do we generate all terms that are true?? *)
@@ -125,7 +124,7 @@ Inductive evidence : Type :=
 | ESig : evidence -> place -> evidence
 | ESeq : evidence -> evidence -> evidence
 | EPar : evidence -> evidence -> evidence
-| EAt : place -> evidence -> evidence. 
+| EAt : place -> evidence -> evidence.
 
 Definition eq_ev_dec: forall x y:evidence, {x=y}+{x<>y}.
 Proof.
@@ -142,7 +141,7 @@ Inductive term : evidence -> Type :=
 | TPar : forall e f, term e -> term f -> term (EPar e f)
 | TAt : forall e p, term e -> term (EAt p e).
 
-Check TMeas (EBlob green). 
+Check TMeas (EBlob green).
 
 (* privacy policy mapping from evidence to Proposition *)
 (* we MUST define privacy policy over evidence bc we need to make 
@@ -188,13 +187,14 @@ Fixpoint privPolicyProp (e:evidence): Prop :=
     (* we have the subset type.... next need to make it a dependent pair? *)
 
     Lemma greengood : privPolicyTProp (TMeas (EBlob green)).
-    Proof. simpl. reflexivity. Qed.  
+    Proof. simpl. reflexivity. Qed.
 
-    (* This proof ends with ABORT. Note this term violates the PP and should not be possible, 
-       therefore the term is impossible to write. *)
-    Lemma greenandred : privPolicyTProp (TPar (TMeas (EBlob green)) (TMeas (EBlob red))).
+    (* Term is impossible to write because evidence is red. *)
+    Lemma greenandred : ~ privPolicyTProp (TPar (TMeas (EBlob green)) (TMeas (EBlob red))).
     Proof.
-      unfold privPolicyTProp. unfold privPolicyProp. split. reflexivity. Abort.   
+      unfold not. intros.
+      unfold privPolicyTProp in H. unfold privPolicyProp in H.  destruct H. exact H0.
+    Qed.
 
     (* check set membership. This doesn't work for now.  *)
     (* Definition is_included : In (selectDep) (TMeas (EBlob green)). *) 
