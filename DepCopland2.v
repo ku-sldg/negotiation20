@@ -175,19 +175,34 @@ Fixpoint privPolicyProp (e:evidence): Prop :=
        : Set *)
     Check selectDep (TMeas (EBlob green)).
 
+    (* if you give me this thing, it is of that type. 
+       This is important because you can't have empty types. 
+       Type system cannot be empty! *)
     Example selectDep1 : selectDep (TMeas (EBlob green)).
     Proof. 
       unfold selectDep. exists (TMeas (EBlob green)). reflexivity.
     Qed.
-    
+
     Check selectDep1.
 
+    Check proj1_sig.
+    Check proj1_sig (selectDep1).
+    (* proj1_sig selectDep1
+	     : term (EBlob green)*)
+    Check proj2_sig (selectDep1).
+    (* proj2_sig selectDep1
+	     : privPolicyProp (EBlob green)*)
+    Compute proj1_sig (selectDep1). 
+    (* 	 = let (x, _) := selectDep1 in x
+         : term (EBlob green)*) 
 
     (* When selectDep is applied to this term it returns type `set` *)
     (* we have the subset type.... next need to make it a dependent pair? *)
 
     Lemma greengood : privPolicyTProp (TMeas (EBlob green)).
     Proof. simpl. reflexivity. Qed.
+
+    (* Example selectDep1' : selectDep (TMeas (EBlob green)) greengood.*)
 
     (* Term is impossible to write because evidence is red. *)
     Lemma greenandred : ~ privPolicyTProp (TPar (TMeas (EBlob green)) (TMeas (EBlob red))).
@@ -198,8 +213,6 @@ Fixpoint privPolicyProp (e:evidence): Prop :=
 
     (* check set membership. This doesn't work for now.  *)
     (* Definition is_included : In (selectDep) (TMeas (EBlob green)). *) 
-    
-
     
     Lemma redfalseP : privPolicyProp ((EBlob red)) -> False.
     Proof.
@@ -213,6 +226,7 @@ Fixpoint privPolicyProp (e:evidence): Prop :=
         end. 
     
     Eval compute in select_term (exist _ (TMeas (EBlob green)) greengood).
+    Eval compute in select_term (exist _  (TPar (TMeas (EBlob green)) (TMeas (EBlob red))) greenandred ). 
 
     (* this term will not work. 
     Eval compute in select_term (exist _ (TPar (TMeas (EBlob green)) (TMeas (EBlob red))) greengood).*) 
@@ -224,11 +238,14 @@ Fixpoint privPolicyProp (e:evidence): Prop :=
 
     Eval compute in select_term (exist _ (THash (TMeas (EBlob red))) hashred).
  
-    (* Definition select_term_all e (s: {t: (term e) | privPolicyTProp t}) : {m: (term e) | privPolicyTProp m} := 
+    (* What should be the relation between these? Right now there is no relation. 
+       In Chlipala, he generated the set of all numbers that was once less than 
+       the input number in the set. *)
+    Definition select_term_all e (s: {t: (term e) | privPolicyTProp t}) : {m: (term e) | privPolicyTProp m} := 
       match s return {m: (term e) | privPolicyTProp m} with
       | exist _ (TMeas (EBlob red)) pf => match redfalseP pf with end
-      | exist _ t _  => exist _ t (allterms _)
-      end. *) 
+      | exist _ t _  => exist _ t (_)
+      end.  
       
 End SubCopland.
       
