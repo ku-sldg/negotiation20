@@ -2,6 +2,9 @@ Set Implicit Arguments.
 
 Module Example1.
 
+(* let the appraiser be a place, the target be a place, 
+   ma be a trusted an isolated measurement and attestation 
+   domain, and q be a server that can respond to request *)
 Inductive place : Type :=
 | appraiser : place
 | target : place
@@ -48,7 +51,9 @@ Check TMeas (EBlob green).
 
 (* Let's say the target does not wish to
    share a measurement from place q 
-   with the appraiser *)
+   with the appraiser. 
+   
+   This will be reflected in the EAt case *)
 Fixpoint privPolicyProp (ap : place) (e:evidence): Prop :=
     match ap, e with
     | _ , EHash => True
