@@ -170,6 +170,11 @@ Module IndexedTypesAgain.
    repeat decide equality.
    Defined.
 
+   Inductive info : Type := 
+   | private_key : info 
+   | session_key : info
+   | public_key : info.  
+
     (* The class is if the information is sensitive. Red means sensitive *)
    Inductive class : Type :=
    | red : class
@@ -237,8 +242,8 @@ Module IndexedTypesAgain.
     (* Terms are indexed on the evidence they produce. First, they expect some measurement.
        That is the first parameter that comes with `term e`. It may also expect the place that 
        is asking for the measurment, ap.   *)
-    Inductive term p:(evidence p) -> Type :=
-    | TMeas : forall e, term e
+    Inductive term p : (evidence p) -> Type :=
+    | TMeas : forall c, term (EBlob p c)
     | THash : forall ap e, term e -> privPolicy ap (EHash p) -> term (EHash p)
     | TSig :
          forall ap e q, term e -> privPolicy ap (ESig p e q) -> term (ESig p e q)
@@ -249,14 +254,24 @@ Module IndexedTypesAgain.
     | TPar : forall ap e f,
         term e -> privPolicy ap e -> term f -> privPolicy ap f -> term (EPar p e f).
 
+   Compute TMeas (AA) (green).
+
+   (* BEFORE *)
    (* this returns some funky thing where we must provide a proof that the 
       goal is satisfied. As input, we give it the apprasier's place, AA. The place 
       where we want the encryption to occur, and the measurement.  *)
-   Compute TCrypt AA BB (TMeas (EBlob CC green)) . 
+   (* Compute TCrypt AA BB (TMeas _ (EBlob CC green)) . *)
    (* = fun x : privPolicy AA (ECrypt CC (EBlob CC green) BB) =>
        TCrypt AA BB (TMeas (EBlob CC green)) x
      : privPolicy AA (ECrypt CC (EBlob CC green) BB) ->
        term (ECrypt CC (EBlob CC green) BB) *)
+
+   (* AFTER *)
+   Compute TCrypt AA BB (TMeas (CC) (green)). 
+   (* = fun x : privPolicy AA (ECrypt CC (EBlob CC green) BB) =>
+       TCrypt AA BB (TMeas CC green) x
+     : privPolicy AA (ECrypt CC (EBlob CC green) BB) ->
+       term (ECrypt CC (EBlob CC green) BB)*)
 
    (* proof that any green measurement is acceptable *)
    Lemma tmeas_green : forall p, privPolicy p (EBlob p green).
@@ -270,7 +285,7 @@ Module IndexedTypesAgain.
    Lemma green_crypted: forall ap mp ep, privPolicy ap (ECrypt mp (EBlob mp green) ep).
    Proof. intros. simpl. destruct eq_place_dec. auto. auto. Qed.
    
-   Compute TCrypt AA BB (TMeas (EBlob CC green)) (green_crypted AA CC BB).
+   Compute TCrypt AA BB (TMeas CC green) (green_crypted AA CC BB).
    (*  = TCrypt AA BB (TMeas (EBlob CC green)) (green_crypted AA CC BB)
        : term (ECrypt CC (EBlob CC green) BB) 
        
@@ -295,7 +310,16 @@ Module IndexedTypesAgain.
      : term (ECrypt CC (EBlob CC red) BB)*)
 
    (* BUT it does not work if the first two places match... which was the goal. *)
-   (* Compute TCrypt AA AA (TMeas (EBlob CC red)) (red_crypted AA neqAACC). *) 
+   (* Compute TCrypt AA AA (TMeas (EBlob CC red)) (red_crypted AA neqAACC). *)
+   Compute THash (TMeas (EBlob AA red)).
+   (* = fun x : privPolicy ?ap (EHash AA) => THash (TMeas (EBlob AA red)) x
+     : privPolicy ?ap (EHash AA) -> term (EHash AA)*)
+   Lemma l1: forall ap,  privPolicy ap (EHash ap).
+   Proof. unfold privPolicy. auto. Qed.
+   
+   Compute THash (TMeas (EBlob AA red)) (l1 AA). 
+   (* = THash (TMeas (EBlob AA red)) (l1 AA)
+     : term (EHash AA)*)
 
 End IndexedTypesAgain. 
 
