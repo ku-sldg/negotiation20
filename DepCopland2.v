@@ -96,6 +96,7 @@ Module IndexedCopland.
     | TPar : forall ap e f,
         term e -> privPolicy ap e -> term f -> privPolicy ap f -> term (EPar p e f).
 
+   Compute TMeas (EBlob _ red). 
 
     Lemma l1: forall ap p, privPolicy ap (EBlob p green). unfold privPolicy; auto. Qed.
 
@@ -242,19 +243,27 @@ Module IndexedTypesAgain.
     (* Terms are indexed on the evidence they produce. First, they expect some measurement.
        That is the first parameter that comes with `term e`. It may also expect the place that 
        is asking for the measurment, ap.   *)
-    Inductive term p : (evidence p) -> Type :=
-    | TMeas : forall c, term (EBlob p c)
+    Inductive term p : evidence p   -> Type :=
+    | TMeas : forall ap c,  privPolicy ap (EBlob p c) -> term (EBlob p c)
     | THash : forall ap e, term e -> privPolicy ap (EHash p) -> term (EHash p)
     | TSig :
          forall ap e q, term e -> privPolicy ap (ESig p e q) -> term (ESig p e q)
     | TCrypt :
-        forall ap e q, term e -> privPolicy ap (ECrypt p e q) -> term (ECrypt p e q)
+        forall (np ap q : place) e , place -> term e -> privPolicy ap (ECrypt p e q) -> term (ECrypt p e q)
     | TSeq : forall ap e f,
         term e -> privPolicy ap e -> term f -> privPolicy ap f -> term (ESeq p e f)
     | TPar : forall ap e f,
         term e -> privPolicy ap e -> term f -> privPolicy ap f -> term (EPar p e f).
 
-   Compute TMeas (AA) (green).
+   Compute TMeas AA BB green.
+   Compute TMeas AA BB red.
+
+   Lemma greenblob : forall ap p, privPolicy ap (EBlob p green). unfold privPolicy; auto. Qed.   
+   Compute TMeas AA AA green (greenblob AA AA).
+   (* term (EBlob AA green)*)
+
+   Compute ECrypt BB (EBlob AA green) CC. 
+   Compute TCrypt AA BB DD EE (TMeas (CC) (green)). 
 
    (* BEFORE *)
    (* this returns some funky thing where we must provide a proof that the 
@@ -267,7 +276,7 @@ Module IndexedTypesAgain.
        term (ECrypt CC (EBlob CC green) BB) *)
 
    (* AFTER *)
-   Compute TCrypt AA BB (TMeas (CC) (green)). 
+   Compute TCrypt AA BB (TMeas (CC) (green) DD). 
    (* = fun x : privPolicy AA (ECrypt CC (EBlob CC green) BB) =>
        TCrypt AA BB (TMeas CC green) x
      : privPolicy AA (ECrypt CC (EBlob CC green) BB) ->
