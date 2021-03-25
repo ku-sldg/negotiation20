@@ -1,3 +1,5 @@
+(* Will not except a measurement of the signautre server *)
+
 Inductive place : Type :=
 | AP : place
 | TP : place
@@ -61,50 +63,42 @@ Fixpoint privPolicyProp (ap : place) (e:evidence): Prop :=
                   end
     end.
 
+(* Definition privPolicyTProp p e (t:term e) := privPolicyProp p e. *) 
+
+(* SELECTION FUNCTION *)
+Definition selectDep p e (t0:term e) := {t:term e | privPolicyProp p e}.
+
 
 (* Measure the VC *)
-Definition vc := (EAt VC (EBlob green)).  
-
-   (* Measure VC and sign the result *)
-Definition vc_sign := ESig (EAt VC (EBlob green)) TP.
-   
-   (* Measure VC and SS in sequence *)
-Definition vc_ss := EPar (ESig (EAt VC (EBlob green)) TP) (ESig (EAt SS (EBlob green)) TP).
-
-Definition privPolicyTProp p e (t:term e) := privPolicyProp p e.
-
-Definition selectDep p e (t0:term e) := {t:term e | privPolicyTProp p _ t0}.
-
-Compute selectDep AP vc. 
+Definition vc := TMeas (EAt VC (EBlob green)).  
+Compute selectDep AP _ vc. 
 (* = {_ : term (EAt VC (EBlob green)) | True}
      : Set *)
-Compute selectDep AP vc_sign. 
-Compute selectDep AP vc_ss _. 
+Example vc_okay : selectDep AP _ vc.
+Proof. unfold selectDep. exists (TMeas (EAt VC (EBlob green))). unfold privPolicyProp. auto. Qed.
 
-Lemma vc_okay : privPolicyTProp AP _ (TMeas (EAt VC (EBlob green))).
-Proof. unfold privPolicyTProp. unfold privPolicyProp. auto. Qed.
+Check proj1_sig (vc_okay).
 
-Compute selectDep AP vc _ vc_okay.
+(* Measure VC and sign the result *)
+Definition vc_sign := TMeas (ESig (EAt VC (EBlob green)) TP).
+Compute selectDep AP _ vc_sign. 
 
-    
+Example vc_sign_okay : selectDep AP _ vc_sign.
+Proof. unfold selectDep. exists (TMeas (ESig (EAt VC (EBlob green)) TP)). unfold privPolicyProp. auto. Qed.
+
+Check proj1_sig (vc_sign_okay).
+(*: term (ESig (EAt VC (EBlob green)) TP)*)
 
 
+(* Measure VC and SS in sequence *)
+Definition vc_ss := TMeas (EPar (ESig (EAt VC (EBlob green)) TP) (ESig (EAt SS (EBlob green)) TP)).
 
-Example selectDep1 : selectDep AA (TMeas (EBlob green)).
-    Proof. 
-      unfold selectDep. exists (TMeas (EBlob green)). reflexivity.
-    Qed.
+Compute selectDep AP _ vc_ss. 
+(* = {_ : term (EPar (ESig (EAt VC (EBlob green)) TP) (ESig (EAt SS (EBlob green)) TP)) | True /\ False}
+     : Set*)
 
-    Check selectDep1.
-
-    Check proj1_sig.
-    Check proj1_sig (selectDep1).
-    (* proj1_sig selectDep1
-	     : term (EBlob green)*)
-    Check proj2_sig (selectDep1).
-    (* proj2_sig selectDep1
-	     : privPolicyProp (EBlob green)*)
-    Compute proj1_sig (selectDep1). 
-    (* 	 = let (x, _) := selectDep1 in x
-         : term (EBlob green)*) 
+(* Proof is left in a `False` state. *)
+Example vc_ss_okay : selectDep AP _ vc_ss.
+Proof. unfold selectDep. exists (TMeas (EPar (ESig (EAt VC (EBlob green)) TP) (ESig (EAt SS (EBlob green)) TP))).
+       unfold privPolicyProp. split. auto. Abort. 
 
