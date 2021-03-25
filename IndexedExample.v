@@ -70,16 +70,7 @@ Require Import Coq.Lists.List.
     occuring if the blob is red  *)
  Compute privPolicy (EBlob priv_key red). 
  Compute privPolicy (ECrypt TP (EBlob priv_key red) AP).
- Compute privPolicy CC (ECrypt CC (EBlob CC red) AA).
- Compute privPolicy CC (ECrypt AA (EBlob AA red) BB).
- 
- (* This measuement type checks but would be impossible to write
-    with the way the type system works.
-    
-    For some reason, I can't figure out how to get the crypt 
-    measurement to have place CC. It is always the 
-    same place as AA *)
- Compute privPolicy CC (ECrypt CC (EBlob AA red) BB).
+
 
   (* Terms are indexed on the evidence they produce. First, they expect some measurement.
      That is the first parameter that comes with `term e`. It may also expect the place that 
@@ -87,13 +78,27 @@ Require Import Coq.Lists.List.
      
      -> privPolicy ap (EBlob p c)*)
   Inductive term p : evidence p  -> Type :=
-  | TMeas : forall ap e,  privPolicy ap e -> term e
+  | TMeas : forall e,  privPolicy e -> term e
   | THash : forall e, e -> term (EHash p)
   | TSig :
-       forall ap e q, term e -> privPolicy ap (ESig p e q) -> term (ESig p e q)
+       forall e q, term e -> privPolicy (ESig p e q) -> term (ESig p e q)
   | TCrypt :
-      forall (ap q : place) e , place -> term e -> privPolicy ap (ECrypt p e q) -> term (ECrypt p e q)
-  | TSeq : forall ap e f,
-      term e -> privPolicy ap e -> term f -> privPolicy ap f -> term (ESeq p e f)
-  | TPar : forall ap e f,
-      term e -> privPolicy ap e -> term f -> privPolicy ap f -> term (EPar p e f).
+      forall (q : place) e , place -> term e -> privPolicy (ECrypt p e q) -> term (ECrypt p e q)
+  | TSeq : forall e f,
+      term e -> privPolicy e -> term f -> privPolicy f -> term (ESeq p e f)
+  | TPar : forall e f,
+      term e -> privPolicy e -> term f -> privPolicy f -> term (EPar p e f).
+
+   Lemma vc_green : privPolicy (EBlob VC green).
+   Proof. unfold privPolicy. auto. Qed.
+
+   Definition vc := TMeas (EBlob VC green).
+   Check vc. (* : privPolicy (EBlob VC green) -> term (EBlob VC green) *)
+   Definition vc' := TMeas (EBlob VC green) vc_green.
+   Check vc'. (*: term (EBlob VC green) *)
+
+   Definition vc_sig := TSig TP (TMeas (EBlob VC green) vc_green).
+   
+   Definition vc_ss := False.  (*this will be impossible to write... no proof that EBlob SS satisfies priv policy *)
+   
+
