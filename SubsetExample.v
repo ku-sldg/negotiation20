@@ -1,3 +1,5 @@
+Require Import Coq.Lists.List.
+
 (* Will not except a measurement of the signautre server *)
 
 Inductive place : Type :=
@@ -47,44 +49,51 @@ Inductive term : evidence -> Type :=
 
 Check TMeas (EBlob green).
 
+Definition good_encrypt := AP :: TP :: nil. 
 
-Fixpoint privPolicyProp (ap : place) (e:evidence): Prop :=
+Fixpoint privPolicy (e:evidence): Prop :=
     match e with
     | EHash => True
     | EBlob red => False
     | EBlob green => True
-    | ECrypt e tp =>  if eq_place_dec ap tp then privPolicyProp ap e else True
-    | ESig e' _ => privPolicyProp ap e'
-    | ESeq l r => and (privPolicyProp ap l) (privPolicyProp ap r)
-    | EPar l r => and (privPolicyProp ap l) (privPolicyProp ap r)
+    | ECrypt e' ep => if (in_dec (eq_place_dec) ep good_encrypt) 
+                         then (match e' with 
+                                 | EBlob red => True 
+                                 | _ => privPolicy e'
+                              end) 
+                          else privPolicy e'
+    | ESig e' _ => privPolicy e'
+    | ESeq l r => and (privPolicy l) (privPolicy r)
+    | EPar l r => and (privPolicy l) (privPolicy r)
     | EAt p e' => match p with 
                   | SS => False 
-                  | _ => privPolicyProp p e' 
+                  | _ => privPolicy  e' 
                   end
     end.
+
 
 (* Definition privPolicyTProp p e (t:term e) := privPolicyProp p e. *) 
 
 (* SELECTION FUNCTION *)
-Definition selectDep p e (t0:term e) := {t:term e | privPolicyProp p e}.
+Definition selectDep e (t0:term e) := {t:term e | privPolicy e}.
 
 
 (* Measure the VC *)
 Definition vc := TMeas (EAt VC (EBlob green)).  
-Compute selectDep AP _ vc. 
+Compute selectDep _ vc. 
 (* = {_ : term (EAt VC (EBlob green)) | True}
      : Set *)
-Example vc_okay : selectDep AP _ vc.
-Proof. unfold selectDep. exists (TMeas (EAt VC (EBlob green))). unfold privPolicyProp. auto. Qed.
+Example vc_okay : selectDep _ vc.
+Proof. unfold selectDep. exists (TMeas (EAt VC (EBlob green))). unfold privPolicy. auto. Qed.
 
 Check proj1_sig (vc_okay).
 
 (* Measure VC and sign the result *)
 Definition vc_sign := TMeas (ESig (EAt VC (EBlob green)) TP).
-Compute selectDep AP _ vc_sign. 
+Compute selectDep _ vc_sign. 
 
-Example vc_sign_okay : selectDep AP _ vc_sign.
-Proof. unfold selectDep. exists (TMeas (ESig (EAt VC (EBlob green)) TP)). unfold privPolicyProp. auto. Qed.
+Example vc_sign_okay : selectDep _ vc_sign.
+Proof. unfold selectDep. exists (TMeas (ESig (EAt VC (EBlob green)) TP)). unfold privPolicy. auto. Qed.
 
 Check proj1_sig (vc_sign_okay).
 (*: term (ESig (EAt VC (EBlob green)) TP)*)
@@ -93,12 +102,12 @@ Check proj1_sig (vc_sign_okay).
 (* Measure VC and SS in sequence *)
 Definition vc_ss := TMeas (EPar (ESig (EAt VC (EBlob green)) TP) (ESig (EAt SS (EBlob green)) TP)).
 
-Compute selectDep AP _ vc_ss. 
+Compute selectDep _ vc_ss. 
 (* = {_ : term (EPar (ESig (EAt VC (EBlob green)) TP) (ESig (EAt SS (EBlob green)) TP)) | True /\ False}
      : Set*)
 
 (* Proof is left in a `False` state. *)
-Example vc_ss_okay : selectDep AP _ vc_ss.
+Example vc_ss_okay : selectDep _ vc_ss.
 Proof. unfold selectDep. exists (TMeas (EPar (ESig (EAt VC (EBlob green)) TP) (ESig (EAt SS (EBlob green)) TP))).
-       unfold privPolicyProp. split. auto. Abort. 
+       unfold privPolicy. split. auto. Abort. 
 
