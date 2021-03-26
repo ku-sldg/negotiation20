@@ -11,7 +11,7 @@ Module IndexedCopland.
    | AA : place
    | BB : place
    | CC : place
-   | private_key_p : place 
+   | priv_key : place 
    | EE : place.
 
    (* decidablility *)
@@ -74,8 +74,12 @@ Module IndexedCopland.
    | EBlob _ red => False
    | EBlob _ green => True
    | ESig _ e' _ => privPolicy e'
-   | ECrypt rp (EBlob private_key_p red) tp => False
-   | ECrypt rp e' tp => if (in_dec (eq_place_dec) tp good_encrypt) then True else privPolicy e'
+   | ECrypt rp e' ep => if (in_dec (eq_place_dec) ep good_encrypt) 
+                        then (match e' with 
+                              | EBlob _  red => True 
+                              | _ => privPolicy e'
+                           end) 
+                        else privPolicy e'
    | ESeq _ l r => (privPolicy l) /\ (privPolicy r)
    | EPar _ l r => (privPolicy l) /\ (privPolicy r)
    end.
@@ -86,9 +90,9 @@ Module IndexedCopland.
    Compute privPolicy (ECrypt AA (EBlob AA red) CC).
    Compute privPolicy (ECrypt CC (EBlob CC red) AA).
    Compute privPolicy (ECrypt CC (EBlob CC green) AA).
-   Compute privPolicy (ECrypt CC (EBlob private_key_p red) AA).
+   Compute privPolicy (ECrypt CC (EBlob priv_key red) AA).
 
-   Compute privPolicy (ECrypt AA (EBlob private_key_p red) CC).
+   Compute privPolicy (ECrypt AA (EBlob priv_key red) CC).
    
     (* Terms are indexed on the evidence they produce. First, they expect some measurement.
        That is the first parameter that comes with `term e`. It may also expect the place that 
@@ -110,10 +114,14 @@ Module IndexedCopland.
         term e -> privPolicy e -> term f -> privPolicy f -> term (EPar p e f).
 
    Compute TMeas AA green.
+   (*  = fun x : privPolicy (EBlob AA green) => TMeas AA green x
+     : privPolicy (EBlob AA green) -> term (EBlob AA green)*)
+
+     
    (* should hash only take in a place?? Doesnt really need a blob? *)
    Compute THash (AA).  
    
-   Lemma greenblob : forall p, privPolicy (EBlob p green). unfold privPolicy; auto. Qed.   
+   Lemma greenblob : forall p, privPolicy (EBlob p green). unfold privPolicy. auto. Qed.   
    Compute TCrypt AA ((TMeas AA red) _) .
    Compute TCrypt AA ((TMeas BB red) _) .
    Compute TMeas AA green (greenblob AA).
@@ -132,14 +140,16 @@ Module IndexedCopland.
    Lemma AA_good : In AA good_encrypt.
    Proof. SearchAbout In. unfold good_encrypt. simpl. left. reflexivity. Qed.
 
-   Lemma green_crypted: In AA good_encrypt -> privPolicy (ECrypt CC (EBlob CC red) AA).
-   Proof. intros. unfold privPolicy. destruct in_dec. auto. auto. Qed.
- 
-   Compute TCrypt AA ((TMeas CC red) _) (green_crypted AA_good).
+   Lemma red_crypted: In AA good_encrypt -> privPolicy (ECrypt BB (EBlob BB red) AA).
+   Proof. intros. simpl. auto. Qed.
+
+   Compute TCrypt AA ((TMeas CC red) _) (red_crypted AA_good).
    (* 	 = TCrypt AA (TMeas CC red ?p) (green_crypted AA_good)
      : term (ECrypt CC (EBlob CC red) AA) *)
 
 End IndexedCopland. 
+
+Export IndexedCopland.
 
 Module SubCopland.
 
