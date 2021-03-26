@@ -11,8 +11,8 @@ Module IndexedCopland.
    | AA : place
    | BB : place
    | CC : place
-   | DD : place 
-   | EE : place .
+   | private_key_p : place 
+   | EE : place.
 
    (* decidablility *)
    Definition eq_place_dec: forall x y:place, {x=y}+{x<>y}.
@@ -28,7 +28,7 @@ Module IndexedCopland.
     (* The class is if the information is sensitive. Red means sensitive *)
    Inductive class : Type :=
    | red : class
-   | green : class.
+   | green : class. 
 
     (* decidablility *)
     Definition eq_class_dec: forall x y:class, {x=y}+{x<>y}.
@@ -42,17 +42,17 @@ Module IndexedCopland.
    Inductive evidence : place -> Type :=
    | EBlob : forall p, class -> evidence p
    | EHash : forall p, evidence p
-   | EKeys : forall p, key -> evidence p 
+   (* | EKeys : forall p, key -> evidence p *)
    | ECrypt : forall p q, evidence q -> place -> evidence p
    | ESig : forall p q, evidence q -> place -> evidence p
    | ESeq : forall p q r, evidence p -> evidence q -> evidence r
    | EPar : forall p q r, evidence p -> evidence q -> evidence r.
 
-   Compute (EKeys AA (public_key)). 
+   Compute (ECrypt AA (EBlob AA green) AA). 
 
    Compute (ESeq AA (EBlob BB green) (EBlob CC red)).
    (* evidence AA *)
-   Compute (ECrypt AA (EBlob BB green) CC).
+   Compute (ECrypt AA (EBlob BB green) AA).
    (* evidence AA *) 
 
    (* where do I pass the proof argument here? *)
@@ -74,8 +74,7 @@ Module IndexedCopland.
    | EBlob _ red => False
    | EBlob _ green => True
    | ESig _ e' _ => privPolicy e'
-   | EKeys p private_key => False 
-   | EKeys p _ => True
+   | ECrypt rp (EBlob private_key_p red) tp => False
    | ECrypt rp e' tp => if (in_dec (eq_place_dec) tp good_encrypt) then True else privPolicy e'
    | ESeq _ l r => (privPolicy l) /\ (privPolicy r)
    | EPar _ l r => (privPolicy l) /\ (privPolicy r)
@@ -87,8 +86,9 @@ Module IndexedCopland.
    Compute privPolicy (ECrypt AA (EBlob AA red) CC).
    Compute privPolicy (ECrypt CC (EBlob CC red) AA).
    Compute privPolicy (ECrypt CC (EBlob CC green) AA).
+   Compute privPolicy (ECrypt CC (EBlob private_key_p red) AA).
 
-   Compute privPolicy (ECrypt AA (EKeys AA private_key) CC).
+   Compute privPolicy (ECrypt AA (EBlob private_key_p red) CC).
    
     (* Terms are indexed on the evidence they produce. First, they expect some measurement.
        That is the first parameter that comes with `term e`. It may also expect the place that 
@@ -102,20 +102,20 @@ Module IndexedCopland.
     | THash : term (EHash p)
     | TSig :
          forall e q, term e -> privPolicy (ESig p e q) -> term (ESig p e q)
-    | TKeys: forall e k, 
     | TCrypt :
-        forall ep e , term e -> privPolicy (ECrypt p e ep) -> term (ECrypt p e ep)
+        forall e q, term e -> privPolicy (ECrypt p e q) -> term (ECrypt p e q)
     | TSeq : forall e f,
         term e -> privPolicy e -> term f -> privPolicy f -> term (ESeq p e f)
     | TPar : forall e f,
         term e -> privPolicy e -> term f -> privPolicy f -> term (EPar p e f).
 
    Compute TMeas AA green.
-   Compute TMeas AA red.
    (* should hash only take in a place?? Doesnt really need a blob? *)
    Compute THash (AA).  
-
+   
    Lemma greenblob : forall p, privPolicy (EBlob p green). unfold privPolicy; auto. Qed.   
+   Compute TCrypt AA ((TMeas AA red) _) .
+   Compute TCrypt AA ((TMeas BB red) _) .
    Compute TMeas AA green (greenblob AA).
    (* term (EBlob AA green)*)
 
@@ -192,6 +192,7 @@ Inductive term : evidence -> Type :=
 | TAt : forall e p, term e -> term (EAt p e).
 
 Check TMeas (EBlob green).
+Compute TCrypt AA (TMeas (EBlob green)). 
 
 (* privacy policy mapping from evidence to Proposition 
 
@@ -200,65 +201,72 @@ Check TMeas (EBlob green).
 
    We include place in the privacy policy to make sure that if a red blob 
    is encrypted, the appraiser cannot decrypt it. *)
-Fixpoint privPolicyProp (e:evidence): Prop :=
+
+Definition good_encrypt := AA :: BB :: nil. 
+
+Fixpoint privPolicy (e:evidence): Prop :=
     match e with
     | EHash => True
     | EBlob red => False
     | EBlob green => True
-    | ECrypt e tp =>  if eq_place_dec  tp then privPolicyProp ap e else True
-    | ESig e' _ => privPolicyProp ap e'
-    | ESeq l r => and (privPolicyProp ap l) (privPolicyProp ap r)
-    | EPar l r => and (privPolicyProp ap l) (privPolicyProp ap r)
-    | EAt p e' => privPolicyProp ap e' 
+    | ECrypt e' ep => if (in_dec (eq_place_dec) ep good_encrypt) 
+                         then (match e' with 
+                                 | EBlob red => True 
+                                 | _ => privPolicy e'
+                              end) 
+                          else privPolicy e'
+    | ESig e' _ => privPolicy e'
+    | ESeq l r => and (privPolicy l) (privPolicy r)
+    | EPar l r => and (privPolicy l) (privPolicy r)
+    | EAt p e' => privPolicy e' 
     end.
 
-    Compute TMeas (ECrypt (EBlob green) AA).
-    Compute privPolicyProp (AA) (ECrypt (EBlob green) AA).
-    (* = True
-     : Prop *)
-    Compute privPolicyProp (AA) (ECrypt (EBlob red) AA).
-    (* = False
-     : Prop*)
-    Compute privPolicyProp (BB) (ECrypt (EBlob green) AA).
-    (* = True
-     : Prop *)
-   Compute privPolicyProp (BB) (ECrypt (EBlob red) AA).
+   Compute TMeas (ECrypt (EBlob green) AA).
+   Compute privPolicy (ECrypt (EBlob green) AA).
+   (* = True
+   : Prop *)
+   Compute privPolicy (ECrypt (EBlob red) AA).
+   (* = False
+   : Prop*)
+   Compute privPolicy (ECrypt (EBlob green) CC).
+   (* = True
+   : Prop *)
+   Compute privPolicy (ECrypt (EBlob red) CC).
    (* We can encrypt a RED blob as long as the place recieving cannot decrypt it
-   
-      = True 
-      : Prop 
+   = True 
+   : Prop 
    *)
 
    (* this privacy policy takes in a place asking *)
-   Definition privPolicyTProp p e (t:term e) := privPolicyProp p e.
+   Definition privPolicyT e (t:term e) := privPolicy e.
 
-    (* This is our selection policy which creates a set of terms. 
-       It builds the set based on privacy policy satisfaction.   *)
-    Definition selectDep p e (_:term e) := {t:term e | privPolicyProp p e}.
-    
-    (* Definition selectDep e (_:term e) := {t:term e | privPolicyProp e}. *)
+   (* This is our selection policy which creates a set of terms. 
+      It builds the set based on privacy policy satisfaction.   *)
+   Definition selectDep e (_:term e) := {t:term e | privPolicy e}.
 
-    Check selectDep. 
-    (* selectDep
-       : place -> forall e : evidence, term e -> Set*) 
-    (* the return type of selectDep is a SET. *)
-    
-    
-    Compute selectDep AA (TMeas (EBlob green)).
-    (* = {_ : term (EBlob green) | True}
-    : Set *)
-    Check selectDep AA (TMeas (EBlob green)).
-    
-    Compute selectDep AA (THash (TMeas(EBlob red))). 
-    (* 
+   (* Definition selectDep e (_:term e) := {t:term e | privPolicyProp e}. *)
+
+   Check selectDep. 
+   (* selectDep
+      : forall e : evidence, term e -> Set*) 
+   (* the return type of selectDep is a SET. *)
+
+
+
+   Compute selectDep  (TMeas (EBlob green)).
+   (* = {_ : term (EBlob green) | True}
+   : Set *)
+
+   Compute selectDep (THash (TMeas(EBlob red))). 
+   (* 
       = {_ : term EHash | True}
-     : Set
-    *)
+      : Set
+      *)
 
     (* if you give me this thing, it is of that type. 
        This is important because you can't have empty types. 
        Type system cannot be empty! *)
-    Example selectDep1 : selectDep AA (TMeas (EBlob green)).
+    Example selectDep1 : selectDep  (TMeas (EBlob green)).
     Proof. 
       unfold selectDep. exists (TMeas (EBlob green)). reflexivity.
     Qed.
@@ -275,7 +283,7 @@ Fixpoint privPolicyProp (e:evidence): Prop :=
     Compute proj1_sig (selectDep1). 
     (* 	 = let (x, _) := selectDep1 in x
          : term (EBlob green)*) 
-
 End SubCopland.
+
         
         
