@@ -244,15 +244,15 @@ Module IndexedTypesAgain.
        is asking for the measurment, ap.   *)
     Inductive term p : (evidence p) -> Type :=
     | TMeas : forall c, term (EBlob p c)
-    | THash : forall ap e, term e -> privPolicy ap (EHash p) -> term (EHash p)
+    | THash : forall e, term e -> privPolicy p (EHash p) -> term (EHash p)
     | TSig :
-         forall ap e q, term e -> privPolicy ap (ESig p e q) -> term (ESig p e q)
+         forall e q, term e -> privPolicy p (ESig p e q) -> term (ESig p e q)
     | TCrypt :
-        forall ap e q, term e -> privPolicy ap (ECrypt p e q) -> term (ECrypt p e q)
-    | TSeq : forall ap e f,
-        term e -> privPolicy ap e -> term f -> privPolicy ap f -> term (ESeq p e f)
-    | TPar : forall ap e f,
-        term e -> privPolicy ap e -> term f -> privPolicy ap f -> term (EPar p e f).
+        forall e q, term e -> privPolicy p (ECrypt p e q) -> term (ECrypt p e q)
+    | TSeq : forall e f,
+        term e -> privPolicy p e -> term f -> privPolicy p f -> term (ESeq p e f)
+    | TPar : forall e f,
+        term e -> privPolicy p e -> term f -> privPolicy p f -> term (EPar p e f).
 
    Compute TMeas (AA) (green).
 
@@ -267,7 +267,7 @@ Module IndexedTypesAgain.
        term (ECrypt CC (EBlob CC green) BB) *)
 
    (* AFTER *)
-   Compute TCrypt AA BB (TMeas (CC) (green)). 
+   Compute TCrypt AA BB (TMeas (CC) (green)).
    (* = fun x : privPolicy AA (ECrypt CC (EBlob CC green) BB) =>
        TCrypt AA BB (TMeas CC green) x
      : privPolicy AA (ECrypt CC (EBlob CC green) BB) ->
