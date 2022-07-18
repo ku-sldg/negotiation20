@@ -332,7 +332,7 @@ Module VirusCheckFunction.
    | c3'' : cap'' (lseq (att 0 (asp (ASPC 0))) (lseq (bpar (ALL, NONE) (asp CPY) (asp HSH)) (asp SIG)))
    | c4'' : cap'' (att 1 (asp (ASPC 1)))
    | c5'' : cap'' (lseq (att 2 (asp (HSH))) (asp (SIG)))
-   | c6'' : cap'' ( att 2 (asp HSH)).
+   | c6'' : cap'' (att 2 (asp HSH)).
 
    Check cap''. 
 

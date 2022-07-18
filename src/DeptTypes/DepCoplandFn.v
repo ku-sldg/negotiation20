@@ -263,6 +263,8 @@ Module DepCopland.
               fun _ : true = privPolicy (EBlob red) => TMeas (EBlob red).
   Proof.
   Abort.
+
+  Compute selectDepFn (TMeas (EBlob red)). 
   
   Definition goodTerm e := {t:(term e) | privPolicyT t = true}.
   (* Do some examples here *)

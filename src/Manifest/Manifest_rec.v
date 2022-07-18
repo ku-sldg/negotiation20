@@ -1,3 +1,7 @@
+
+(*************
+This file was the first attempt at the manifest (6.28.22). It uses record types. There is great discription in here about ASPs and the goal of the local and global manifests.  
+*)
 Notation "[ ]" := nil (format "[ ]") : list_scope.
 Notation "[ x ]" := (cons x nil) : list_scope.
 Notation "[ x ; y ; .. ; z ]" := (cons x (cons y .. (cons z nil) ..)) : list_scope.
@@ -6,10 +10,10 @@ Notation "[ x ; y ; .. ; z ]" := (cons x (cons y .. (cons z nil) ..)) : list_sco
 Require Import Coq.Relations.Relation_Definitions. 
 Require Import String.
 Require Import Coq.Classes.RelationClasses.
+Require Import Coq.Lists.List.
 
 (*********************
 COPLAND GRAMMAR 
-
 Had to redefine the Copland grammar below in order to write some examples. 
 **********************)
 
@@ -18,21 +22,19 @@ Definition N_ID: Set := nat.
 
 Definition Event_ID: Set := nat.
 
-Inductive key : Set := 
-| pub : key 
-| priv: key. 
-
 Inductive ASP_ID : Set := 
 | attest_id : ASP_ID
-| encrypt : key -> ASP_ID
-| decrypt : key -> ASP_ID. 
+| encrypt :  ASP_ID
+| decrypt :  ASP_ID. 
 
 Inductive TARG_ID: Set := 
 | o1 : TARG_ID 
 | o2 : TARG_ID.
 
-Definition Arg: Set.
-Admitted.
+Inductive Arg: Set := 
+| a_pub_key : Arg 
+| t_priv_key : Arg 
+| t_pub_key : Arg. 
 
 Inductive ASP_PARAMS: Set :=
 | asp_paramsC: ASP_ID -> (list Arg) -> Plc -> TARG_ID -> ASP_PARAMS.
@@ -82,43 +84,34 @@ Inductive Term: Set :=
   Print ASP. 
 
 (* **************
-   DEFINING INI FILES 
-   ************** 
-   
-    The goal of the INI file is to list all possible ASPs and measurement targets. 
+   DEFINING MANIFEST
+   **************  
 
    Need to take into consideration 
-   - platform (an attestation manager lives on a platform)
+   - keys/ids 
+      * capture by defining a platform (an attestation manager lives on a platform)
    - list of ASPs 
-      This can be more summed up as the "capabilities" of the ASP. IE that they can measure certain targets at certain places. Need the measuring place to indicate where the ASP is located.  *)
-
+      * This can be more summed up as the "capabilities" of the ASP. IE that they can measure certain targets at certain places. Need the measuring place to indicate where the ASP is located.
+   - Measures relation
+      * describes who can measure what 
+   - Context 
+      * what does it need to run
+      * what does it have around it to run  *)
    
 Record localMAN : Set := mkLOCAL 
-{ iPlatform : Plc ; 
-  iASP : (list ASP) }. 
-
-(***************
-DEFINING MANIFEST 
-************** 
+{ lPlatform : Plc ; 
+  lASP : (list ASP) }. 
    
-    Need to take into consideration 
-    - list of INIs 
-    - measures relation
-    
-    Each INI file describes a list of ASP that exist on an Attestation Mangaer (AM). 
-    
-    For example, say there is an attestation manager A and an attestation manager B. Say that A wants to ask B for a measurement. We must define in the measures relation that A can do so or we may extract such relation.  
-    *)
-   
-
+(* manifest will not have *)
 Record globalMAN : Set := mkGLOBAL
-{ mLOCAL : list localMAN }.
+{ gLOCAL : list localMAN ;
+  gM : inhabited (relation Plc)}.
 
 (***************************
   DEFINING GENERATE FUNCTION 
   ***************************
 
-  Once the manifest is written, we need some way to generate a list of protocols that can be used for attestation. Then can apply privacy policy over the protocols to respond to the relying party. 
+  Once the manifest is written, we need some way to generate a list of protocols that can be used for attestation.  
 
   First, `generate` is the entry point to the function. This turns the manifest into a list of INI files. Next, `generate_list` function called the generate_from_ini for each element in the INI file. generate_from_ini is the fundamental operation as it actually generates the protocols. *)
 
@@ -136,29 +129,38 @@ Fixpoint generate_from_ini (p : Plc ) (a : list ASP) : list Term :=
 Fixpoint generate_list (m: list localMAN) : list Term :=
   match m with 
   | (nil)  => [ ]
-  | (cons h t') => match h with 
-                  | {| iPlatform := p ; iASP := l |} => generate_from_ini p l ++ generate_list t'
-                  (* | {| iPlatform := p ; iASP := nil |} => [ ]*)
-                  end
+  | (cons h t') => generate_from_ini h.(lPlatform) h.(lASP) ++ generate_list t'
   end. 
 
 Definition generate (m : globalMAN) : list Term := 
-  match m with 
-   | {| mLOCAL := m' |} => generate_list (m')
+  match m.(gLOCAL) with 
+   | nil => []
+   | list => generate_list list 
   end.
+
+(* all terms can be produced via the generate function *)
+Lemma generate_ok : forall (t:Term) (m:globalMAN),  m.(gLOCAL) <> nil ->  In t (generate m).
+Proof.
+  intros. induction t.
+  + induction m. simpl in H. destruct H. destruct gLOCAL0. reflexivity. destruct l. simpl.  .   destruct m. destruct gLOCAL0.
+  ++ simpl in H. destruct H. reflexivity.
+  ++ simpl in H. destruct H.     simpl.  unfold In. simpl.  inversion H.   
+  
+  
+  
+  induction m. destruct gLOCAL0.
+  + simpl. simpl in H. destruct H. reflexivity.
+  + induction l.
+  ++ simpl in H. 
 
 (***************************
   DEFINING COMBINATION FUNCTION 
-
-  At some point, we need to look at how protocols are combined. If they can be joined in sequence, parallel, or 
-
+  At some point, we need to look at how protocols are combined. If they can be joined in sequence or parallel. Perhaps use a lattice to model this then walking the lattice will give you different possible combinations of terms. 
   ***************************)
 
 (****************************
-  DEFINING TARGET'S SELECTION FUNCTION
-
+  TARGET'S SELECTION POLICY
   We want to be able to pass in a reqest, and recieve a list of terms that satisfy the reqest. First, use generate to recieve a list of protocols. Then string matching to return all protocols that include the requested protocol. 
-
 *****************************)  
 
 Definition eq_targ_id : forall x y : TARG_ID, {x = y} + {x <> y}.
@@ -196,6 +198,30 @@ match t_in with
                 else select_t r t (t_out)
 | _ => t_out
 end.
+
+
+(*****************************
+  PRIVACY POLICY
+******************************)
+
+
+(******************************
+    THE NEGOTIATE FUNCTION 
+    Here we take the request and the target's manifest to actually generate a list of protocols. 
+  *****************************)
+Definition negotiate_t (r: TARG_ID) (m :globalMAN) : list Term :=
+  select_t r (generate m) []. 
+    
+
+(******************************
+  THEORIES  
+  Here we come to our main Theorem. This says, forall terms generated through negotation are actually in the Manifest. Essentially, can the manifest run the selected protocols? 
+******************************)
+Theorem runnable : forall (r:TARG_ID) (m:globalMAN), negotiate_t r m "gives you some t in " generate m .
+Proof.
+  
+Qed.
+
 
 (***************************
    EXAMPLE 
