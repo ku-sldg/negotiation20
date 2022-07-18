@@ -304,7 +304,6 @@ Module DepCopland.
   Proof.
     intros. inversion H. Abort.
 
-
   (* in CPDT on pg 104 where pred_strong is defined, Chipila has a 
      construstor for every case. *)
      

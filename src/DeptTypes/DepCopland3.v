@@ -104,8 +104,7 @@ Module IndexedCopland.
     Inductive term p : evidence p  -> Type :=
     | TMeas : forall c,  privPolicy (EBlob p c) -> term (EBlob p c)
     | THash : term (EHash p)
-    | TSig :
-         forall e q, term e -> privPolicy (ESig p e q) -> term (ESig p e q)
+    | TSig : forall e q, term e -> privPolicy (ESig p e q) -> term (ESig p e q)
     | TCrypt :
         forall e q, term e -> privPolicy (ECrypt p e q) -> term (ECrypt p e q)
     | TSeq : forall e f,
@@ -138,7 +137,7 @@ Module IndexedCopland.
    
 
    Lemma AA_good : In AA good_encrypt.
-   Proof. SearchAbout In. unfold good_encrypt. simpl. left. reflexivity. Qed.
+   Proof. (* SearchAbout In.*) unfold good_encrypt. simpl. left. reflexivity. Qed.
 
    Lemma red_crypted: In AA good_encrypt -> privPolicy (ECrypt BB (EBlob BB red) AA).
    Proof. intros. simpl. auto. Qed.
