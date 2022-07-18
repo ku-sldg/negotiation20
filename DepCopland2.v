@@ -96,6 +96,7 @@ Module IndexedCopland.
     | TPar : forall ap e f,
         term e -> privPolicy ap e -> term f -> privPolicy ap f -> term (EPar p e f).
 
+   Compute TMeas (EBlob _ red). 
 
     Lemma l1: forall ap p, privPolicy ap (EBlob p green). unfold privPolicy; auto. Qed.
 
@@ -241,20 +242,32 @@ Module IndexedTypesAgain.
 
     (* Terms are indexed on the evidence they produce. First, they expect some measurement.
        That is the first parameter that comes with `term e`. It may also expect the place that 
-       is asking for the measurment, ap.   *)
-    Inductive term p : (evidence p) -> Type :=
-    | TMeas : forall c, term (EBlob p c)
-    | THash : forall e, term e -> privPolicy p (EHash p) -> term (EHash p)
+       is asking for the measurment, ap.  
+       
+       -> privPolicy ap (EBlob p c)*)
+    Inductive term p : evidence p  -> Type :=
+    | TMeas : forall ap e,  privPolicy ap e -> term e
+    | THash : forall e, e -> term (EHash p)
     | TSig :
          forall e q, term e -> privPolicy p (ESig p e q) -> term (ESig p e q)
     | TCrypt :
-        forall e q, term e -> privPolicy p (ECrypt p e q) -> term (ECrypt p e q)
-    | TSeq : forall e f,
-        term e -> privPolicy p e -> term f -> privPolicy p f -> term (ESeq p e f)
-    | TPar : forall e f,
-        term e -> privPolicy p e -> term f -> privPolicy p f -> term (EPar p e f).
+        forall (ap q : place) e , place -> term e -> privPolicy ap (ECrypt p e q) -> term (ECrypt p e q)
+    | TSeq : forall ap e f,
+        term e -> privPolicy ap e -> term f -> privPolicy ap f -> term (ESeq p e f)
+    | TPar : forall ap e f,
+        term e -> privPolicy ap e -> term f -> privPolicy ap f -> term (EPar p e f).
 
-   Compute TMeas (AA) (green).
+
+   Compute TMeas AA (EBlob AA green).
+   Compute TMeas AA (EBlob AA red).
+   Compute THash AA (EBlob AA red).  
+
+   Lemma greenblob : forall ap p, privPolicy ap (EBlob p green). unfold privPolicy; auto. Qed.   
+   Compute TMeas AA AA green (greenblob AA AA).
+   (* term (EBlob AA green)*)
+
+   Compute ECrypt BB (EBlob AA green) CC. 
+   Compute TCrypt AA BB DD ((TMeas CC AA green) (greenblob CC AA)). 
 
    (* BEFORE *)
    (* this returns some funky thing where we must provide a proof that the 
@@ -267,15 +280,15 @@ Module IndexedTypesAgain.
        term (ECrypt CC (EBlob CC green) BB) *)
 
    (* AFTER *)
+<<<<<<< HEAD
    Compute TCrypt AA BB (TMeas (CC) (green)).
+=======
+   Compute TCrypt AA BB DD ((TMeas CC AA green) (greenblob CC AA)). 
+>>>>>>> fcf6d8c7a80d1ace232394eac89245fc2170a394
    (* = fun x : privPolicy AA (ECrypt CC (EBlob CC green) BB) =>
-       TCrypt AA BB (TMeas CC green) x
+       TCrypt AA BB DD (TMeas CC AA green (greenblob CC AA)) x
      : privPolicy AA (ECrypt CC (EBlob CC green) BB) ->
        term (ECrypt CC (EBlob CC green) BB)*)
-
-   (* proof that any green measurement is acceptable *)
-   Lemma tmeas_green : forall p, privPolicy p (EBlob p green).
-   Proof. intros. simpl. auto. Qed.   
 
    (* it shouldn't matter if ap = tp... the blob is green
       the privacy policy for crypt must take into consideration 
@@ -285,9 +298,10 @@ Module IndexedTypesAgain.
    Lemma green_crypted: forall ap mp ep, privPolicy ap (ECrypt mp (EBlob mp green) ep).
    Proof. intros. simpl. destruct eq_place_dec. auto. auto. Qed.
    
-   Compute TCrypt AA BB (TMeas CC green) (green_crypted AA CC BB).
-   (*  = TCrypt AA BB (TMeas (EBlob CC green)) (green_crypted AA CC BB)
-       : term (ECrypt CC (EBlob CC green) BB) 
+   Compute TCrypt AA BB CC ((TMeas CC AA green) (greenblob CC AA)) (green_crypted AA CC BB).
+   (*  = TCrypt AA BB CC (TMeas CC AA green (greenblob CC AA))
+         (green_crypted AA CC BB)
+        : term (ECrypt CC (EBlob CC green) BB) 
        
        This says that the green blob measured at place CC is encrypted with BB. *) 
 
@@ -308,18 +322,6 @@ Module IndexedTypesAgain.
    Compute TCrypt AA BB (TMeas (EBlob CC red)) (red_crypted AA neqAACC).   
    (* = TCrypt AA BB (TMeas (EBlob CC red)) (red_crypted AA neqAACC)
      : term (ECrypt CC (EBlob CC red) BB)*)
-
-   (* BUT it does not work if the first two places match... which was the goal. *)
-   (* Compute TCrypt AA AA (TMeas (EBlob CC red)) (red_crypted AA neqAACC). *)
-   Compute THash (TMeas (EBlob AA red)).
-   (* = fun x : privPolicy ?ap (EHash AA) => THash (TMeas (EBlob AA red)) x
-     : privPolicy ?ap (EHash AA) -> term (EHash AA)*)
-   Lemma l1: forall ap,  privPolicy ap (EHash ap).
-   Proof. unfold privPolicy. auto. Qed.
-   
-   Compute THash (TMeas (EBlob AA red)) (l1 AA). 
-   (* = THash (TMeas (EBlob AA red)) (l1 AA)
-     : term (EHash AA)*)
 
 End IndexedTypesAgain. 
 
@@ -460,32 +462,6 @@ Fixpoint privPolicyProp (ap : place) (e:evidence): Prop :=
     Compute proj1_sig (selectDep1). 
     (* 	 = let (x, _) := selectDep1 in x
          : term (EBlob green)*) 
-
-
-   (* Another privPolicy. This time, we say that the target
-      refuses to share information  *)
-   Fixpoint privPolicyProp2 (ap : place) (e:evidence): Prop :=
-    match ap, e with
-    | _ , EHash => True
-    | _ , EBlob red => False
-    | _ , EBlob green => True
-    | _ , ECrypt e tp =>  match ap with 
-                           | tp => privPolicyProp2 ap e
-                           (* | _ => True *)
-                           end
-    | _ , ESig e' _ => privPolicyProp2 ap e'
-    | _ , ESeq l r => and (privPolicyProp2 ap l) (privPolicyProp2 ap r)
-    | _ , EPar l r => and (privPolicyProp2 ap l) (privPolicyProp2 ap r)
-    | _ , EAt tp e' => match ap, tp with
-                      (* this rule says that the target does not want 
-                         to share a measurement from place BB with 
-                         place AA. That is, the appraiser asks for a measurement 
-                         from place AA and the target's place BB exposes some 
-                         kind of information they do not wish to share *) 
-                      | AA, BB => False   
-                      | _ , _ => privPolicyProp2 ap e' 
-                      end
-    end.
 
 End SubCopland.
 
