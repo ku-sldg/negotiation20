@@ -396,7 +396,10 @@ Module Manifest.
   Lemma ex12: (trc (R mm3) Rely Appraise).
   Proof.
     eapply TrcFront.
+    assert ((R mm3) Rely Target). constructor. apply H.
+    eapply TrcFront.
+    assert ((R mm3) Target Appraise). constructor. apply H.
+    eapply TrcRefl.
+  Qed.
     
-    
-  
 End Manifest.
