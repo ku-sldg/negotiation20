@@ -6,16 +6,19 @@ Require Export String.
 
 Module Manifest.
 
-  (** Finite set of keys that serve as identifiers for AMs as well as keys.
-   * Primarily used as identifiers in this model.
-   *)
-  
   Definition Plc: Set := string.
   Definition N_ID: Set := nat.
   Definition Event_ID: Set := nat.
   Definition ASP_ID: Set := string.
   Definition TARG_ID: Set := string.
   Definition Arg: Set := string.
+
+  (** Some places to play with *)
+
+  Notation Rely := "Rely"%string.
+  Notation Target := "Target"%string.
+  Notation Appraise := "Appraise"%string.
+
   
   (** The structure of evidence. *)
 
@@ -55,9 +58,9 @@ Module Manifest.
   (* A couple of examples for use later *)
   
   Definition aspc0 :=
-    ASPC ALL EXTD (asp_paramsC "asp0"%string ["x"%string;"y"%string] "Target"%string "Target"%string).
+    ASPC ALL EXTD (asp_paramsC "asp0"%string ["x"%string;"y"%string] Target Target).
   Definition aspc1 :=
-    ASPC ALL EXTD (asp_paramsC "asp1"%string ["x"%string;"y"%string] "Target"%string "Target"%string).
+    ASPC ALL EXTD (asp_paramsC "asp1"%string ["x"%string;"y"%string] Target Target).
 
   Definition Split: Set := (SP * SP).
   
@@ -249,10 +252,6 @@ Module Manifest.
       s_M : relation string;     (* Who talks to who from mm *)
       s_C : list string }.       (* Who depends on who from mm *)
 
-  Definition Rely := "Rely"%string.
-  Definition Target := "Target"%string.
-  Definition Appraise := "Appraise"%string.
-  
   (** Relations defining [M] for [Rely], [Target], and [Appraise]. 
    *)
   Inductive M_Rely: relation string :=
