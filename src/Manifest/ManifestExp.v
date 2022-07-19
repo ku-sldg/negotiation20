@@ -90,7 +90,7 @@ Module Manifest.
 
   (** Manifest is an INI and M defining know communication.
    *)
-  Record Manifest := {ini:INI; M:relation string}.
+  Record Manifest := {ini:INI; M:list string}.
   
   (** Manifest Map [mm] is a mapping from an AM keys to their manifest.
    * remember the hash of the public key is an AM's identifier.
@@ -254,13 +254,9 @@ Module Manifest.
 
   (** Relations defining [M] for [Rely], [Target], and [Appraise]. 
    *)
-  Inductive M_Rely: relation string :=
-  | RelyTarget: M_Rely Rely Target.
-
-  Inductive M_Target: relation string :=
-  | TargetAppraise: M_Target Target Appraise.
-
-  Inductive M_Appraise: relation string :=.
+  Definition M_Rely: list string := [Target].
+  Definition M_Target: list string := [Appraise].
+  Definition M_Appraise: list string := [].
 
   (** Relations defining [M] for the entire system.  Not currently used. 
    *)
@@ -306,17 +302,17 @@ Module Manifest.
   Definition knowsOf(k:string)(mm0:pmm)(p:Plc):Prop :=
     match (mm0 k) with
     | None => False
-    | Some m => m.(M) k p
+    | Some m => In p m.(M)
     end.
 
   Example ex3: knowsOf Rely mm3 Target.
   Proof.
-    unfold knowsOf. simpl. constructor.
+    unfold knowsOf. simpl. left. reflexivity.
   Qed.
   
   Example ex4: knowsOf Rely mm3 Appraise -> False.
   Proof.
-    unfold knowsOf. simpl. intros. inversion H.
+    unfold knowsOf. simpl. intros. destruct H. inversion H. assumption.
   Qed.
 
   (** Is term [t] exectuable on the system described by manifest [k] in
@@ -336,7 +332,7 @@ Module Manifest.
   Ltac prove_exec :=
     simpl; auto; match goal with
                  | |- hasASP _ _ _ => cbv; left; reflexivity
-                 | |- knowsOf _ _ _ => unfold knowsOf; simpl; constructor
+                 | |- knowsOf _ _ _ => unfold knowsOf; simpl; left; reflexivity
                  | |- _ /\ _ => split; prove_exec
                  | |- _ => idtac
                  end.
@@ -376,15 +372,15 @@ Module Manifest.
   
   Definition R(mm:pmm)(k1 k2:string):Prop :=
     match (mm k1) with
-    | Some m => m.(M) k1 k2
+    | Some m => In k2 m.(M)
     | None => False
     end.
 
   Example ex9: (R mm3 Rely Target).
-  Proof. cbv. constructor. Qed.
+  Proof. cbv. left. reflexivity. Qed.
 
   Example ex10: (R mm3 Rely Appraise) -> False.
-  Proof. intros HContra. cbv in *. inversion HContra. Qed.
+  Proof. intros HContra. cbv in *. destruct HContra. inversion H. assumption. Qed.
   
   Inductive trc {A} (R: A -> A -> Prop) : A -> A -> Prop :=
   | TrcRefl : forall x, trc R x x
@@ -401,9 +397,9 @@ Module Manifest.
   Lemma ex12: (trc (R mm3) Rely Appraise).
   Proof.
     eapply TrcFront.
-    assert ((R mm3) Rely Target). constructor. apply H.
+    assert ((R mm3) Rely Target). constructor. reflexivity. apply H.
     eapply TrcFront.
-    assert ((R mm3) Target Appraise). constructor. apply H.
+    assert ((R mm3) Target Appraise). constructor. reflexivity. apply H.
     eapply TrcRefl.
   Qed.
     
