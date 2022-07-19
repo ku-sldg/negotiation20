@@ -57,10 +57,10 @@ Module Manifest.
 
   (* A couple of examples for use later *)
   
-  Definition aspc0 :=
-    ASPC ALL EXTD (asp_paramsC "asp0"%string ["x"%string;"y"%string] Target Target).
-  Definition aspc1 :=
-    ASPC ALL EXTD (asp_paramsC "asp1"%string ["x"%string;"y"%string] Target Target).
+  Notation aspc0 :=
+    (ASPC ALL EXTD (asp_paramsC "asp0"%string ["x"%string;"y"%string] Target Target)).
+  Notation aspc1 :=
+    (ASPC ALL EXTD (asp_paramsC "asp1"%string ["x"%string;"y"%string] Target Target)).
 
   Definition Split: Set := (SP * SP).
   
