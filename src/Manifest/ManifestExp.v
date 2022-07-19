@@ -81,59 +81,51 @@ Module Manifest.
   Theorem evidence_dec : forall a1 a2 : EVIDENCE, {a1=a2}+{~a1=a2}.
   Proof. repeat decide equality. Defined.
 
-  (** INI is a list of ASPs and likely more later.
+  (** [INI] defines an attestation manger a list of ASPs and other managers it is
+   * aware of.
    *)
   Record INI :=
-    { asps : list ASP }.
+    { asps : list ASP;
+      M:list string}.
+
+  (** [Manifest] is a set of AM's defined by [INI] records. *)
+  Definition Manifest : Type :=  string -> (option INI).
+
+  Definition m_empty : Manifest := (fun _ => None).
   
-  Check {| asps := [NULL] |}.
-
-  (** Manifest is an INI and M defining know communication.
-   *)
-  Record Manifest := {ini:INI; M:list string}.
-  
-  (** Manifest Map [mm] is a mapping from an AM keys to their manifest.
-   * remember the hash of the public key is an AM's identifier.
-   *)
-  Definition mm : Type :=  string -> Manifest.
-
-  (** Empty Manifest Map
-   *)
-  Definition mm_empty (v : Manifest) := (fun _:string => v).
-
-  Definition mm_update (m : mm) (x : string) (v : Manifest) :=
+  Definition m_update (m : Manifest) (x : string) (v : (option INI)) :=
     fun x' => if string_dec x x' then v else m x'.
 
-  Lemma mm_apply_empty: forall x v, @mm_empty v x = v.
+  Lemma m_apply_empty: forall x, @m_empty x = None.
   Proof.
     intros.
     auto.
   Qed.
 
-  Lemma mm_update_eq : forall (m: mm) x v,
-      (mm_update m x v) x = v.
+  Lemma m_update_eq : forall (m: Manifest) x v,
+      (m_update m x v) x = v.
   Proof.
-    intros. unfold mm_update.
+    intros. unfold m_update.
     case (string_dec x x).
     * intro H. reflexivity.
     * intro H. contradiction.
   Qed.
 
-  Theorem mm_update_neq : forall v x1 x2 (m:mm),
-      x1 <> x2 -> (mm_update m x1 v) x2 = m x2.
+  Theorem m_update_neq : forall v x1 x2 (m:Manifest),
+      x1 <> x2 -> (m_update m x1 v) x2 = m x2.
   Proof.
     intros v x1 x2 m.
     intros H.
-    unfold mm_update.
+    unfold m_update.
     case (string_dec x1 x2); intros H1; [contradiction | reflexivity].
   Qed.
 
-  Theorem mm_update_shadow : forall (m:mm) v1 v2 x,
-      mm_update (mm_update m x v1) x v2
-      = mm_update m x v2.
+  Theorem m_update_shadow : forall (m:Manifest) v1 v2 x,
+      m_update (m_update m x v1) x v2
+      = m_update m x v2.
   Proof.
     intros m v1 v2 x.
-    unfold mm_update.
+    unfold m_update.
     apply functional_extensionality.
     intros x0.
     case (string_dec x x0).
@@ -141,84 +133,11 @@ Module Manifest.
     * intros H; reflexivity.
   Qed.
   
-  Theorem mm_update_same : forall x (m : mm),
-      mm_update m x (m x) = m.
+  Theorem m_update_same : forall x (m : Manifest),
+      m_update m x (m x) = m.
   Proof.
     intros x m.
-    unfold mm_update.
-    apply functional_extensionality.
-    intros x0.
-    case (string_dec x x0).
-    * intros H. subst. reflexivity.
-    * intros H. reflexivity.
-  Qed.
-
-  Theorem mm_update_permute : forall v1 v2 x1 x2 (m : mm),
-      x2 <> x1 ->
-      (mm_update (mm_update m x2 v2) x1 v1)
-      = (mm_update (mm_update m x1 v1) x2 v2).
-  Proof.
-    intros v1 v2 x1 x2 m.
-    intros H.
-    unfold mm_update.
-    apply functional_extensionality.
-    intros x.
-    case (string_dec x1 x).
-    * intros H1. subst.
-      ** case (string_dec x2 x); intros; contradiction || reflexivity.
-    * intros H1. subst.
-      ** case (string_dec x2 x); intros; reflexivity.
-  Qed.
-
-  Definition pmm : Type :=  string -> (option Manifest).
-
-  Definition pmm_empty : pmm := (fun _ => None).
-
-  Definition pmm_update (m : pmm) (x : string) (v : (option Manifest)) :=
-    fun x' => if string_dec x x' then v else m x'.
-
-  Lemma pmm_apply_empty: forall x, @pmm_empty x = None.
-  Proof.
-    intros.
-    auto.
-  Qed.
-
-  Lemma pmm_update_eq : forall (m: pmm) x v,
-      (pmm_update m x v) x = v.
-  Proof.
-    intros. unfold pmm_update.
-    case (string_dec x x).
-    * intro H. reflexivity.
-    * intro H. contradiction.
-  Qed.
-
-  Theorem pmm_update_neq : forall v x1 x2 (m:pmm),
-      x1 <> x2 -> (pmm_update m x1 v) x2 = m x2.
-  Proof.
-    intros v x1 x2 m.
-    intros H.
-    unfold pmm_update.
-    case (string_dec x1 x2); intros H1; [contradiction | reflexivity].
-  Qed.
-
-  Theorem pmm_update_shadow : forall (m:pmm) v1 v2 x,
-      pmm_update (pmm_update m x v1) x v2
-      = pmm_update m x v2.
-  Proof.
-    intros m v1 v2 x.
-    unfold pmm_update.
-    apply functional_extensionality.
-    intros x0.
-    case (string_dec x x0).
-    * intros H; reflexivity.
-    * intros H; reflexivity.
-  Qed.
-  
-  Theorem pmm_update_same : forall x (m : pmm),
-      pmm_update m x (m x) = m.
-  Proof.
-    intros x m.
-    unfold pmm_update.
+    unfold m_update.
     apply functional_extensionality.
     intros x0.
     case (string_dec x x0).
@@ -226,14 +145,14 @@ Module Manifest.
     * intros H; reflexivity.
   Qed.
 
-  Theorem pmm_update_permute : forall v1 v2 x1 x2 (m : pmm),
+  Theorem m_update_permute : forall v1 v2 x1 x2 (m : Manifest),
       x2 <> x1 ->
-      (pmm_update (pmm_update m x2 v2) x1 v1)
-      = (pmm_update (pmm_update m x1 v1) x2 v2).
+      (m_update (m_update m x2 v2) x1 v1)
+      = (m_update (m_update m x1 v1) x2 v2).
   Proof.
     intros v1 v2 x1 x2 m.
     intros H.
-    unfold pmm_update.
+    unfold m_update.
     apply functional_extensionality.
     intros x.
     case (string_dec x1 x).
@@ -248,8 +167,7 @@ Module Manifest.
    *  THIS CONSTRUCT IS NOT CURRENTLY USED
    *)
   Record System :=
-    { s_AM : pmm;             (* Who is involved *)
-      s_M : relation string;     (* Who talks to who from mm *)
+    { s_M : Manifest;            (* Who is involved *)
       s_C : list string }.       (* Who depends on who from mm *)
 
   (** Relations defining [M] for [Rely], [Target], and [Appraise]. 
@@ -274,20 +192,20 @@ Module Manifest.
   (** Definition of manifest maps for use in examples and proofs.  Note they
    * build constructively through [mm3] that is the map for this system
    *)
-  Definition mm0 := pmm_empty.
+  Definition mm0 := m_empty.
   Definition mm1 :=
-    pmm_update mm0 Rely (Some {| ini := {| asps := [asp1] |}; M:= M_Rely |}).
+    m_update mm0 Rely (Some {| asps := [asp1]; M:= M_Rely|}).
   Definition mm2 :=
-    pmm_update mm1 Target (Some {| ini := {| asps := [asp2] |}; M:= M_Target |}).
+    m_update mm1 Target (Some {| asps := [asp2]; M:= M_Target |}).
   Definition mm3 :=
-    pmm_update mm2 Appraise (Some {| ini := {| asps := [asp3] |}; M:= M_Appraise|}).
+    m_update mm2 Appraise (Some {| asps := [asp3] ; M:= M_Appraise|}).
 
   (** Access an [ASP] [a] from manifest [k] in manifest map [mm0]
    *)
-  Definition hasASP(k:string)(mm0:pmm)(a:ASP):Prop :=
+  Definition hasASP(k:string)(mm0:Manifest)(a:ASP):Prop :=
     match (mm0 k) with
     | None => False
-    | Some m => In a m.(ini).(asps)
+    | Some m => In a m.(asps)
     end.
 
   Example ex1: hasASP Rely mm3 asp1.
@@ -299,7 +217,7 @@ Module Manifest.
   (** Determine if manifest [k] from [mm0] knows how to communicate from [k]
    * to [p]
    *)
-  Definition knowsOf(k:string)(mm0:pmm)(p:Plc):Prop :=
+  Definition knowsOf(k:string)(mm0:Manifest)(p:Plc):Prop :=
     match (mm0 k) with
     | None => False
     | Some m => In p m.(M)
@@ -318,7 +236,7 @@ Module Manifest.
   (** Is term [t] exectuable on the system described by manifest [k] in
    * manfiest map [mm]?  Are the resources available?
    *)
-  Fixpoint executable(t:Term)(k:string)(mm:pmm):Prop :=
+  Fixpoint executable(t:Term)(k:string)(mm:Manifest):Prop :=
     match t with
     | asp a  => hasASP k mm a
     | att p t => knowsOf k mm p /\ executable t p mm
@@ -359,25 +277,27 @@ Module Manifest.
                   Rely mm3).
   Proof. prove_exec. Qed.
 
+  (* Experiments with classes. Nothing here.  Move along...*)
   Class Executable T P E :=
     { exec : T -> P -> E -> Prop }.
 
-  Instance manExec: Executable Term string pmm :=
+  #[local]
+  Instance manExec: Executable Term string Manifest :=
     {| exec := executable
     |}.
 
   Compute manExec.(exec) (asp NULL) Rely mm3.
 
-  (** Moving on to M *)
+  (** Moving on to reasoning about system M *)
   
-  Definition R(mm:pmm)(k1 k2:string):Prop :=
+  Definition R(mm:Manifest)(k1 k2:string):Prop :=
     match (mm k1) with
     | Some m => In k2 m.(M)
     | None => False
     end.
 
   Example ex9: (R mm3 Rely Target).
-  Proof. cbv. left. reflexivity. Qed.
+  Proof. cbv. auto. Qed.
 
   Example ex10: (R mm3 Rely Appraise) -> False.
   Proof. intros HContra. cbv in *. destruct HContra. inversion H. assumption. Qed.
@@ -394,13 +314,12 @@ Module Manifest.
     constructor.
   Qed.
 
+  (** [Measure] relation from [Rely] to [Appraise] *)
   Lemma ex12: (trc (R mm3) Rely Appraise).
   Proof.
-    eapply TrcFront.
-    assert ((R mm3) Rely Target). constructor. reflexivity. apply H.
-    eapply TrcFront.
-    assert ((R mm3) Target Appraise). constructor. reflexivity. apply H.
-    eapply TrcRefl.
+    eapply TrcFront. constructor. reflexivity.
+    eapply TrcFront. constructor. reflexivity.
+    constructor.
   Qed.
     
 End Manifest.
