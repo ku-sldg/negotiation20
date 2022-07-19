@@ -290,6 +290,10 @@ Module Manifest.
     | Some m => In a m.(ini).(asps)
     end.
 
+  (** Decidability of ASP presence should be true.  Hold for later
+  Theorem hasASP_dec: forall k mm0 a, {hasASP k mm0 a}+{~hasASP k mm0 a}.
+   *)
+  
   Example ex1: hasASP Rely mm3 asp1.
   Proof. unfold hasASP. simpl. left. reflexivity. Qed.
 
@@ -336,6 +340,13 @@ Module Manifest.
                  | |- _ /\ _ => split; prove_exec
                  | |- _ => idtac
                  end.
+
+  Definition executable_dec: forall t k mm, {executable t k mm}+{~executable t k mm}.
+  Proof.
+    intros t k mm.
+    induction t.
+    unfold executable.
+  Abort.
   
   Example ex5: (executable (asp asp2) Target mm3).
   Proof. prove_exec. Qed.
