@@ -4,6 +4,12 @@ Require Import Lists.List.
 Import ListNotations.
 Require Export String.
 
+(** Stuff to do:
+ * - Decidability of executable.  Might not work
+ * - Model finder migration from Chlipala
+ * - Flesh out INI and Manifest types
+ *)
+
 Module Manifest.
 
   Definition Plc: Set := string.
@@ -170,35 +176,16 @@ Module Manifest.
     { s_M : Manifest;            (* Who is involved *)
       s_C : list string }.       (* Who depends on who from mm *)
 
-  (** Relations defining [M] for [Rely], [Target], and [Appraise]. 
-   *)
-  Definition M_Rely: list string := [Target].
-  Definition M_Target: list string := [Appraise].
-  Definition M_Appraise: list string := [].
-
-  (** Relations defining [M] for the entire system.  Not currently used. 
-   *)
-  Inductive M_System: relation string :=
-  | SRelyTarget: M_System Rely Target
-  | STargetAppraise: M_System Target Appraise.
-  
-  (** Some example ASPs for use in proofs
-   *)
-  Definition asp0 := aspc0.
-  Definition asp1 := aspc1.
-  Definition asp2 := SIG.
-  Definition asp3 := HSH.
-
   (** Definition of manifest maps for use in examples and proofs.  Note they
    * build constructively through [mm3] that is the map for this system
    *)
   Definition mm0 := m_empty.
   Definition mm1 :=
-    m_update mm0 Rely (Some {| asps := [asp1]; M:= M_Rely|}).
+    m_update mm0 Rely (Some {| asps := [aspc1]; M:= [Target] |}).
   Definition mm2 :=
-    m_update mm1 Target (Some {| asps := [asp2]; M:= M_Target |}).
+    m_update mm1 Target (Some {| asps := [SIG]; M:= [Appraise] |}).
   Definition mm3 :=
-    m_update mm2 Appraise (Some {| asps := [asp3] ; M:= M_Appraise|}).
+    m_update mm2 Appraise (Some {| asps := [HSH] ; M:= [] |}).
 
   (** Access an [ASP] [a] from manifest [k] in manifest map [mm0]
    *)
@@ -212,7 +199,7 @@ Module Manifest.
   Theorem hasASP_dec: forall k mm0 a, {hasASP k mm0 a}+{~hasASP k mm0 a}.
    *)
   
-  Example ex1: hasASP Rely mm3 asp1.
+  Example ex1: hasASP Rely mm3 aspc1.
   Proof. unfold hasASP. simpl. left. reflexivity. Qed.
 
   Example ex2: hasASP Rely mm3 CPY -> False.
@@ -266,7 +253,7 @@ Module Manifest.
     unfold executable.
   Abort.
   
-  Example ex5: (executable (asp asp2) Target mm3).
+  Example ex5: (executable (asp SIG) Target mm3).
   Proof. prove_exec. Qed.
   
   Example ex6: (executable (asp CPY) Target mm3) -> False.
@@ -278,13 +265,13 @@ Module Manifest.
     discriminate. assumption.
   Qed.
 
-  Example ex7: (executable (lseq (asp asp2) (asp asp2)) Target mm3).
+  Example ex7: (executable (lseq (asp SIG) (asp SIG)) Target mm3).
   Proof. prove_exec. Qed.
 
-  Example ex8: (executable (lseq (asp asp1)
+  Example ex8: (executable (lseq (asp aspc1)
                               (att Target
-                                 (lseq (asp asp2)
-                                    (asp asp2))))
+                                 (lseq (asp SIG)
+                                    (asp SIG))))
                   Rely mm3).
   Proof. prove_exec. Qed.
 
@@ -332,5 +319,5 @@ Module Manifest.
     eapply TrcFront. constructor. reflexivity.
     constructor.
   Qed.
-    
+
 End Manifest.
