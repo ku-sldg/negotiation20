@@ -17,7 +17,16 @@ COPLAND GRAMMAR
 Had to redefine the Copland grammar below in order to write some examples. 
 **********************)
 
-Definition Plc: Set := nat.
+Inductive Plc: Set := 
+| relyingParty
+| attester
+| appraiser.
+
+Theorem eq_plc (x y : Plc): {x = y} +  {x <> y} .
+Proof.
+  repeat decide equality. 
+Defined.
+
 Definition N_ID: Set := nat.
 
 Definition Event_ID: Set := nat.
