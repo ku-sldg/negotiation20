@@ -3,7 +3,9 @@ Require Import Relations.
 Require Import Logic.FunctionalExtensionality.
 Require Import Lists.List.
 Import ListNotations.
-Require Export String.
+Require Import String.
+Require Import Copland.
+Import Copland.Term.
 
 (** Stuff to do:
  * - Decidability of executable.  Might not work
@@ -11,83 +13,16 @@ Require Export String.
  * - Flesh out INI and Manifest types
  *)
 
-Module Manifest.
-
-  Definition Plc: Set := string.
-  Definition N_ID: Set := nat.
-  Definition Event_ID: Set := nat.
-  Definition ASP_ID: Set := string.
-  Definition TARG_ID: Set := string.
-  Definition Arg: Set := string.
-
-  (** Some places to play with *)
+Module ManifestTerm.
 
   Notation Rely := "Rely"%string.
   Notation Target := "Target"%string.
   Notation Appraise := "Appraise"%string.
 
-  Notation plc_dec := string_dec.
-  
-  (** The structure of evidence. *)
-
-  Inductive ASP_PARAMS: Set :=
-  | asp_paramsC: ASP_ID -> (list Arg) -> Plc -> TARG_ID -> ASP_PARAMS.
-
-  Inductive Evidence: Set :=
-  | mt: Evidence
-  | nn: N_ID -> Evidence
-  | gg: Plc -> ASP_PARAMS -> Evidence -> Evidence
-  | hh: Plc -> ASP_PARAMS -> Evidence -> Evidence
-  | ss: Evidence -> Evidence -> Evidence.
-  Theorem Evidence_dec : forall a1 a2 : Evidence, {a1=a2}+{~a1=a2}.
-  Proof. repeat decide equality. Defined.
-
-  Inductive SP: Set :=
-  | ALL
-  | NONE.
-  Theorem SP_dec : forall a1 a2 : SP, {a1=a2}+{~a1=a2}.
-  Proof. repeat decide equality. Defined.
-
-  Inductive FWD: Set :=
-  | COMP
-  | EXTD.
-  Theorem FWD_dec : forall a1 a2 : FWD, {a1=a2}+{~a1=a2}.
-  Proof. repeat decide equality. Defined.
-
-  Inductive ASP: Set :=
-  | NULL: ASP
-  | CPY: ASP
-  | ASPC: SP -> FWD -> ASP_PARAMS -> ASP
-  | SIG: ASP
-  | HSH: ASP.
-  Theorem ASP_dec : forall a1 a2 : ASP, {a1=a2}+{~a1=a2}.
-  Proof. repeat decide equality. Defined.
-
-  (* A couple of examples for use later *)
-  
   Notation aspc0 :=
     (ASPC ALL EXTD (asp_paramsC "asp0"%string ["x"%string;"y"%string] Target Target)).
   Notation aspc1 :=
     (ASPC ALL EXTD (asp_paramsC "asp1"%string ["x"%string;"y"%string] Target Target)).
-
-  Definition Split: Set := (SP * SP).
-  
-  Inductive Term: Set :=
-  | asp: ASP -> Term
-  | att: Plc -> Term -> Term
-  | lseq: Term -> Term -> Term
-  | bseq: Split -> Term -> Term -> Term
-  | bpar: Split -> Term -> Term -> Term.
-  Theorem Term_dec : forall a1 a2 : Term, {a1=a2}+{~a1=a2}.
-  Proof. repeat decide equality. Defined.
-
-  Inductive ASPID := aspID : nat -> ASPID.
-  Theorem aspID_dec : forall a1 a2 : ASPID, {a1=a2}+{~a1=a2}.
-  Proof. repeat decide equality. Defined.
-
-  Inductive EVIDENCE := evidence : nat -> EVIDENCE.
-  Theorem evidence_dec : forall a1 a2 : EVIDENCE, {a1=a2}+{~a1=a2}.
-  Proof. repeat decide equality. Defined.
 
   (** [Manifest] defines an attestation manger a list of ASPs and other
    * managers it is aware of.  [Manifest] defines a single AM and its
@@ -324,66 +259,13 @@ Module Manifest.
     constructor.
   Qed.
 
-  (** [Measure] relation from [Rely] to [Appraise] *)
+  (** [Measure] relation from [Rely] to [Appraise]
+   *)
   Lemma ex12: (trc (R e3) Rely Appraise).
   Proof.
     eapply TrcFront. constructor. reflexivity.
     eapply TrcFront. constructor. reflexivity.
     constructor.
   Qed.
-
-  Lemma zez:0=0. reflexivity. Qed.
   
-  Definition eq_nat_dec : forall n m : nat, {n=m} + {n<>m}.
-  refine (fix f (n m:nat) : {n=m} + {n<>m} :=
-            match n,m with
-              | O, O => (left _ zez)
-              | S n', S m' => (if (f n' m') then (left _ _) else (right _ _))
-              | i,j => (right _ _)
-            end).
-    lia.
-    lia.
-    rewrite e. reflexivity.
-    injection. intros. lia.
-  Defined.
-
-  Check left.
-
-  Theorem In_dec: forall l (a:string), {In a l}+{~In a l}.
-  Proof.
-    intros l a.
-    induction l.
-    * right. simpl. unfold not. auto.
-    * destruct IHl.
-      left.
-      simpl. right. assumption.
-      right.
-      destruct n.
-      destruct H.
-      destruct n.
-      
-  Abort.
-  
-  Theorem hasASP_dec: forall k m a, {hasASP k m a}+{~hasASP k m a}.
-    intros k m a.
-    induction a.
-    Check In.
-  Abort.
-
-  (*
-  refine (fix f (k:string)(m:Environment)(a:ASP) : {hasASP k m a}+{~hasASP k m a} :=
-              match (m k) with
-              | Some m0 => if (In a m0.(asps)) then True else False
-              | None => (right _ _)
-              end).
-  
-  Definition exec_dec: forall t k m, {executable t k m}+{~executable t k m}.
-    refine (fix f (t:Term)(k:string)(m:Environment) : {executable t k m}+{~executable t k m} :=
-              match t with
-              | asp a => if (hasASP k m a) then (left _ _) else (right _ _)
-              | att p t => (left _ _)
-              | _ => (right _ _)
-              end).
-   *)
-      
-End Manifest.
+End ManifestTerm.
