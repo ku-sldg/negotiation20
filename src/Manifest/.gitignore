@@ -1,2 +1,4 @@
 *.vok
 *.vos
+*.conf
+.makefile.d
