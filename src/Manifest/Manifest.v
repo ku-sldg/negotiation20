@@ -4,7 +4,7 @@ Require Import Logic.FunctionalExtensionality.
 Require Import Lists.List.
 Import ListNotations.
 Require Import String.
-Require Import Copland.
+Require Import Cop.Copland.
 Import Copland.Term.
 
 (** Stuff to do:
@@ -35,7 +35,7 @@ Module ManifestTerm.
 (*
       ; C : list string
       ; key : string
-      ; add : nat
+      ; address : nat
       ; tpm : nat
 *)
     }.
@@ -129,6 +129,10 @@ Module ManifestTerm.
   Definition e3 :=
     e_update e2 Appraise (Some {| asps := [HSH] ; M:= [] |}).
 
+  Inductive System : Type :=
+  | env : Environment -> System
+  | union : System -> System -> System.
+  
   (** Access an [ASP] [a] from manifest [k] in manifest map [e0]
    *)
   Definition hasASP(k:string)(e0:Environment)(a:ASP):Prop :=

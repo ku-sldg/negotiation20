@@ -1,3 +1,4 @@
--Q .
-ManifestTerm.v
-Copland.v
+-I .
+-R ./Copland Cop
+Copland/Copland.v
+Manifest.v

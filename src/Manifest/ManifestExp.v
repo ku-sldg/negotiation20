@@ -354,13 +354,12 @@ Module Manifest.
     intros l a.
     induction l.
     * right. simpl. unfold not. auto.
-    * destruct IHl.
-      left.
-      simpl. right. assumption.
+    * inversion IHl.
+      left. simpl. right. assumption.
       right.
-      destruct n.
-      destruct H.
-      destruct n.
+      unfold not in *. simpl.
+      intros. apply H.
+      destruct H0.
       
   Abort.
   
