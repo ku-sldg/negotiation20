@@ -298,10 +298,10 @@ Module ManifestTerm.
     | None => False
     end.
 
-  Example ex9: (R e3 Rely Target).
+  Example ex14: (R e3 Rely Target).
   Proof. cbv. auto. Qed.
 
-  Example ex10: (R e3 Rely Appraise) -> False.
+  Example ex15: (R e3 Rely Appraise) -> False.
   Proof.
     prove_exec.
     intros HContra.
@@ -309,6 +309,22 @@ Module ManifestTerm.
     destruct HContra.
     * inversion H.
     * assumption.
+  Qed.
+  
+  Fixpoint Rs(s:System)(k1 k2:string):Prop :=
+    match s with
+    | env e => R e k1 k2
+    | union s1 s2 => Rs s1 k1 k2 \/ Rs s2 k1 k2
+    end.
+
+  Example ex16: (Rs (env e3) Rely Target).
+  Proof.
+    unfold Rs. apply ex14.
+  Qed.
+
+  Example ex17: (Rs (union (env e3) (env e2)) Rely Target).
+  Proof.
+    unfold Rs. left. apply ex14.
   Qed.
 
   (** Traces through [M]
@@ -321,18 +337,32 @@ Module ManifestTerm.
     -> trc R y z
     -> trc R x z.
 
-  Lemma ex11: (trc (R e3) Rely Rely).
+  Lemma ex18: (trc (R e3) Rely Rely).
   Proof.
     constructor.
   Qed.
 
   (** [Measure] relation from [Rely] to [Appraise]
    *)
-  Lemma ex12: (trc (R e3) Rely Appraise).
+  Lemma ex19: (trc (R e3) Rely Appraise).
   Proof.
     eapply TrcFront. constructor. reflexivity.
     eapply TrcFront. constructor. reflexivity.
     constructor.
   Qed.
-  
+
+  Inductive trcs {A} (Rs: A -> A -> Prop) : A -> A -> Prop :=
+  | TrcRefls : forall x, trcs Rs x x
+  | TrcFronts : forall x y z,
+    Rs x y
+    -> trcs Rs y z
+    -> trcs Rs x z.
+
+  Lemma ex20: (trcs (Rs (union (env e3) (env e2))) Rely Appraise).
+  Proof.
+    eapply TrcFronts. constructor. unfold Rs. constructor. reflexivity.
+    eapply TrcFronts. constructor. unfold Rs. constructor. reflexivity.
+    eapply TrcRefls. 
+  Qed.
+
 End ManifestTerm.
