@@ -280,10 +280,15 @@ Module ManifestTerm.
 
   #[local]
   Instance manExec: Executable Term string Environment :=
-    {| exec := executable
-    |}.
+    { exec := executable
+    }.
 
   Compute manExec.(exec) (asp NULL) Rely e3.
+
+  #[local]
+  Instance sysExec: Executable Term string System :=
+    { exec := executables
+    }.
 
   (** Moving on to reasoning about system M *)
   
