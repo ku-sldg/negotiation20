@@ -45,6 +45,7 @@ Module ManifestTerm.
    * Names should be the hash of their public key, but this restriction
    * is not enforced here. 
    *)
+
   Definition Environment : Type :=  Plc -> (option Manifest).
 
   Definition e_empty : Environment := (fun _ => None).
@@ -128,58 +129,95 @@ Module ManifestTerm.
     e_update e1 Target (Some {| asps := [SIG]; M:= [Appraise] |}).
   Definition e3 :=
     e_update e2 Appraise (Some {| asps := [HSH] ; M:= [] |}).
-
+  
   Inductive System : Type :=
   | env : Environment -> System
   | union : System -> System -> System.
-  
-  (** Access an [ASP] [a] from manifest [k] in manifest map [e0]
-   *)
-  Definition hasASP(k:string)(e0:Environment)(a:ASP):Prop :=
-    match (e0 k) with
+
+
+  Definition hasASPe(k:string)(e:Environment)(a:ASP):Prop :=
+    match (e k) with
     | None => False
     | Some m => In a m.(asps)
+    end.      
+
+  Fixpoint hasASPs(k:string)(s:System)(a:ASP):Prop :=
+    match s with
+    | env e => (hasASPe k e a)
+    | union s1 s2 => (hasASPs k s1 a) \/ (hasASPs k s2 a)
     end.
 
   (** Decidability of ASP presence should be true.  Hold for later
   Theorem hasASP_dec: forall k e0 a, {hasASP k e0 a}+{~hasASP k e0 a}.
    *)
   
-  Example ex1: hasASP Rely e3 aspc1.
-  Proof. unfold hasASP. simpl. left. reflexivity. Qed.
+  Example ex1: hasASPe Rely e3 aspc1.
+  Proof. unfold hasASPe. simpl. left. reflexivity. Qed.
 
-  Example ex2: hasASP Rely e3 CPY -> False.
-  Proof. unfold hasASP. simpl. intros. destruct H. inversion H. assumption. Qed.
+  Example ex2: hasASPe Rely e3 CPY -> False.
+  Proof. unfold hasASPe. simpl. intros. destruct H. inversion H. assumption. Qed.
+  
+  Example ex5: hasASPs Rely (env e3) aspc1.
+  Proof. unfold hasASPs. unfold hasASPe. simpl. left. reflexivity. Qed.
 
-  (** Determine if manifest [k] from [e0] knows how to coeunicate from [k]
+  Example ex6: hasASPs Rely (union (env e3) (env e2)) aspc1.
+  Proof. unfold hasASPs. left. unfold hasASPe. simpl. left. reflexivity. Qed.
+
+  
+  (** Determine if manifest [k] from [e] knows how to communicate from [k]
    * to [p]
    *)
-  Definition knowsOf(k:string)(e0:Environment)(p:Plc):Prop :=
-    match (e0 k) with
+  Definition knowsOfe(k:string)(e:Environment)(p:Plc):Prop :=
+    match (e k) with
     | None => False
     | Some m => In p m.(M)
     end.
 
-  Example ex3: knowsOf Rely e3 Target.
+  Fixpoint knowsOfs(k:string)(s:System)(p:Plc):Prop :=
+    match s with
+    | env e => (knowsOfe k e p)
+    | union s1 s2 => (knowsOfs k s1 p) \/ (knowsOfs k s2 p)
+    end.
+
+  Example ex3: knowsOfe Rely e3 Target.
   Proof.
-    unfold knowsOf. simpl. left. reflexivity.
+    unfold knowsOfe. simpl. auto.
   Qed.
   
-  Example ex4: knowsOf Rely e3 Appraise -> False.
+  Example ex4: knowsOfe Rely e3 Appraise -> False.
   Proof.
-    unfold knowsOf. simpl. intros. destruct H. inversion H. assumption.
+    unfold knowsOfe. simpl. intros. destruct H. inversion H. assumption.
   Qed.
 
+  Example ex7: knowsOfs Rely (env e3) Target.
+  Proof.
+    unfold knowsOfs,knowsOfe. simpl. auto.
+  Qed.
+
+  Example ex8: knowsOfs Rely (union (env e3) (env e2)) Target.
+  Proof.
+    unfold knowsOfs,knowsOfe. simpl. auto.
+  Qed.
+  
   (** Is term [t] exectuable on the system described by manifest [k] in
    * manfiest map [e]?  Are the resources available?
    *)
   Fixpoint executable(t:Term)(k:string)(e:Environment):Prop :=
     match t with
-    | asp a  => hasASP k e a
-    | att p t => knowsOf k e p /\ executable t p e
+    | asp a  => hasASPe k e a
+    | att p t => knowsOfe k e p /\ executable t p e
     | lseq t1 t2 => executable t1 k e /\ executable t2 k e
     | bseq _ t1 t2 => executable t1 k e /\ executable t2 k e
     | bpar _ t1 t2 => executable t1 k e /\ executable t2 k e
+    end.
+
+  Fixpoint executables(t:Term)(k:string)(s:System):Prop :=
+    match t with
+    | asp a  => hasASPs k s a
+    | att p t => knowsOfs k s p /\ executables t p s
+    | lseq t1 t2 => executables t1 k s /\ executables t2 k s
+    | bseq _ t1 t2 => executables t1 k s /\ executables t2 k s
+    | bpar _ t1 t2 => executables t1 k s /\ executables t2 k s
     end.
 
   (** Proof tactic for proving [executable] given the above definition
@@ -188,16 +226,16 @@ Module ManifestTerm.
 
   Ltac prove_exec :=
     simpl; auto; match goal with
-                 | |- hasASP _ _ _ => cbv; left; reflexivity
-                 | |- knowsOf _ _ _ => unfold knowsOf; simpl; left; reflexivity
+                 | |- hasASPe _ _ _ => cbv; left; reflexivity
+                 | |- knowsOfe _ _ _ => unfold knowsOfe; simpl; left; reflexivity
                  | |- _ /\ _ => split; prove_exec
                  | |- ?A => idtac A
                  end.
 
-  Example ex5: (executable (asp SIG) Target e3).
+  Example ex9: (executable (asp SIG) Target e3).
   Proof. prove_exec. Qed.
   
-  Example ex6: (executable (asp CPY) Target e3) -> False.
+  Example ex10: (executable (asp CPY) Target e3) -> False.
   Proof.
     intros Hcontra.
     simpl in *.
@@ -206,15 +244,35 @@ Module ManifestTerm.
     discriminate. assumption.
   Qed.
 
-  Example ex7: (executable (lseq (asp SIG) (asp SIG)) Target e3).
+  Example ex11: (executable (lseq (asp SIG) (asp SIG)) Target e3).
   Proof. prove_exec. Qed.
 
-  Example ex8: (executable (lseq (asp aspc1)
+  Example ex12: (executable (lseq (asp aspc1)
                               (att Target
                                  (lseq (asp SIG)
                                     (asp SIG))))
                   Rely e3).
   Proof. prove_exec. Qed.
+
+  Ltac prove_execs :=
+    simpl; auto; match goal with
+                 | |- hasASPe _ _ _ => cbv; left; reflexivity
+                 | |- hasASPs _ _ _ => cbv; left; reflexivity
+                 | |- knowsOfe _ _ _ => unfold knowsOfe; simpl; left; reflexivity
+                 | |- knowsOfs _ _ _ => unfold knowsOfs,knowsOfe; simpl; left; reflexivity
+                 | |- _ /\ _ => split; prove_execs
+                 | |- _ \/ _ => try (left; prove_execs); try (right; prove_execs)
+                 | |- ?A => idtac A
+                 end.
+
+
+  Example ex13: (executables (lseq (asp aspc1)
+                                (att Target
+                                   (lseq (asp SIG)
+                                      (asp SIG))))
+                  Rely (union (env e3) (env e2))).
+  Proof. prove_execs. Qed.
+
 
   (* Experiments with classes. Nothing here.  Move along...*)
   Class Executable T P E :=
