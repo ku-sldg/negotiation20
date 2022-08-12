@@ -1,6 +1,5 @@
 Require Import Lia.
 Require Import Relations.
-Require Import Logic.FunctionalExtensionality.
 Require Import Lists.List.
 Import ListNotations.
 Require Import String.
