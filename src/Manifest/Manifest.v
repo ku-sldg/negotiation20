@@ -209,9 +209,10 @@ Module ManifestTerm.
   Proof.
     prove_exec'.
   Qed.
-
-  (** Is term [t] exectuable on the system described by manifest [k] in
-   * manfiest map [e]?  Are the resources available?
+  
+  (** Is term [t] exectuable on the attestation manager named [k] in
+   * environment [e]?  Are ASPs available at the right attesation managers
+   * and are necessary communications allowed?
    *)
   Fixpoint executable(t:Term)(k:string)(e:Environment): bool :=
     match t with
@@ -283,17 +284,17 @@ Module ManifestTerm.
                   Rely (union (env e3) (env e2))) = true.
   Proof. repeat prove_exec'. Qed.
 
-(* 
+
   (* Experiments with classes. Nothing here.  Move along...*)
-  Class Executable T P E :=
-    { exec : T -> P -> E -> Prop }.
+  (* Class Executable T P E :=
+    { exec : T -> P -> E -> bool }.
 
   #[local]
-  Instance manExec: Executable Term string Environment :=
+  Instance manExec: Executable Term Plc Environment :=
     { exec := executable
     }.
 
-  Compute manExec.(exec) (asp NULL) Rely e3.
+  Compute (manExec.(exec) (asp NULL) Rely e3).
 
   #[local]
   Instance sysExec: Executable Term string System :=
@@ -374,5 +375,31 @@ Module ManifestTerm.
     eapply (TrcFronts (Rs (union (env e3) (env e2))) _ Appraise _). prove_exec.
     econstructor.
   Qed.
+
+(** 
+  Module ClassExp.
+
+  Class HasASP {A} := {hasASP:string -> A -> ASP -> Prop }.
+
+  Instance HasASPe: HasASP Environment :=
+    { hasASP(k:string)(e:Environment)(a:ASP) :=
+      match (e k) with
+      | None => False
+      | Some m => In a m.(asps)
+      end
+    }.
+
+  Instance HasASPs: HasASP System :=
+    { hasASP(k:string)(s:System)(a:ASP) :=
+      match s with
+      | env e => hasASP k e a
+      | union s1 s2 => (hasASP k s1 a) \/ (hasASP k s2 a)
+      end
+    }.
+
+  End ClassExp.
+   *)
+  
+
 
 End ManifestTerm.
