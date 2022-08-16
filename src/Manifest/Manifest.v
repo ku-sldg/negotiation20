@@ -133,8 +133,7 @@ Module ManifestTerm.
   Inductive System : Type :=
   | env : Environment -> System
   | union : System -> System -> System.
-
-
+  
   Definition hasASPe(k:string)(e:Environment)(a:ASP):Prop :=
     match (e k) with
     | None => False
@@ -147,9 +146,20 @@ Module ManifestTerm.
     | union s1 s2 => (hasASPs k s1 a) \/ (hasASPs k s2 a)
     end.
 
-  (** Decidability of ASP presence should be true.  Hold for later
-  Theorem hasASP_dec: forall k e0 a, {hasASP k e0 a}+{~hasASP k e0 a}.
-   *)
+  Theorem hasASP_dec: forall k e a, {hasASPe k e a}+{~hasASPe k e a}.
+  Proof.
+    intros k e a.
+    unfold hasASPe.
+    destruct (e k).
+    * induction (asps m).
+      right. unfold not. intros. inversion H.
+      case (ASP_dec a a0).
+      intros H. subst. left. simpl. auto.
+      intros H. unfold not in H. destruct IHl. left. simpl. auto.
+      right. unfold not. intros. unfold not in n. simpl in H0.
+      destruct H0. apply H. subst. auto. apply n. assumption.
+    * cbv. right. intros. assumption.
+  Defined.
   
   Example ex1: hasASPe Rely e3 aspc1.
   Proof. unfold hasASPe. simpl. left. reflexivity. Qed.
@@ -173,6 +183,21 @@ Module ManifestTerm.
     | Some m => In p m.(M)
     end.
 
+  Theorem knowsOfe_dec:forall k e p, {(knowsOfe k e p)}+{~(knowsOfe k e p)}.
+  Proof.
+    intros k e p.
+    unfold knowsOfe.
+    destruct (e k).
+    induction (M m).
+    right. simpl. unfold not. intros. assumption.
+    case (string_dec p a).
+    intros. subst. left. simpl. auto.
+    intros H. unfold not in H. destruct IHl. left. simpl. auto.
+    right. unfold not. intros. unfold not in n. simpl in H0.
+    destruct H0. apply H. subst. auto. apply n. assumption.
+    auto.
+  Qed.
+    
   Fixpoint knowsOfs(k:string)(s:System)(p:Plc):Prop :=
     match s with
     | env e => (knowsOfe k e p)
@@ -199,8 +224,9 @@ Module ManifestTerm.
     unfold knowsOfs,knowsOfe. simpl. auto.
   Qed.
   
-  (** Is term [t] exectuable on the system described by manifest [k] in
-   * manfiest map [e]?  Are the resources available?
+  (** Is term [t] exectuable on the attestation manager named [k] in
+   * environment [e]?  Are ASPs available at the right attesation managers
+   * and are necessary communications allowed?
    *)
   Fixpoint executable(t:Term)(k:string)(e:Environment):Prop :=
     match t with
@@ -211,6 +237,21 @@ Module ManifestTerm.
     | bpar _ t1 t2 => executable t1 k e /\ executable t2 k e
     end.
 
+  (** THIS THEOREM IS FALSE
+  Theorem executable_dec:forall t k e,{(executable t k e)}+{~(executable t k e)}.
+  Proof.
+    intros t k e.
+    induction t.
+    * unfold executable. apply (hasASP_dec k e a).
+    * destruct IHt.
+      case (knowsOfe_dec k e p). intros.
+      case (executable t p e).
+   *)
+  
+  (** Is term [t] executable on the attestation mnanager named [k] in
+   * system [s]?  Are ASPs available at the right attestation managers
+   * and are necessary communications allowed?
+   *)
   Fixpoint executables(t:Term)(k:string)(s:System):Prop :=
     match t with
     | asp a  => hasASPs k s a
@@ -272,23 +313,6 @@ Module ManifestTerm.
                                       (asp SIG))))
                   Rely (union (env e3) (env e2))).
   Proof. prove_execs. Qed.
-
-
-  (* Experiments with classes. Nothing here.  Move along...*)
-  Class Executable T P E :=
-    { exec : T -> P -> E -> Prop }.
-
-  #[local]
-  Instance manExec: Executable Term string Environment :=
-    { exec := executable
-    }.
-
-  Compute manExec.(exec) (asp NULL) Rely e3.
-
-  #[local]
-  Instance sysExec: Executable Term string System :=
-    { exec := executables
-    }.
 
   (** Moving on to reasoning about system M *)
   
@@ -364,5 +388,51 @@ Module ManifestTerm.
     eapply TrcFronts. constructor. unfold Rs. constructor. reflexivity.
     eapply TrcRefls. 
   Qed.
+
+
+  (* Experiments with classes. Nothing here.  Move along...*)
+  Module ManifestClass.
+
+  Class Executable T P E :=
+    { exec : T -> P -> E -> Prop }.
+
+  #[local]
+  Instance manExec: Executable Term string Environment :=
+    { exec := executable
+    }.
+
+  Compute manExec.(exec) (asp NULL) Rely e3.
+
+  #[local]
+  Instance sysExec: Executable Term string System :=
+    { exec := executables
+    }.
+  End ManifestClass.
+
+(** 
+  Module ClassExp.
+
+  Class HasASP {A} := {hasASP:string -> A -> ASP -> Prop }.
+
+  Instance HasASPe: HasASP Environment :=
+    { hasASP(k:string)(e:Environment)(a:ASP) :=
+      match (e k) with
+      | None => False
+      | Some m => In a m.(asps)
+      end
+    }.
+
+  Instance HasASPs: HasASP System :=
+    { hasASP(k:string)(s:System)(a:ASP) :=
+      match s with
+      | env e => hasASP k e a
+      | union s1 s2 => (hasASP k s1 a) \/ (hasASP k s2 a)
+      end
+    }.
+
+  End ClassExp.
+   *)
+  
+
 
 End ManifestTerm.
