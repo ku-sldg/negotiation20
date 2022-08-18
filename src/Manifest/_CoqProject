@@ -1,4 +1,7 @@
 -I .
 -R ./Copland Cop
+Ltacs.v
+TypeClasses.v
+Maps.v
 Copland/Copland.v
 Manifest.v
