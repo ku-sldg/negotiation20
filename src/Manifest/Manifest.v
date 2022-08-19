@@ -8,7 +8,6 @@ Require Import Cop.Copland.
 Import Copland.Term.
 
 (** Stuff to do:
- * - Decidability of executable.  Might not work
  * - Model finder migration from Chlipala
  * - Flesh out INI and Manifest types
  *)
@@ -240,6 +239,12 @@ Module ManifestTerm.
   Theorem executable_dec:forall t k e,{(executable t k e)}+{~(executable t k e)}.
     intros.  generalize k. induction t; intros.
     + unfold executable. apply hasASP_dec.
+    + simpl. assert (H:{knowsOfe k0 e p}+{~knowsOfe k0 e p}). apply knowsOfe_dec. destruct H. destruct (IHt p).
+      ++ left. intros. assumption.
+      ++ right. unfold not. intros. unfold not in n. apply n. apply H. assumption.
+      ++ simpl. assert (H:{knowsOfe k0 e p}+{~knowsOfe k0 e p}). apply knowsOfe_dec. destruct H.
+         +++ contradiction.
+         +++ left. intros.
     + simpl. assert (H: {knowsOfe k0 e p} + {~knowsOfe k0 e p}). apply knowsOfe_dec. destruct H. specialize IHt with p. destruct IHt.
       ++ left. intros. assumption.
       ++ right. unfold not. intros. unfold not in n. apply n. apply H. assumption.

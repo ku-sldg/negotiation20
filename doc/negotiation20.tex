@@ -517,6 +517,47 @@ is the Copland evidence semantics defined by \citet{Ramsdell:2019aa}.
 Thus, a proposal can be mapped onto the various evidence that each
 protocol produces.
 
+\section{Attic}
+
+An \emph{ASP description} (ASP) is a $\ldots$
+
+An Attestation Manager (AM) is defined by a \emph{manifest}
+$(IP,[asp],M,k,c)$ where:
+
+\begin{itemize}
+  \squash
+\item $IP$ - Address for communicating with the AM
+\item $[asp]$ - List of ASPs available to the AM
+\item $M$ - List of other AMs the AM can send requests to
+\item $k$ - The AM's key
+\item $c$ - ``other'' configuration information to be specified
+\end{itemize}
+
+An \emph{enviornment} is a mapping of AM identifiers to AM definitions.  The
+identifier is defined as the hash of the AM's private key.  The
+environment is effectively a list of all known AMs in a particular
+environment.
+
+A \emph{system} is an environment $\ldots$
+
+A protocol $p$ is $(executable\ p\ a\ e)$ on an AM $a$ in environment $e$ if:
+
+\begin{itemize}
+\item It is an ASP that is available on the current AM
+\item It is a request to an AM that can execute it
+\item It is the parallel composition of two executable protocols.
+\end{itemize}
+
+Executability is decidable for an $p$, $a$ and $e$.
+
+The type $\{p:P,a:AM,e:E\mid (executable\ p\ a\ e)\}$ defines the collection of
+protocols executable on $a$ in $e$.
+
+Adding executability to the protocol lattice results in:
+
+\[(\{p:P\mid
+  (a,\mathcal{E}[\![p]\!]=e)\in\pi_T\wedge (executable\ p\ a\ e)\},\preceq_T,\top_T,\bot_T)\]
+
 \nocite{Coker::Principles-of-R,Ramsdell:2019aa,Petz:2019aa,Davey:02:Introduction-to}
 
 \bibliographystyle{ACM-Reference-Format} \bibliography{sldg}
