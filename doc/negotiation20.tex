@@ -552,20 +552,18 @@ $(executable\ p\ a\ e)$ if:
 
 Executability is decidable for any $p$, $a$ and $e$.
 
-The type $\{p,a,e\mid (executable\ p\ a\ e)\}$ defines the collection of
+The type $P(a,e)=\{p,a,e\mid (executable\ p\ a\ e)\}$ defines the collection of
 protocols executable on $a$ in $e$.
 
 Adding executability to the protocol lattice results in:
 
-\[(\{p:P\mid
-  (a,\mathcal{E}[\![p]\!])\in\pi_T\wedge (executable\ p\ a\ e)\},\preceq_T,\top_T,\bot_T)\]
+\[(\{p:P(a,e)\mid
+  (a,\mathcal{E}[\![p]\!])\in\pi_T \},\preceq_T,\top_T,\bot_T)\]
 
-The type $\{p:P\mid (a,\mathcal{E}[\![p]\!])\in\pi_T\wedge
-(executable\ p\ a\ e)\}$ is type of an allowable protocol that is
+The type $\{p:P(a,e)\mid (a,\mathcal{E}[\![p]\!])\in\pi_T\}$ is type of an allowable protocol that is
 executable.  Thus, the negotiation function has the type:
 
-\[R\rightarrow \{p:P\mid (a,\mathcal{E}[\![p]\!])\in\pi_T\wedge
-  (executable\ p\ a\ e)\}\]
+\[R\rightarrow \{p:P(a,e)\mid (a,\mathcal{E}[\![p]\!])\in\pi_T\}\]
 
 A request has the form:
 
