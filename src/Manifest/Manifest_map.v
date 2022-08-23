@@ -20,73 +20,15 @@ Require Import Coq.Init.Datatypes.
 Require Import Coq.Logic.Decidable.
 Require Import Coq.Bool.Bool.
 
-(*********************
-COPLAND GRAMMAR 
-Had to redefine the Copland grammar below in order to write some examples. 
-**********************)
+Require Import Cop.Copland.
+Import Copland.Term.
 
-Inductive Plc: Set := 
-| relyingParty
-| attester
-| appraiser.
+Print Plc.
 
 Theorem eq_plc (x y : Plc): {x = y} +  {x <> y} .
 Proof.
   repeat decide equality. 
 Defined.
-
-Definition N_ID: Set := nat.
-
-Definition Event_ID: Set := nat.
-
-Inductive ASP_ID : Set := 
-| request : ASP_ID
-| attest_id : ASP_ID
-| appraise_id : ASP_ID
-| encrypt :  ASP_ID
-| decrypt :  ASP_ID. 
-
-Inductive TARG_ID: Set := 
-| o1 : TARG_ID 
-| o2 : TARG_ID.
-
-Inductive Arg: Set := 
-| a_pub_key : Arg 
-| t_priv_key : Arg 
-| t_pub_key : Arg. 
-
-Inductive ASP_PARAMS: Set :=
-| asp_paramsC: ASP_ID -> (list Arg) -> Plc -> TARG_ID -> ASP_PARAMS.
-
-Inductive Evidence: Set :=
-| mt: Evidence
-| uu: (*ASP_PARAMS ->*) ASP_PARAMS ->
-(*Evidence ->*) Plc -> Evidence -> Evidence
-| gg: Plc -> Evidence -> Evidence
-| hh: Plc -> Evidence -> Evidence
-| nn: N_ID -> Evidence
-| ss: Evidence -> Evidence -> Evidence
-| pp: Evidence -> Evidence -> Evidence.
-
-Inductive ASP: Set :=
-| CPY: ASP
-| ASPC: ASP_PARAMS -> ASP
-| SIG: ASP
-| HSH: ASP.
-
-Inductive SP: Set :=
-| ALL
-| NONE.
-
-Definition Split: Set := (SP * SP).
-
-Inductive Term: Set :=
-| asp: ASP -> Term
-| att: Plc -> Term -> Term
-| lseq: Term -> Term -> Term
-| bseq: Split -> Term -> Term -> Term
-| bpar: Split -> Term -> Term -> Term.
-
 
 (* **************
 DEFINING MANIFEST
@@ -95,20 +37,24 @@ DEFINING MANIFEST
 - eventually context relation? 
 
 DEFINING SYSTEM
+- a collection of manifests
+
+DEFINING ENVIORNMENT 
+- a singular system or a union of systems 
 **************  *)
 
-Record lMan : Set := mkLOCAL 
+Record Manifest : Set := mkMAN 
 { lASP : (list ASP); 
 M : list Plc }. 
 
 (* map properties... taken from Pierce in Sofware Foundations
 https://softwarefoundations.cis.upenn.edu/lf-current/Maps.html *)
 
-Definition partial_map := Plc -> (option lMan).
+Definition System : Type := Plc -> (option Manifest).
 
-Definition t_empty : partial_map := (fun _ => None). 
+Definition t_empty : System := (fun _ => None). 
 
-Definition t_update (m : partial_map) (x : Plc) (v: (option lMan)):=
+Definition t_update (m : System) (x : Plc) (v: (option Manifest)):=
   fun x' => if eq_plc x x' then v else m x'.
   
 Notation "x '!->' v ';' m" := (t_update m x v)
@@ -117,29 +63,35 @@ Notation "x '!->' v ';' m" := (t_update m x v)
 Notation "x '!->' v" := (t_update t_empty x v)
 (at level 100).
 
-Definition gMan := partial_map.
+Inductive Environment : Type :=
+| one : System -> Environment
+| union : Environment -> Environment -> Environment.
 
 (****************
 MEASURES RELATION 
 *****************)
 
+Notation Rely := "Rely"%string.
+Notation Target := "Target"%string.
+Notation Appraise := "Appraise"%string.
+
 Inductive Meas : relation Plc := 
-| rp_att : Meas relyingParty attester
-| att_app : Meas attester appraiser.
+| rp_att : Meas Rely Target
+| att_app : Meas Target Appraise.
 
 (***************************
 PROPERTIES OF THE SYSTEM 
 *************************** *)
 
 (* make sure that place k has ASP a. Can check in the manifest for this. *)
-Definition hasASP (k: Plc) (gm:gMan) (a:ASP) : Prop :=
+Definition hasASP (k: Plc) (gm:System) (a:ASP) : Prop :=
   match gm k with 
   | None => False 
   | Some v => In a v.(lASP)
   end.
   
 (* check to see if req_plc can measure meas_plc... this uses the measures relation ... may need to enrich this definition *)
-Definition canMeas (req_plc: Plc) (meas_plc : Plc) (gm : gMan) : Prop :=
+Definition canMeas (req_plc: Plc) (meas_plc : Plc) (gm : System) : Prop :=
   match gm req_plc with 
   | None => False 
   | Some v => In meas_plc v.(M)
@@ -148,7 +100,7 @@ end.
 Definition canMeas_dec :forall k meas_plc gm, {canMeas k meas_plc gm} + {~ canMeas k meas_plc gm}.
 Proof.
   intros. unfold canMeas. destruct (gm k); simpl.
-  + induction l. simpl.
+  + induction m. simpl.
   apply in_dec; repeat decide equality.
   + auto.
 Qed.
@@ -214,14 +166,14 @@ Defined.
 
 Definition hasASP_dec : forall k gm a, {hasASP k gm a} + {~ hasASP k gm a}.
 Proof.
-  intros k gm a. unfold hasASP. destruct (gm k). simpl. induction l. simpl. induction lASP0. apply in_dec; repeat decide equality. apply in_dec; repeat decide equality. auto. 
+  intros k gm a. unfold hasASP. destruct (gm k). simpl. induction m. simpl. induction lASP0. apply in_dec; repeat decide equality. apply in_dec; repeat decide equality. auto. 
 Defined. 
 
 
 Definition canMeas_dec' :forall k meas_plc gm, {canMeas k meas_plc gm} + {~ canMeas k meas_plc gm}.
 Proof.
   intros. unfold canMeas. destruct (gm k); simpl.
-  + induction l. simpl.
+  + induction m. simpl.
   apply in_dec; repeat decide equality.
   + auto.
   Defined.
@@ -230,7 +182,7 @@ Proof.
 EXECUTABILITY 
 *****************)
 
-Fixpoint Executable (t:Term) (gm:gMan) (k:Plc) : Prop :=
+Fixpoint Executable (t:Term) (gm:System) (k:Plc) : Prop :=
 match t with
 (* check to make sure ASP is in manifest *)
 | asp a => hasASP k gm a
@@ -242,7 +194,6 @@ match t with
 | bpar sp t1 t2 => Executable t1 gm k /\ Executable t2 gm k
 end.
 
-
 Theorem in_a_in_a0: forall (p:Plc) (a:Plc) (l0:list Plc), In p l0 -> In p (a :: l0).
 Proof. 
 intros. induction l0. 
@@ -253,8 +204,6 @@ Qed.
 (* this is too strong... but necessary for solving the proof *)
 Theorem canMeas_neq : forall k p gm, canMeas k p gm -> k <> p.
 Proof.
-    intros k p gm. induction k; destruct p; intros.
-    + simpl in *. unfold canMeas in H. destruct (gm relyingParty) in H.  simpl in H. 
 Abort.   
 
 Theorem execute : forall t gm k, {Executable t gm k} + {~Executable t gm k}.
@@ -265,7 +214,9 @@ Proof.
   + simpl. intros. assert (H: {canMeas k0 p gm} + {~canMeas k0 p gm}). apply canMeas_dec.
   destruct (IHt p). 
   ++ intros. left. intros. apply e.
-  ++  destruct H. right. unfold not in *. intros. apply n. apply H. apply c. left. intros. congruence. 
+  ++ destruct H.
+  +++ right. unfold not in *. intros. apply n. apply H. apply c.
+  +++ left. intros. congruence. 
   + simpl. specialize IHt1 with k0; specialize IHt2 with k0. inversion IHt1; inversion IHt2.  
   ++ left. split. apply H. apply H0.
   ++ right. unfold not in *. intros. inversion H1. apply H0. apply H3.
@@ -281,14 +232,7 @@ Proof.
   ++ right. unfold not in *. intros. inversion H1. apply H0. apply H3.
   ++ right. unfold not in *. intros. apply H. inversion H1. apply H2.
   ++ right. unfold not in *. intros. inversion H1. apply H. apply H2.
-Qed.
-
-
-
-
-(***************************
-  DEFINING GENERATE FUNCTION 
-  *************************** *)
+Defined.
 
 (***************************
   DEFINING COMBINATION FUNCTION 
@@ -309,56 +253,56 @@ Here we take the request and the target's manifest to actually generate a list o
 
 (****************
 EXAMPLE  
-*****************)
+****************
 
 Definition req_asp := ASPC (asp_paramsC request [] attester o1).
 Definition attest_asp := ASPC (asp_paramsC attest_id [] attester o1).
 Definition appraise_asp := ASPC (asp_paramsC appraise_id [] appraiser o1).
 
 (* attester has an attest asp and can measure the appraiser. *)
-Definition l_rp : lMan := mkLOCAL [req_asp] [attester].
-Definition l_attester : lMan := mkLOCAL [attest_asp] [appraiser].
-Definition l_appraiser : lMan := mkLOCAL [appraise_asp] [].
+Definition l_rp : Manifest := mkMAN [req_asp] [attester].
+Definition l_attester : Manifest := mkMAN [attest_asp] [appraiser].
+Definition l_appraiser : Manifest := mkMAN [appraise_asp] [].
 
-Example s1_gMan := (relyingParty !-> Some l_rp ; attester !-> Some l_attester ; appraiser !-> Some l_appraiser).
+Example s1_System := (relyingParty !-> Some l_rp ; attester !-> Some l_attester ; appraiser !-> Some l_appraiser).
 
-Example lookup : s1_gMan appraiser = Some l_appraiser.
+Example lookup : s1_System appraiser = Some l_appraiser.
 Proof. auto. Qed.
 
 Ltac cons_refl := constructor ; reflexivity.
 
-Example check2 : canMeas attester appraiser s1_gMan.
+Example check2 : canMeas attester appraiser s1_System.
 Proof.
   cons_refl.
 Qed.
 
 (* simple example. Checking that the attester can execute the attest asp *)
-Example check_exec1 : Executable (asp attest_asp) s1_gMan attester.
+Example check_exec1 : Executable (asp attest_asp) s1_System attester.
 Proof. 
 Abort.
 
 (* check that the appraiser cannot execute the attest asp *)
-Example check_exec2 : Executable (asp attest_asp) s1_gMan appraiser.
+Example check_exec2 : Executable (asp attest_asp) s1_System appraiser.
 Proof. Abort.
 
 (* check that the attester can request the appraise measurement from the appraiser *)
-Example check_exec2 : Executable (att appraiser (asp appraise_asp)) s1_gMan attester.
+Example check_exec2 : Executable (att appraiser (asp appraise_asp)) s1_System attester.
 Proof. Abort.
 
-Compute hasASP attester (s1_gMan) attest_asp.
+Compute hasASP attester (s1_System) attest_asp.
 (* ^hmmm the type of this is interesting... either they are equal or it's false. 
 Does this mean something is wrong? *)  
 
 Ltac solve_left := simpl; left; auto.
 Ltac solve_right H1 H2 := simpl; right; intros; destruct H1; inversion H1; destruct H2; apply H1.
 
-Example check1 : hasASP attester (s1_gMan) attest_asp.
+Example check1 : hasASP attester (s1_System) attest_asp.
 Proof.
 constructor. reflexivity.
 Qed.  
 
-Example canMeas_ex : canMeas' attester appraiser s1_gMan.
+Example canMeas_ex : canMeas attester appraiser s1_System.
 Proof.
-  unfold canMeas'. destruct canMeas_dec.
-  + unfold not. intros. inversion H.
-  + unfold not in n. exfalso. apply n.         
+Abort.       
+
+*)
