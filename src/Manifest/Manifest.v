@@ -8,7 +8,6 @@ Require Import Cop.Copland.
 Import Copland.Term.
 
 (** Stuff to do:
- * - Decidability of executable.  Might not work
  * - Model finder migration from Chlipala
  * - Flesh out INI and Manifest types
  *)
@@ -231,23 +230,39 @@ Module ManifestTerm.
   Fixpoint executable(t:Term)(k:string)(e:Environment):Prop :=
     match t with
     | asp a  => hasASPe k e a
-    | att p t => knowsOfe k e p /\ executable t p e
+    | att p t => knowsOfe k e p -> executable t p e
     | lseq t1 t2 => executable t1 k e /\ executable t2 k e
     | bseq _ t1 t2 => executable t1 k e /\ executable t2 k e
     | bpar _ t1 t2 => executable t1 k e /\ executable t2 k e
     end.
 
-  (** THIS THEOREM IS FALSE
   Theorem executable_dec:forall t k e,{(executable t k e)}+{~(executable t k e)}.
-  Proof.
-    intros t k e.
-    induction t.
-    * unfold executable. apply (hasASP_dec k e a).
-    * destruct IHt.
-      case (knowsOfe_dec k e p). intros.
-      case (executable t p e).
-   *)
-  
+    intros.  generalize k. induction t; intros.
+    + unfold executable. apply hasASP_dec.
+    + simpl. assert (H:{knowsOfe k0 e p}+{~knowsOfe k0 e p}). apply knowsOfe_dec. destruct H. destruct (IHt p).
+      ++ left. intros. assumption.
+      ++ right. unfold not. intros. unfold not in n. apply n. apply H. assumption.
+      ++ simpl. assert (H:{knowsOfe k0 e p}+{~knowsOfe k0 e p}). apply knowsOfe_dec. destruct H.
+         +++ contradiction.
+         +++ left. intros.
+    + simpl. assert (H: {knowsOfe k0 e p} + {~knowsOfe k0 e p}). apply knowsOfe_dec. destruct H. specialize IHt with p. destruct IHt.
+      ++ left. intros. assumption.
+      ++ right. unfold not. intros. unfold not in n. apply n. apply H. assumption.
+      ++ simpl. assert (H: {knowsOfe k0 e p}+{~knowsOfe k0 e p}). apply knowsOfe_dec. destruct H. specialize IHt with p. destruct IHt.
+         +++ left. intros. assumption.
+         +++ contradiction.
+         +++ specialize IHt with p. destruct IHt. left. intros. contradiction. left. intros H. contradiction.
+    + simpl. specialize IHt1 with k0. specialize IHt2 with k0. destruct IHt1,IHt2. left. split ; assumption. right. unfold not. intros H. destruct H. contradiction.
+      right. unfold not. intros. destruct H. contradiction.
+      right. unfold not. intros H. destruct H. contradiction.
+    + simpl. specialize IHt1 with k0. specialize IHt2 with k0. destruct IHt1,IHt2. left. split ; assumption. right. unfold not. intros H. destruct H. contradiction.
+      right. unfold not. intros. destruct H. contradiction.
+      right. unfold not. intros H. destruct H. contradiction.
+    + simpl. specialize IHt1 with k0. specialize IHt2 with k0. destruct IHt1,IHt2. left. split ; assumption. right. unfold not. intros H. destruct H. contradiction.
+      right. unfold not. intros. destruct H. contradiction.
+      right. unfold not. intros H. destruct H. contradiction.
+  Defined.
+
   (** Is term [t] executable on the attestation mnanager named [k] in
    * system [s]?  Are ASPs available at the right attestation managers
    * and are necessary communications allowed?
@@ -313,6 +328,11 @@ Module ManifestTerm.
                                       (asp SIG))))
                   Rely (union (env e3) (env e2))).
   Proof. prove_execs. Qed.
+
+
+  Theorem executable_dec : forall t gm k, {executable t gm k} + {~executable t gm k}.
+Proof.
+
 
   (** Moving on to reasoning about system M *)
   
