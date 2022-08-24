@@ -35,7 +35,8 @@ Definition Request: Set := (Term * SA).
 
 Definition Refinement (r: Request) (m:gMan) : list Term := 
     match r gm with 
-       
+     
+
 
 (* 4. Selection 
 

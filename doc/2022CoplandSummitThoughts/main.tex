@@ -1,0 +1,60 @@
+\documentclass[12pt]{article}
+\usepackage[utf8]{inputenc}
+
+\usepackage{graphicx}
+\usepackage{tikz}
+\usetikzlibrary{arrows}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{lipsum}
+
+\title{Different Negotiation Situations}
+\author{Anna Fritz}
+\date{August 2022}
+
+\begin{document}
+
+\begin{titlepage}
+\maketitle
+\end{titlepage}
+
+Negotiation is the act of an \emph{appraiser} and \emph{target} agreeing on a protocol for attestation. 
+
+\begin{figure}[hbtp]
+    \centering 
+    \input{negotiation-fig.tex}
+    \caption[Negotiation process]{Negotiation protocol.}
+    \label{fig:negotiation-fig}
+  %%\description{Attestation sequence.}
+  \end{figure}
+
+\begin{table}
+    \begin{tabularx}{\linewidth}{>{\parskip1ex}X@{\kern4\tabcolsep}>{\parskip1ex}X}
+        \toprule
+        \hfil\bfseries Pros
+        &
+        \hfil\bfseries Cons
+        \\\cmidrule(r{3\tabcolsep}){1-1}\cmidrule(l{-\tabcolsep}){2-2}
+
+        %% PROS, seperated by empty line or \par
+        Gives appriser chance to understand target system and correctly formulate a request. \par
+        Appraiser decides best protocol. \par
+        Target ensures Appraiser is not aware of any protocols that expose sensitive information \par        
+        &
+        %% CONS, separated by empty line or \par
+        More messages. This increases the network usage and is unfavorable to the IETF. \par 
+
+        \\\bottomrule
+    \end{tabularx}
+    \caption{Pros and cons of 3 step negotiation}
+\end{table}
+
+\begin{figure}[hbtp]
+    \centering 
+    \input{negotiation-fig-2.tex}
+    \caption[Negotiation process]{Negotiation protocol.}
+    \label{fig:negotiation-fig-2}
+    %%\description{Attestation sequence.}
+\end{figure}
+
+\end{document}
