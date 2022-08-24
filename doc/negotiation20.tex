@@ -519,27 +519,37 @@ protocol produces.
 
 \section{Attic}
 
-An \emph{ASP description} (ASP) is a $\ldots$.
+An \emph{ASP description} (ASP) is a name and security type:
+
+\begin{itemize}
+  \squash
+\item $n$ - Name
+\item $T_{asp}$ - Security type established by the security association.
+\end{itemize}
 
 An Attestation Manager (AM) is defined by a \emph{manifest}
 $([asp],M,k,c)$ where:
 
 \begin{itemize}
   \squash
+\item $T_{am}$ - Security type establihsed by the security association.
 \item $[asp]$ - List of ASPs available to the attestation manager
 \item $[M]$ - List of other attestation manager names to whom the
   defined attestation manager may send requests
 \item $k$ - The attestation manager's key.  The attestation manager's
   name is the hash of its public key.
+\item $ac:T_{am}\rightarrow T_{asp}\rightarrow Bool$ - The attestation
+  manager's access control policy.  APs of type $T_{am}$ may have
+  access to ASPs of type $T_{asp}$
 \item $c$ - ``other'' configuration information minimally including
   its address.
 \end{itemize}
 
-An \emph{enviornment} is a mapping of AM identifiers to AM
-definitions.  The identifier for an AM is defined as the hash of its
-public key.  The environment is effectively a list of all known AMs in
-a particular context.  A \emph{system} is one or more environments
-defining a collection of ASPs.
+An \emph{enviornment} is a mapping of AM identifiers to manifests.
+The identifier for an AM is defined as the hash of its public key.
+The environment is effectively a list of all known AMs in a particular
+context.  A \emph{system} is one or more environments defining a
+collection of ASPs.
 
 A protocol $p$ is \emph{executable} on an AM $a$ in system $s$
 $(executable(p,a,s)$ if:
