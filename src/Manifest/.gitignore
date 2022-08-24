@@ -2,3 +2,4 @@
 *.vos
 *.conf
 .makefile.d
+.DS_Store
