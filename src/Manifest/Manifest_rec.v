@@ -113,8 +113,8 @@ Record localMAN : Set := mkLOCAL
    
 (* manifest will not have *)
 Record globalMAN : Set := mkGLOBAL
-{ gLOCAL : list localMAN ;
-  gM : inhabited (relation Plc)}.
+{ gLOCAL : list localMAN
+  (* gM : inhabited (relation Plc) *)}.
 
 (***************************
   DEFINING GENERATE FUNCTION 
@@ -150,17 +150,7 @@ Definition generate (m : globalMAN) : list Term :=
 (* all terms can be produced via the generate function *)
 Lemma generate_ok : forall (t:Term) (m:globalMAN),  m.(gLOCAL) <> nil ->  In t (generate m).
 Proof.
-  intros. induction t.
-  + induction m. simpl in H. destruct H. destruct gLOCAL0. reflexivity. destruct l. simpl.  .   destruct m. destruct gLOCAL0.
-  ++ simpl in H. destruct H. reflexivity.
-  ++ simpl in H. destruct H.     simpl.  unfold In. simpl.  inversion H.   
-  
-  
-  
-  induction m. destruct gLOCAL0.
-  + simpl. simpl in H. destruct H. reflexivity.
-  + induction l.
-  ++ simpl in H. 
+Abort.
 
 (***************************
   DEFINING COMBINATION FUNCTION 
@@ -195,9 +185,6 @@ Fixpoint match_r_t (r : TARG_ID) (t: Term) : bool :=
   | bpar _ t1 t2 => match_r_t r t1 || match_r_t r t2
   end. 
 
-(* some examples where I preformed a sanity check. *)
-Compute match_r_t o1 (att 1 (asp (ASPC (asp_paramsC attest_id [] 1 o1)))).
-Compute match_r_t o2 (att 1 (asp (ASPC (asp_paramsC attest_id [] 1 o1)))).
 
 (* The selection function. This using select_r_t to generate a list of terms that satisfy the request. *)
 Fixpoint select_t (r: TARG_ID) (t_in : list Term) (t_out : list Term) : list Term := 
@@ -226,10 +213,18 @@ Definition negotiate_t (r: TARG_ID) (m :globalMAN) : list Term :=
   THEORIES  
   Here we come to our main Theorem. This says, forall terms generated through negotation are actually in the Manifest. Essentially, can the manifest run the selected protocols? 
 ******************************)
-Theorem runnable : forall (r:TARG_ID) (m:globalMAN), negotiate_t r m "gives you some t in " generate m .
-Proof.
-  
-Qed.
+
+(***************************
+  DEFINING EXECUATABLE FUNCTION 
+
+  To check if any phrase is executable, check to see if it is in the Manifest. 
+  *************************** *)
+
+  Definition hasASP (k: Plc) (gm: globalMAN) (a:ASP) : Prop :=
+    match gm.(gLOCAL) with 
+    | nil => False 
+    | _ => False
+    end.
 
 
 (***************************
