@@ -244,14 +244,7 @@ Module ManifestTerm.
       ++ right. unfold not. intros. unfold not in n. apply n. apply H. assumption.
       ++ simpl. assert (H:{knowsOfe k0 e p}+{~knowsOfe k0 e p}). apply knowsOfe_dec. destruct H.
          +++ contradiction.
-         +++ left. intros.
-    + simpl. assert (H: {knowsOfe k0 e p} + {~knowsOfe k0 e p}). apply knowsOfe_dec. destruct H. specialize IHt with p. destruct IHt.
-      ++ left. intros. assumption.
-      ++ right. unfold not. intros. unfold not in n. apply n. apply H. assumption.
-      ++ simpl. assert (H: {knowsOfe k0 e p}+{~knowsOfe k0 e p}). apply knowsOfe_dec. destruct H. specialize IHt with p. destruct IHt.
-         +++ left. intros. assumption.
-         +++ contradiction.
-         +++ specialize IHt with p. destruct IHt. left. intros. contradiction. left. intros H. contradiction.
+         +++ left. intros. congruence. 
     + simpl. specialize IHt1 with k0. specialize IHt2 with k0. destruct IHt1,IHt2. left. split ; assumption. right. unfold not. intros H. destruct H. contradiction.
       right. unfold not. intros. destruct H. contradiction.
       right. unfold not. intros H. destruct H. contradiction.
