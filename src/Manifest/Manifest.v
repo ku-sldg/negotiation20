@@ -346,8 +346,12 @@ Module ManifestTerm.
                                    (lseq (asp SIG)
                                       (asp SIG))))
                   Rely (union (env e3) (env e2))).
-  Proof. prove_execs. Qed.
+  Proof. prove_execs. simpl. intros. split.
+    +  unfold hasASPe. cbv; left; left; reflexivity.
+    + unfold hasASPe. cbv. left. left. reflexivity. 
+  Qed.
 
+  Check executables. 
 
   Theorem executables_dec : forall t gm k, {executables t gm k} + {~executables t gm k}.
 Proof.
