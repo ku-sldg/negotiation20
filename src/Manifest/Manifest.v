@@ -159,6 +159,18 @@ Module ManifestTerm.
       destruct H0. apply H. subst. auto. apply n. assumption.
     * cbv. right. intros. assumption.
   Defined.
+
+  Theorem hasASPs_dec: forall k e a, {hasASPs k e a}+{~hasASPs k e a}.
+  Proof.
+    intros k e a.
+    induction e.
+    + simpl in *. apply hasASP_dec.
+    + simpl in *.  inversion IHe1; inversion IHe2.
+    ++ left. left. apply H.
+    ++ left. left. apply H.
+    ++ left. right. apply H0.
+    ++ right. unfold not in *. intros. inversion H1. congruence. congruence.
+  Defined.
   
   Example ex1: hasASPe Rely e3 aspc1.
   Proof. unfold hasASPe. simpl. left. reflexivity. Qed.
@@ -202,6 +214,18 @@ Module ManifestTerm.
     | env e => (knowsOfe k e p)
     | union s1 s2 => (knowsOfs k s1 p) \/ (knowsOfs k s2 p)
     end.
+
+    Theorem knowsOfs_dec:forall k s p, {(knowsOfs k s p)}+{~(knowsOfs k s p)}.
+    Proof.
+      intros k s p.
+      induction s; simpl in *.
+      + apply knowsOfe_dec.
+      + inversion IHs1; inversion IHs2.
+      ++ left. left. apply H. 
+      ++ left. left. apply H.
+      ++ left. right. apply H0.
+      ++ right. unfold not in *. intros. inversion H1; congruence.
+    Qed.        
 
   Example ex3: knowsOfe Rely e3 Target.
   Proof.
@@ -263,7 +287,7 @@ Module ManifestTerm.
   Fixpoint executables(t:Term)(k:string)(s:System):Prop :=
     match t with
     | asp a  => hasASPs k s a
-    | att p t => knowsOfs k s p /\ executables t p s
+    | att p t => knowsOfs k s p -> executables t p s
     | lseq t1 t2 => executables t1 k s /\ executables t2 k s
     | bseq _ t1 t2 => executables t1 k s /\ executables t2 k s
     | bpar _ t1 t2 => executables t1 k s /\ executables t2 k s
@@ -301,7 +325,9 @@ Module ManifestTerm.
                                  (lseq (asp SIG)
                                     (asp SIG))))
                   Rely e3).
-  Proof. prove_exec. Qed.
+  Proof. prove_exec. intros. split. 
+    cbv in *. left. reflexivity. 
+    cbv in *. left. reflexivity.   Qed.
 
   Ltac prove_execs :=
     simpl; auto; match goal with
@@ -320,11 +346,37 @@ Module ManifestTerm.
                                    (lseq (asp SIG)
                                       (asp SIG))))
                   Rely (union (env e3) (env e2))).
-  Proof. prove_execs. Qed.
+  Proof. prove_execs. simpl. intros. split.
+    +  unfold hasASPe. cbv; left; left; reflexivity.
+    + unfold hasASPe. cbv. left. left. reflexivity. 
+  Qed.
 
+  Check executables. 
 
-  Theorem executable_dec : forall t gm k, {executable t gm k} + {~executable t gm k}.
-Proof.
+  (** Is term [t] executable on the attestation mnanager named [k] in
+   * system [s]?  Are ASPs available at the right attestation managers
+   * and are necessary communications allowed?
+   *)
+
+  Theorem executables_dec : forall t k s, {executables t k s} + {~executables t k s}.
+    Proof.
+    intros.  generalize k s. induction t; intros.
+    + unfold executables. apply hasASPs_dec.
+    + simpl. assert (H:{knowsOfs k0 s0 p}+{~knowsOfs k0 s0 p}). apply knowsOfs_dec. destruct (IHt p s0).
+      ++ left. intros. assumption.
+      ++ destruct H.
+      +++ right. unfold not. intros. apply n. apply H. assumption.
+      +++ left. intros. congruence. 
+    + simpl. specialize IHt1 with k0 s0. specialize IHt2 with k0 s0. destruct IHt1,IHt2. left. split ; assumption. right. unfold not. intros H. destruct H. contradiction.
+      right. unfold not. intros. destruct H. contradiction.
+      right. unfold not. intros H. destruct H. contradiction.
+    + simpl. specialize IHt1 with k0 s1. specialize IHt2 with k0 s1. destruct IHt1,IHt2. left. split ; assumption. right. unfold not. intros H. destruct H. contradiction.
+      right. unfold not. intros. destruct H. contradiction.
+      right. unfold not. intros H. destruct H. contradiction.
+    + simpl. specialize IHt1 with k0 s1. specialize IHt2 with k0 s1. destruct IHt1,IHt2. left. split ; assumption. right. unfold not. intros H. destruct H. contradiction.
+      right. unfold not. intros. destruct H. contradiction.
+      right. unfold not. intros H. destruct H. contradiction.
+    Defined.
 
 
   (** Moving on to reasoning about system M *)
