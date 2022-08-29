@@ -23,8 +23,7 @@ Inductive ASP_PARAMS: Set :=
 Inductive Evidence: Set :=
 | mt: Evidence
 | nn: N_ID -> Evidence
-| gg: Plc -> ASP_PARAMS -> Evidence -> Evidence
-| hh: Plc -> ASP_PARAMS -> Evidence -> Evidence
+| uu: Plc -> ASP_PARAMS -> Evidence -> Evidence
 | ss: Evidence -> Evidence -> Evidence.
 Theorem Evidence_dec : forall a1 a2 : Evidence, {a1=a2}+{~a1=a2}.
 Proof. repeat decide equality. Defined.
