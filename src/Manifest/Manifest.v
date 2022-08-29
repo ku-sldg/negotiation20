@@ -353,26 +353,30 @@ Module ManifestTerm.
 
   Check executables. 
 
-  Theorem executables_dec : forall t gm k, {executables t gm k} + {~executables t gm k}.
-Proof.
-  intros.  generalize k. induction t; intros.
-  + unfold executables. apply hasASPs_dec.
-  + simpl. assert (H:{knowsOfs gm k0 p}+{~knowsOfs gm k0 p}). apply knowsOfs_dec. destruct H. destruct (IHt p).
-    ++ left. intros. assumption.
-    ++ right. unfold not. intros. unfold not in n. apply n. apply H. assumption.
-    ++ simpl. assert (H:{knowsOfe k0 e p}+{~knowsOfe k0 e p}). apply knowsOfe_dec. destruct H.
-       +++ contradiction.
-       +++ left. intros. congruence. 
-  + simpl. specialize IHt1 with k0. specialize IHt2 with k0. destruct IHt1,IHt2. left. split ; assumption. right. unfold not. intros H. destruct H. contradiction.
-    right. unfold not. intros. destruct H. contradiction.
-    right. unfold not. intros H. destruct H. contradiction.
-  + simpl. specialize IHt1 with k0. specialize IHt2 with k0. destruct IHt1,IHt2. left. split ; assumption. right. unfold not. intros H. destruct H. contradiction.
-    right. unfold not. intros. destruct H. contradiction.
-    right. unfold not. intros H. destruct H. contradiction.
-  + simpl. specialize IHt1 with k0. specialize IHt2 with k0. destruct IHt1,IHt2. left. split ; assumption. right. unfold not. intros H. destruct H. contradiction.
-    right. unfold not. intros. destruct H. contradiction.
-    right. unfold not. intros H. destruct H. contradiction.
-Defined.
+  (** Is term [t] executable on the attestation mnanager named [k] in
+   * system [s]?  Are ASPs available at the right attestation managers
+   * and are necessary communications allowed?
+   *)
+
+  Theorem executables_dec : forall t k s, {executables t k s} + {~executables t k s}.
+    Proof.
+    intros.  generalize k s. induction t; intros.
+    + unfold executables. apply hasASPs_dec.
+    + simpl. assert (H:{knowsOfs k0 s0 p}+{~knowsOfs k0 s0 p}). apply knowsOfs_dec. destruct (IHt p s0).
+      ++ left. intros. assumption.
+      ++ destruct H.
+      +++ right. unfold not. intros. apply n. apply H. assumption.
+      +++ left. intros. congruence. 
+    + simpl. specialize IHt1 with k0 s0. specialize IHt2 with k0 s0. destruct IHt1,IHt2. left. split ; assumption. right. unfold not. intros H. destruct H. contradiction.
+      right. unfold not. intros. destruct H. contradiction.
+      right. unfold not. intros H. destruct H. contradiction.
+    + simpl. specialize IHt1 with k0 s1. specialize IHt2 with k0 s1. destruct IHt1,IHt2. left. split ; assumption. right. unfold not. intros H. destruct H. contradiction.
+      right. unfold not. intros. destruct H. contradiction.
+      right. unfold not. intros H. destruct H. contradiction.
+    + simpl. specialize IHt1 with k0 s1. specialize IHt2 with k0 s1. destruct IHt1,IHt2. left. split ; assumption. right. unfold not. intros H. destruct H. contradiction.
+      right. unfold not. intros. destruct H. contradiction.
+      right. unfold not. intros H. destruct H. contradiction.
+    Defined.
 
 
   (** Moving on to reasoning about system M *)
