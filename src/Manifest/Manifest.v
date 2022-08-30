@@ -14,6 +14,12 @@ Import Copland.Term.
 
 Module ManifestTerm.
 
+  (* Objects are targets of measurement. Ex: One measurement may be to hash the virus checker. The object would be vc while the asp HSH is called. *)
+  Inductive Obj := 
+  | vc : Obj
+  | sf : Obj 
+  | ss : Obj. 
+
   Notation Rely := "Rely"%string.
   Notation Target := "Target"%string.
   Notation Appraise := "Appraise"%string.
@@ -29,8 +35,9 @@ Module ManifestTerm.
    * simulates cruft necessary to initialize its TPM.
    *)
   Record Manifest := {
-      asps : list ASP
-      ; M : list Plc
+      asps : list ASP ;
+      objs : list Obj ; 
+      M : list Plc
 (*
       ; C : list string
       ; key : string
@@ -123,11 +130,11 @@ Module ManifestTerm.
    *)
   Definition e0 := e_empty.
   Definition e1 :=
-    e_update e0 Rely (Some {| asps := [aspc1]; M:= [Target] |}).
+    e_update e0 Rely (Some {| asps := [aspc1];  objs := [] ; M:= [Target] |}).
   Definition e2 :=
-    e_update e1 Target (Some {| asps := [SIG]; M:= [Appraise] |}).
+    e_update e1 Target (Some {| asps := [SIG]; objs := [vc] ; M:= [Appraise] |}).
   Definition e3 :=
-    e_update e2 Appraise (Some {| asps := [HSH] ; M:= [] |}).
+    e_update e2 Appraise (Some {| asps := [HSH] ; objs := [] ; M:= [] |}).
   
   Inductive System : Type :=
   | env : Environment -> System
@@ -184,6 +191,56 @@ Module ManifestTerm.
   Example ex6: hasASPs Rely (union (env e3) (env e2)) aspc1.
   Proof. unfold hasASPs. left. unfold hasASPe. simpl. left. reflexivity. Qed.
 
+  (** Determine if manifest [k] has object [o]
+   *)
+   Definition hasObje (k:string) (e:Environment) (o:Obj) : Prop :=
+    match (e k) with
+    | None => False
+    | Some m => In o m.(objs)
+    end.
+
+  Fixpoint hasObjs (k:string) (s:System) (o:Obj):Prop :=
+    match s with
+    | env e => (hasObje k e o)
+    | union s1 s2 => (hasObjs k s1 o) \/ (hasObjs k s2 o)
+    end.
+
+  (* example proof stating that target has object vc *)
+  Example ex': hasObje Target e2 vc.
+  Proof. unfold hasObje. simpl. left. reflexivity. Qed. 
+
+  Theorem in_dec {A:Type}: (forall x y:A, {x = y} + {x <> y}) -> 
+    forall (a:A) (l:list A), {In a l} + {~ In a l}.
+  Proof. 
+    intros. induction l.
+    + right. auto.
+    + inversion IHl.
+    ++ left. simpl. right. auto.
+    ++ specialize X with a a0. inversion X.
+    +++ simpl. left. left. apply eq_sym. apply H0.
+    +++ simpl. right. unfold not. intros. inversion H1. apply eq_sym in H2. destruct H0. apply H2. destruct H. apply H2.
+  Defined.
+  
+  Theorem hasObje_dec: forall k e o, {hasObje k e o}+{~hasObje k e o}.
+  Proof.
+    intros k e o.
+    unfold hasObje.
+    destruct (e k).
+    * apply in_dec; repeat decide equality.
+    * auto.    
+  Defined.
+
+  Theorem hasObjs_dec: forall k s o, {hasObjs k s o}+{~hasObjs k s o}.
+  Proof.
+    intros k s o.
+    induction s.
+    + apply hasObje_dec.
+    + simpl in *.  inversion IHs1; inversion IHs2.
+    ++ left. left. apply H.
+    ++ left. left. apply H.
+    ++ left. right. apply H0.
+    ++ right. unfold not in *. intros. inversion H1. congruence. congruence.
+  Defined.
   
   (** Determine if manifest [k] from [e] knows how to communicate from [k]
    * to [p]
