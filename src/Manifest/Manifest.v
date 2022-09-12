@@ -142,7 +142,7 @@ Module ManifestTerm.
 
   (* Definition of system using environements defined above. *)
 
-  Definition s1 := env e3. 
+  Definition example_sys_1 := env e3. 
   
   Definition hasASPe(k:string)(e:Environment)(a:ASP):Prop :=
     match (e k) with
