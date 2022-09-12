@@ -139,6 +139,10 @@ Module ManifestTerm.
   Inductive System : Type :=
   | env : Environment -> System
   | union : System -> System -> System.
+
+  (* Definition of system using environements defined above. *)
+
+  Definition s1 := env e3. 
   
   Definition hasASPe(k:string)(e:Environment)(a:ASP):Prop :=
     match (e k) with
