@@ -1,29 +1,61 @@
-(***************************
-   EXAMPLE 
+(* EXAMPLE SYSTEM 
 
-   Assumer ther are two places (attestation managers). Place 1 (P1) and place 2 (P2).  They each have an ASP "attest" which takes a measurement of the system. 
-
-   Say that P0, the relying party, requests an attestation of P1.
+   an example system that has a virus checker that can be measured by the "attest" asp. 
    
-   Request = "o1" 
-****************************)
- 
-(* the relying party formulates the request. The request is for an attestation to measure target o1. *)
-Definition request := TARG_ID.
-Definition r1 : request := o1. 
+   By Anna Fritz (9.12.22)*)
 
-(* this is the ini file for the attester. Assume the attester has two places: place 1 and place 2. Each take the "attest" measurement of the system. *)
-Definition loc_man1 := mkLOCAL 1 [ASPC (asp_paramsC attest_id [] 1 o1)].
-Definition loc_man2 := mkLOCAL 2 [ASPC (asp_paramsC attest_id [] 2 o2)].
+Require Import Lists.List.
+Import ListNotations.
 
-Definition glob_man := mkGLOBAL [loc_man1 ; loc_man2].
-Print glob_man.
+Require Import Cop.Copland.
+Import Copland.Term.
+Import Copland.Evidence. 
+Require Import Manifest. 
+Import Manifest.ManifestTerm. 
 
-(* Now, we have defined global and local manifest. We can look at what happens once request is sent. *)
+Require Import String. 
 
-(* request is sent to attester. Target needs to call "generate" function where a manifest is input and outputs some protocols. Then target needs to call thier selection function. Finally, will need to call a privacy funtion.  *)
 
-Definition gen : list Term := generate (glob_man).
-Definition sel : list Term := select_t r1 gen []. 
-Compute gen. 
-Compute sel.
+Module ExamplePhrases. 
+(* craft two example phrases. One measures the virus checker and 
+   the other measures the signature server *)
+    Definition hashing := asp HSH.
+    Definition signing := asp SIG.
+
+    (* possible ASPs*)
+    Definition asp_attest :ASP_ID := "attest"%string. 
+
+    (* possible targets *)
+    Definition vc : TARG_ID := "virus checker"%string.
+    Definition ss : TARG_ID := "signature server"%string. 
+
+    (* possible target IDs *)
+    Definition target : Plc := "target"%string.
+
+    (* possible Copland phrases *)
+    Definition meas_vc := (ASPC ALL EXTD (asp_paramsC asp_attest [] target vc)).
+    Definition meas_ss : Term := asp (ASPC ALL EXTD (asp_paramsC asp_attest [] target ss)).
+
+    (* eval takes a term to evidence *)
+    Definition eval_vc := eval (asp (meas_vc)) target mt.
+    Compute eval_vc.  
+
+End ExamplePhrases.
+
+Module ExampleSystems. 
+(* Creating a system that can measure the vc but cannot measure the ss*)
+    Import ExamplePhrases.
+
+    (* Pieces needed for manifest *)
+    Definition asps' := [meas_vc].
+    Definition objs' : list Obj := [].
+    Definition meas' : list Plc := [].
+    
+    Definition man1 : Manifest := {| asps := asps' ; objs := objs' ; M := meas' |}.
+
+    Definition e0 := e_empty.
+    Definition e1 := e_update e0 target (Some man1).  
+
+    Definition s1 := env (e1).
+
+End ExampleSystems.
