@@ -6,6 +6,7 @@ Import ListNotations.
 Require Import String.
 Require Import Cop.Copland.
 Import Copland.Term.
+Require Import Utils.Utilities.
 
 (** Stuff to do:
  * - Model finder migration from Chlipala
