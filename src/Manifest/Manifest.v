@@ -28,6 +28,8 @@ Module ManifestTerm.
     (ASPC ALL EXTD (asp_paramsC "asp0"%string ["x"%string;"y"%string] Target Target)).
   Notation aspc1 :=
     (ASPC ALL EXTD (asp_paramsC "asp1"%string ["x"%string;"y"%string] Target Target)).
+  Notation aspc2 :=
+    (ASPC ALL EXTD (asp_paramsC "asp2"%string ["vc"%string] Target Target)).
 
   (** [Manifest] defines an attestation manger a list of ASPs and other
    * managers it is aware of.  [Manifest] defines a single AM and its
@@ -132,7 +134,7 @@ Module ManifestTerm.
   Definition e1 :=
     e_update e0 Rely (Some {| asps := [aspc1];  objs := [] ; M:= [Target] |}).
   Definition e2 :=
-    e_update e1 Target (Some {| asps := [SIG]; objs := [vc] ; M:= [Appraise] |}).
+    e_update e1 Target (Some {| asps := [SIG;  aspc2]; objs := [vc] ; M:= [Appraise] |}).
   Definition e3 :=
     e_update e2 Appraise (Some {| asps := [HSH] ; objs := [] ; M:= [] |}).
   
@@ -375,7 +377,8 @@ Module ManifestTerm.
     simpl in *.
     cbv in *.
     destruct Hcontra.
-    discriminate. assumption.
+    discriminate.
+    inversion H. discriminate. apply H0.
   Qed.
 
   Example ex11: (executable (lseq (asp SIG) (asp SIG)) Target e3).
