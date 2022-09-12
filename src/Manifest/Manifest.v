@@ -165,7 +165,7 @@ Module ManifestTerm.
     unfold hasASPe.
     destruct (e k).
     * induction (asps m).
-      right. unfold not. intros. inversion H.
+      right. unfold not. intros. inverts H.
       case (ASP_dec a a0).
       intros H. subst. left. simpl. auto.
       intros H. unfold not in H. destruct IHl. left. simpl. auto.
@@ -179,7 +179,7 @@ Module ManifestTerm.
     intros k e a.
     induction e.
     + simpl in *. apply hasASP_dec.
-    + simpl in *.  inversion IHe1; inversion IHe2.
+    + simpl in *.  inverts IHe1; inverts IHe2.
     ++ left. left. apply H.
     ++ left. left. apply H.
     ++ left. right. apply H0.
@@ -190,7 +190,7 @@ Module ManifestTerm.
   Proof. unfold hasASPe. simpl. left. reflexivity. Qed.
 
   Example ex2: hasASPe Rely e3 CPY -> False.
-  Proof. unfold hasASPe. simpl. intros. destruct H. inversion H. assumption. Qed.
+  Proof. unfold hasASPe. simpl. intros. destruct H. inverts H. assumption. Qed.
   
   Example ex5: hasASPs Rely (env e3) aspc1.
   Proof. unfold hasASPs. unfold hasASPe. simpl. left. reflexivity. Qed.
@@ -284,12 +284,12 @@ Module ManifestTerm.
       intros k s p.
       induction s; simpl in *.
       + apply knowsOfe_dec.
-      + inversion IHs1; inversion IHs2.
+      + inverts IHs1; inverts IHs2.
       ++ left. left. apply H. 
       ++ left. left. apply H.
       ++ left. right. apply H0.
-      ++ right. unfold not in *. intros. inversion H1; congruence.
-    Qed.        
+      ++ right. unfold not in *. intros. inverts H1; congruence.
+    Qed.
 
   Example ex3: knowsOfe Rely e3 Target.
   Proof.
@@ -298,7 +298,7 @@ Module ManifestTerm.
   
   Example ex4: knowsOfe Rely e3 Appraise -> False.
   Proof.
-    unfold knowsOfe. simpl. intros. destruct H. inversion H. assumption.
+    unfold knowsOfe. simpl. intros. destruct H. inverts H. assumption.
   Qed.
 
   Example ex7: knowsOfs Rely (env e3) Target.
