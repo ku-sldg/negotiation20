@@ -9,9 +9,9 @@ Require Import Cop.Copland.
 Import Copland.Term.
 Import Copland.Evidence. 
 Require Import Manifest. 
-Import Manifest.ManifestTerm. 
+Import Manifest.ManifestTerm.
 
-Require Import String. 
+Require Import String.
 
 (* TO DO check out Disclose.v & event semantics in term_defs.v *) 
 
