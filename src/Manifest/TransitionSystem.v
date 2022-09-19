@@ -25,12 +25,14 @@ Require Import String.
       answer state.  *)
 Inductive state := 
 | proposal (pr : list Term)
-| requesting (input accumulator : list Term) (s:System).
+| requesting (input accumulator : list Term) (s:System) (p:Plc).
+
+Check requesting.
 
 (* the initialization state starts with the request and an 
    empty list *)
-Inductive init (req : list Term) (s: System) : state -> Prop := 
-| Init : init req s (requesting req [] s).
+Inductive init (req : list Term) (s: System) (p:Plc) : state -> Prop := 
+| Init : init req s p (requesting req [] s p).
 
 (* the final state is the list of terms that are acceptable. AKA the proposal. *)
 Inductive final : state -> Prop := 
@@ -51,10 +53,10 @@ Fixpoint get_Plc (t:Term) : Plc :=
   end.  
 
 Inductive step : state -> state -> Prop := 
-| Done : forall acc s, 
-          step (requesting [] acc s) (proposal acc)
-| Step : forall acc t s ts, 
-          step (requesting (t :: ts) acc s) (requesting ts (check_exe t (get_Plc t) s ++ acc) s).
+| Done : forall acc s p, 
+          step (requesting [] acc s p) (proposal acc)
+| Step : forall acc t s ts p, 
+          step (requesting (t :: ts) acc s p) (requesting ts (check_exe t p s ++ acc) s p).
 
 (* We need the TRC to reason about all states *)
 Inductive trc {A} (R : A -> A -> Prop) : A -> A -> Prop :=
@@ -82,13 +84,16 @@ Inductive trc {A} (R : A -> A -> Prop) : A -> A -> Prop :=
 
  (* Lets say the request is to hash the virus checker *)
   Definition req1 := [asp (aspc2)].
+  Definition p1 := Target.
   
-  Example req_vc : step^* (requesting req1 [] example_sys_1) (proposal [asp (aspc2)]).
+  Example req_vc : step^* (requesting req1 [] example_sys_1 p1) (proposal [asp (aspc2)]).
   Proof.
     simpl.
     eapply TrcFront.
     + apply Step.
-    + simpl. eapply TrcFront. simpl. apply Done. apply TrcRefl.
+    + simpl. eapply TrcFront.
+    ++ apply Done.
+    ++ apply TrcRefl.
   Qed. 
 
 
