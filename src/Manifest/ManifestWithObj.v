@@ -15,7 +15,7 @@ Require Import Utils.Utilities.
 
 Module ManifestTerm.
 
-  (* Objects can be deduced from ASP *)
+  (* Objects are deduced from ASP definition *)
 
   Notation Rely := "Rely"%string.
   Notation Target := "Target"%string.
@@ -34,10 +34,8 @@ Module ManifestTerm.
    * simulates cruft necessary to initialize its TPM.
    *)
   Record Manifest := {
-
       asps : list ASP ;
       M : list Plc
-
 (*
       ; C : list string
       ; key : string
@@ -130,7 +128,7 @@ Module ManifestTerm.
    *)
   Definition e0 := e_empty.
   Definition e1 :=
-    e_update e0 Rely (Some {| asps := [aspc1]; M:= [Target] |}).
+    e_update e0 Rely (Some {| asps := [aspc1];  M:= [Target] |}).
   Definition e2 :=
     e_update e1 Target (Some {| asps := [SIG;  aspc2]; M:= [Appraise] |}).
   Definition e3 :=
@@ -140,8 +138,6 @@ Module ManifestTerm.
   | env : Environment -> System
   | union : System -> System -> System.
 
-  Local Hint Constructors System : core.
-  
   (* Definition of system using environements defined above. *)
 
   Definition example_sys_1 := env e3. 
@@ -451,11 +447,9 @@ Module ManifestTerm.
     -> trc R y z
     -> trc R x z.
 
-  Local Hint Constructors trc : base.
-  
   Lemma ex18: (trc (R e3) Rely Rely).
   Proof.
-    auto with base.
+    constructor.
   Qed.
 
   (** [Measure] relation from [Rely] to [Appraise]
@@ -473,8 +467,6 @@ Module ManifestTerm.
     Rs x y
     -> trcs Rs y z
     -> trcs Rs x z.
-
-  Local Hint Constructors trcs : base.
 
   Lemma ex20: (trcs (Rs (union (env e3) (env e2))) Rely Appraise).
   Proof.
