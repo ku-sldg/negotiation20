@@ -34,8 +34,10 @@ Module ManifestTerm.
    * simulates cruft necessary to initialize its TPM.
    *)
   Record Manifest := {
+
       asps : list ASP ;
       M : list Plc
+
 (*
       ; C : list string
       ; key : string
@@ -138,6 +140,8 @@ Module ManifestTerm.
   | env : Environment -> System
   | union : System -> System -> System.
 
+  Local Hint Constructors System : core.
+  
   (* Definition of system using environements defined above. *)
 
   Definition example_sys_1 := env e3. 
@@ -447,9 +451,11 @@ Module ManifestTerm.
     -> trc R y z
     -> trc R x z.
 
+  Local Hint Constructors trc : base.
+  
   Lemma ex18: (trc (R e3) Rely Rely).
   Proof.
-    constructor.
+    auto with base.
   Qed.
 
   (** [Measure] relation from [Rely] to [Appraise]
@@ -467,6 +473,8 @@ Module ManifestTerm.
     Rs x y
     -> trcs Rs y z
     -> trcs Rs x z.
+
+  Local Hint Constructors trcs : base.
 
   Lemma ex20: (trcs (Rs (union (env e3) (env e2))) Rely Appraise).
   Proof.
