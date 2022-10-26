@@ -1,11 +1,13 @@
 (* File by Adam Petz. Taken on 9.2.22 
 
-This file desribles the flexible mechanisms as copland Phrases *)
+This file desribles the flexible mechanisms as copland Phrases 
+
+use "coqc -Q . Cop Example_Phrases.v" to compile phrase admits import *)
 
 From Cop Require Export Copland.
 Import Copland.Term.
 
-Require Import Example_Phrase_Admits. 
+Require Export Example_Phrase_Admits. 
 
 Require Import List.
 Import ListNotations.
@@ -156,3 +158,13 @@ Definition test_par_nested : Term :=
        (bpar (ALL,ALL)
              (asp SIG)
              (asp SIG)).
+
+Import Copland.Evidence.
+
+Print eval. 
+
+Example ex1 := eval cert_style_simple_sig P0 mt.
+Compute ex1. 
+
+End Phrase_to_Evidence. 
+
