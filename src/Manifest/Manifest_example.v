@@ -9,53 +9,93 @@ Import ListNotations.
 
 Require Import Cop.Copland.
 Import Copland.Term.
-Import Copland.Evidence. 
+Import Copland.Evidence.
 Require Import Manifest. 
 Import Manifest.ManifestTerm. 
 
-Require Import String. 
+Require Import String.
 
+Print Manifest.
+(* Manifest is a list of ASPs, objects, and places that the AM can measure *)
 
-Module ExamplePhrases. 
-(* craft two example phrases. One measures the virus checker and 
-   the other measures the signature server *)
-    Definition hashing := asp HSH.
-    Definition signing := asp SIG.
+Print Environment.
+(* An Enviornement maps the place to a manifest. In other words, place where the AM is located. *)
 
-    (* possible ASPs*)
-    Definition asp_attest :ASP_ID := "attest"%string. 
+Print System.
+(* A System is a collection of environements. *)
 
-    (* possible targets *)
-    Definition vc : TARG_ID := "virus checker"%string.
-    Definition ss : TARG_ID := "signature server"%string. 
+Print e0.
+(* empty enviornment *) 
 
-    (* possible target IDs *)
-    Definition target : Plc := "target"%string.
+Print e1.
+(* The relying party has aspc1, no objects, and can measure the target. *)
+Print aspc1. 
+(* (ASPC ALL EXTD (asp_paramsC "asp1"%string ["x"%string;"y"%string] Target Target)).*)
 
-    (* possible Copland phrases *)
-    Definition meas_vc := (ASPC ALL EXTD (asp_paramsC asp_attest [] target vc)).
-    Definition meas_ss : Term := asp (ASPC ALL EXTD (asp_paramsC asp_attest [] target ss)).
+Print e2. 
+(* Target place has the ASP SIG and aspc2. Target can measure the appraiser. *)
 
-    (* eval takes a term to evidence *)
-    Definition eval_vc := eval (asp (meas_vc)) target mt.
-    Compute eval_vc.  
+Print e3.
+(* The appraiser can HSH but cannot measure anyone.*) 
 
-End ExamplePhrases.
+Module Example1. 
 
-Module ExampleSystems. 
-(* Creating a system that can measure the vc but cannot measure the ss*)
-    Import ExamplePhrases.
+    Notation Rely := "Rely"%string.
+    Notation Target := "Target"%string.
+    Notation Appraise := "Appraise"%string.
 
-    (* Pieces needed for manifest *)
-    Definition asps' := [meas_vc].
-    Definition objs' : list Obj := [].
-    Definition meas' : list Plc := [].
-    
-    Definition man1 : Manifest := {| asps := asps' ; objs := objs' ; M := meas' |}.
+    Notation vc := "virusChecker"%string. 
+    Notation sf := "signatureFile"%string. 
+    Notation ss := "signatureServer"%string. 
 
-    Definition e0 := e_empty.
-    Definition e1 := e_update e0 target (Some man1).  
+    Notation aspc0' :=
+        (ASPC ALL EXTD (asp_paramsC "asp0"%string [] Target vc)).
+    Notation aspc1' :=
+        (ASPC ALL EXTD (asp_paramsC "asp1"%string ["x"%string;"y"%string] Target ss)).
+    Notation aspc2' :=
+        (ASPC ALL EXTD (asp_paramsC "asp2"%string ["vc"%string] Target sf)).
 
-    Definition s1 := env (e1).
+    Definition e0' := e_empty.
+    Definition e1' :=
+        e_update e0' Rely (Some {| asps := [aspc1] ; M:= [Target] |}).
+    Definition e2' :=
+        e_update e1' Target (Some {| asps := [SIG;  aspc2] ; M:= [Appraise] |}).
+    Definition e3' :=
+        e_update e2' Appraise (Some {| asps := [HSH] ; M:= [] |}).
 
-End ExampleSystems.
+End Example1. 
+
+Print asp_paramsC. 
+(* asp_paramsC : ASP_ID -> list Arg -> Plc -> TARG_ID -> ASP_PARAMS. *)
+
+Module Example2. 
+
+Notation Rely := "Rely"%string.
+Notation Target := "Target"%string.
+Notation Appraise := "Appraise"%string.
+
+Notation vc := "virusChecker"%string. 
+Notation os := "OS"%string. 
+Notation tpm := "TrustedPlatformModule"%string. 
+
+Notation asp_vc :=
+    (ASPC ALL EXTD (asp_paramsC "measure"%string [] Target vc)).
+Notation asp_os :=
+    (ASPC ALL EXTD (asp_paramsC "measure"%string [] Target os)).
+Notation asp_tpm :=
+    (ASPC ALL EXTD (asp_paramsC "get_keys"%string [] Target tpm)).
+
+Print aspc1. 
+
+Definition e0' := e_empty.
+(* the relying party has no ASPs *)
+Definition e1' :=
+    e_update e0' Rely (Some {| asps := [] ; M:= [Target] |}).
+(* the target can measure vc, os, and tpm *)
+Definition e2' :=
+    e_update e1' Target (Some {| asps := [SIG; asp_vc ; asp_os ; asp_tpm] ; M:= [Appraise] |}).
+(* the appraiser can take a hash *)
+Definition e3' :=
+    e_update e2' Appraise (Some {| asps := [HSH] ; M:= [] |}).
+
+End Example2. 
