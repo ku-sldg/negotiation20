@@ -99,6 +99,10 @@ Inductive request :=
 | req : string -> UserType -> resource -> request
 | many : request -> request -> request. 
 
+Definition ExR0 := req Rely outsider r0.
+Definition ExR1 := req Rely outsider r1.
+Definition ExR2 := many ExR0 ExR1.
+
 Definition getPlc (a:ASP_PARAMS) : Plc := 
   match a with 
   | asp_paramsC id arg pl t => pl 
@@ -109,7 +113,7 @@ Definition getTarg (a:ASP_PARAMS) : TARG_ID :=
   | asp_paramsC id arg pl t => t 
   end.
 
-(* Define privacy policy. This is dependent on the request and the environment.
+(* Define privacy policy. This is dependent on the request and the system.
    
    [k] is the request 
    [e] is the enviornment for which the policy exists 
@@ -119,7 +123,7 @@ Definition getTarg (a:ASP_PARAMS) : TARG_ID :=
    1. an outsider only has access to user space measurements 
    2. an insider can request use of the TPM or user space measurement 
    3. an system admin can take user space measurement, kernel measurement, and can access TPM. *)
-Fixpoint privPolicy (r : request) (e: Environment) : Prop := 
+Fixpoint privPolicy (r : request) : Prop := 
   match r with 
   | req k outsider res => match res with 
                           | resrc _ user => True 
@@ -131,13 +135,16 @@ Fixpoint privPolicy (r : request) (e: Environment) : Prop :=
                          | resrc _ kernel => False 
                          end
   | req k systemAdmin res => True 
-  | many r1 r2 => privPolicy r1 e /\ privPolicy r2 e
+  | many r1 r2 => privPolicy r1 /\ privPolicy r2
   end. 
+
+(* INTERESTING: 
+   Because everything is types, we don't need to consider the system yet. That comes with executability. *)
 
 (* Make some example reqeusts *)
 Example req1 := req Target outsider r0.
 
-Theorem  req1': privPolicy req1 e3 = True .
+Theorem  req1': privPolicy req1 = True .
 Proof.
   simpl. auto.
 Qed.
@@ -145,18 +152,24 @@ Qed.
 (* an outsider cannot request access to a kernel level object *)
 Example req2 := req Target outsider r1.
 
-Theorem  req2': privPolicy req2 e3 -> False.
+Theorem  req2': privPolicy req2 -> False.
 Proof.
   simpl. auto.
 Qed.
 
-(* transitive reflexive closure gives us all elements we could access *)
-Inductive trc {A} (R : A -> A -> Prop) : A -> A -> Prop :=
-| TrcRefl : forall x, trc R x x
-| TrcFront : forall x y z, R x y -> trc R y z -> trc R x z.
+(* system admin can request anything *)
+Lemma req_admin : forall u res k, u = systemAdmin -> privPolicy (req k u res) = True.
+Proof.
+  intros. simpl. inversion H; subst. auto.
+Qed.
 
-Notation "R ^*" := (trc R) (at level 0).
-
-(* what if we want to use the trc to reveal all resources an outsider has access to? *)
-
-
+(* now, try to make it a subset type *)
+Definition privDep (r: request) : {r : request | (privPolicy r)}.
+Proof. 
+  exists r. induction r.
+  + destruct u.
+  ++ destruct r.
+  +++ destruct a0.
+  ++++ simpl. auto.
+  ++++ (* Stuck here. How to prove False without any false pretenses. *)
+  Abort. 
