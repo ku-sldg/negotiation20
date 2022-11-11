@@ -1,6 +1,6 @@
 (* Reasoning about Access Control. Motivated by paper titled "Model Checking Distributed Mandatory Access Control Policies" 
 
-Motivation : We need to be able to know if an AM can request measurement from another AM (measures relation). At the requested AM, we need to know if they can access a specific resource in the context of a certain appraiser. 
+Motivation : We need to be able to know if an AM can request measurement from another AM (measures relation). At the requested AM, we need to know if they can access a specific resource in the context of a certain userraiser. 
 
 Goal: create a type system to describe the resource of measurement (resources) and the ASPs preforming measurement. 
 
@@ -24,94 +24,69 @@ Import Manifest.ManifestTerm.
 Require Import Manifest_example.
 Import Manifest_example.Example2.
 
-(* Start by defining a type system like the system in MCDMACP 
-   https://leepike.github.io/pubs/mcdmacp12.pdf 
-   
-   neeeded = domain does not currently have access to an resource. 
-             domain would like to aquire access in clear state.  
-   notNeeded = domain does not need access to resource 
-   clearr = domain has access to resource in clear 
-   encrypted = info requires key but may be decrypted locally
-   sealed = domain has access to resource but it needs keys/encryption 
-            facilities to view information and will require use of TPM
-            to gain access *)
+Definition requestor := string. 
 
-
-(* In our case, lets assume clearr means you have access to decrpytion keys while sealed means you don't have access *)
-Inductive status := 
-| needed : status
-| notNeeded : status
-| clearr : status
-| sealed : status.
-
-Theorem eq_status_dec: forall (x:status) (y:status), {x = y} + {x <> y}.
-Proof. 
-  repeat decide equality.
-Defined.  
-
-(* Need a label to describe the return type of an ASP *)
+(* Label describes the type of an ASP ie the architectural level at which the AM operates   *)
 Inductive ASPType  := 
 | user : ASPType 
 | kernel : ASPType
 | TPM : ASPType.
 
-(* Defining measurement resources. *)
+(* Defining measurement resources. A resource is an ASP along with its type.
+   This makes it easy to get only the ASP during attestation. *)
 Inductive resource  :=
 | resrc :  ASP ->  ASPType -> resource.
 
-(* This type describes the id of the requestor *)
-Inductive UserType := 
-| outsider : UserType 
-| insider : UserType
-| systemAdmin : UserType. 
-  
+(* create some resources 
+   label based on the type of data the measurement exposes 
+   
+   asp_vc, asp_os, asp_tpm are simple asps defined in Manifest_example2. *)
+Definition r0 : resource := resrc asp_vc user. 
+Definition r1 : resource := resrc asp_os kernel.
+Definition r2 : resource := resrc asp_tpm TPM.
+
 Theorem eq_resource_dec: forall (x:resource) (y:resource), {x = y} + {x <> y}.
 Proof. 
   repeat decide equality.
 Defined.  
 
-(* create some resources 
-   label based on the type of data the measurement exposes *)
-Definition r0 : resource := resrc asp_vc user. 
-Definition r1 : resource := resrc asp_os kernel.
-Definition r2 : resource := resrc asp_tpm TPM.
+(* This type describes the id of the requestor. Either the entity requesting is  
+   an outsider (don't have creditials on the network), an insider (has creditials), or the system admin. 
+
+   There could be many more types. Using these three as a proof of concept. 
+   TO DO : look at SELinux security types *)
+Inductive RoleType := 
+| outsider : RoleType 
+| insider : RoleType
+| systemAdmin : RoleType.   
 
 Compute eq_resource_dec r1 r2.
 (* this returns right *)
 
-(* In the paper, sigma is a function describing the state of the domain. 
-
-This is essentially the privacy function. Is a resource needed or not needed? Sigma tells us its status while the red/green notation tells us if it should be shared *)
-
-Definition sigma (r : resource) : status := 
-  match r with 
-  | resrc asp_vc user => needed 
-  | resrc asp_os kernel => needed
-  | resrc asp_tpm TPM => sealed 
-  | _ => notNeeded
-  end.
-
-
 (* [k] = WHO the requestor is 
-   [u] = TYPE of requestor for policy 
    [t] = requested resource  *)
 Inductive request := 
-| req : string -> UserType -> resource -> request
-| many : request -> request -> request. 
+| req : requestor -> resource -> request. 
 
-Definition ExR0 := req Rely outsider r0.
-Definition ExR1 := req Rely outsider r1.
-Definition ExR2 := many ExR0 ExR1.
+(* To request multiple resources, use a list.  *)
+Definition ExR0 := req Rely r0.
+Definition ExR1 := req Rely r1.
+Definition ExR2 := [ExR0 ; ExR1].
 
-Definition getPlc (a:ASP_PARAMS) : Plc := 
-  match a with 
-  | asp_paramsC id arg pl t => pl 
-  end.
-  
-Definition getTarg (a:ASP_PARAMS) : TARG_ID := 
-  match a with 
-  | asp_paramsC id arg pl t => t 
-  end.
+(* The situation describes the type of each party in the attestation scenario. Here is the situation defined relationally.  *)
+Inductive situation' : requestor -> RoleType -> Set := 
+| sit1' : situation' Rely insider.
+
+(* Situation defined inductivly *)
+Inductive situation := 
+| sit : requestor -> RoleType -> situation. 
+
+(* Context describes the dependency between resources as outlined in "Confining the Adversary" by Rowe. Context will likely be in the Manifest. I'm not sure if we need to reason about it yet but it's here so I don't forget about it. The latter resource here depends on the former *) 
+Inductive context := 
+| contxt : resource -> resource -> context. 
+
+(* resource 0 (measure vc) depends on the measurement of the OS resource 1 (measure os) *)
+Example c1 := contxt r1 r0. 
 
 (* Define privacy policy. This is dependent on the request and the system.
    
@@ -123,53 +98,110 @@ Definition getTarg (a:ASP_PARAMS) : TARG_ID :=
    1. an outsider only has access to user space measurements 
    2. an insider can request use of the TPM or user space measurement 
    3. an system admin can take user space measurement, kernel measurement, and can access TPM. *)
-Fixpoint privPolicy (r : request) : Prop := 
-  match r with 
-  | req k outsider res => match res with 
-                          | resrc _ user => True 
-                          | _ => False 
-                          end  
-  | req k insider res => match res with 
-                         | resrc _ user => True 
-                         | resrc _ TPM => True 
-                         | resrc _ kernel => False 
-                         end
-  | req k systemAdmin res => True 
-  | many r1 r2 => privPolicy r1 /\ privPolicy r2
+Definition privPolicy' (s: situation) (r : request) : Prop := 
+  match s with 
+  | sit _ outsider => match r with 
+                      | req _ (resrc _ user) => True 
+                      | _ => False
+                      end
+  | sit _ insider => match r with 
+                      | req _ (resrc _ user) => True 
+                      | req _ (resrc _ TPM) => True 
+                      | _ => False
+                      end 
+  | sit _ systemAdmin => True 
   end. 
 
-(* INTERESTING: 
-   Because everything is types, we don't need to consider the system yet. That comes with executability. *)
+(* Assuming the privacy policy will be a list *)
+Fixpoint privPolicy (s : situation) (r: list request) : Prop :=
+  match r with 
+  | [] => True 
+  | h :: t => (privPolicy' s h) /\ privPolicy s t 
+  end. 
 
-(* Make some example reqeusts *)
-Example req1 := req Target outsider r0.
+Ltac inv H := inversion H; subst. 
+Ltac left_true H := left; split; simpl; try apply I; try apply H. 
+Ltac not_right H0 := right; unfold not; intros; inv H0; congruence.
 
-Theorem  req1': privPolicy req1 = True .
+(* For any requested list, either the privacy policy is satisfied or its not. This proof is long and painful. It needs automation.  *)
+Definition privPolicyDec : forall r s, {privPolicy s r} + {~ privPolicy s r}.
 Proof.
-  simpl. auto.
-Qed.
+  intros r s. generalize dependent s. induction r.
+  + simpl. left. apply I.
+  + simpl. intros. destruct a. destruct r4. destruct a0.
+  (* proofs for user *)
+  ++ destruct s. destruct r5.
+  +++ simpl. specialize IHr with (sit r4 outsider). inv IHr.
+  ++++ left_true H.
+  ++++ not_right H0.
+  +++  simpl. specialize IHr with (sit r4 insider). inv IHr.
+  ++++ left_true H.
+  ++++ not_right H0.
+  +++ simpl. specialize IHr with (sit r4 systemAdmin). inv IHr.
+  ++++ left_true H.
+  ++++ not_right H0.
+  (* proofs for kernel *)
+  ++ destruct s. destruct r5.
+  +++ simpl. specialize IHr with (sit r4 outsider). inv IHr.
+  ++++ not_right H0. 
+  ++++ not_right H0.
+  +++  simpl. specialize IHr with (sit r4 insider). inv IHr.
+  ++++ not_right H0.
+  ++++ not_right H0.
+  +++ simpl. specialize IHr with (sit r4 systemAdmin). inv IHr.
+  ++++ left_true H.
+  ++++ not_right H0.
+  (* proofs for TPM *)
+  ++ destruct s. destruct r5.
+  +++ simpl. specialize IHr with (sit r4 outsider). inv IHr.
+  ++++ not_right H0. 
+  ++++ not_right H0.
+  +++  simpl. specialize IHr with (sit r4 insider). inv IHr.
+  ++++ left_true H. 
+  ++++ not_right H0.
+  +++ simpl. specialize IHr with (sit r4 systemAdmin). inv IHr.
+  ++++ left_true H. 
+  ++++ not_right H0.
+Qed. 
 
-(* an outsider cannot request access to a kernel level object *)
-Example req2 := req Target outsider r1.
+(* INTERESTING: 
+  Because everything is types, we don't need to consider the system yet. That comes with executability. *)
 
-Theorem  req2': privPolicy req2 -> False.
+(* The relying party request r1 *)
+Print ExR1. 
+
+(* Reason about example requests
+   r0 = asp_vc user. 
+   r1 = asp_os kernel.
+   r2 = asp_tpm TPM. *)
+
+Lemma help : True /\ True = True.
+auto. Qed.  
+
+Lemma help' : (True /\ True) -> True /\ True.
+auto. Qed.  
+
+(* in this situation, the relying party is an insider *)
+Definition sit1 := sit Rely insider. 
+
+(* this says, the relying party as an "insider" requests r1 (measurement of os at kernel level) *)
+Theorem  req1': ~ privPolicy sit1 [ExR1].
+Proof.
+  simpl. unfold not. intros. inv H. auto.
+Qed. 
+
+(* relying party as an outsider *)
+Definition sit2 := sit Rely outsider. 
+
+(* an outsider requests access to a user level object *)
+Theorem  req2': privPolicy sit2 [ExR0].
 Proof.
   simpl. auto.
 Qed.
 
 (* system admin can request anything *)
-Lemma req_admin : forall u res k, u = systemAdmin -> privPolicy (req k u res) = True.
+Lemma req_admin : forall rely u res, u = systemAdmin -> privPolicy (sit rely u) [res].
 Proof.
-  intros. simpl. inversion H; subst. auto.
-Qed.
+  intros. inv H. simpl. auto. 
+Qed. 
 
-(* now, try to make it a subset type *)
-Definition privDep (r: request) : {r : request | (privPolicy r)}.
-Proof. 
-  exists r. induction r.
-  + destruct u.
-  ++ destruct r.
-  +++ destruct a0.
-  ++++ simpl. auto.
-  ++++ (* Stuck here. How to prove False without any false pretenses. *)
-  Abort. 
