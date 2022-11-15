@@ -26,6 +26,8 @@ Import Manifest_example.Example2.
 
 Definition requestor := string. 
 
+Module Not_Relationally. 
+
 (* Label describes the type of an ASP ie the architectural level at which the AM operates   *)
 Inductive ASPType  := 
 | user : ASPType 
@@ -41,9 +43,9 @@ Inductive resource  :=
    label based on the type of data the measurement exposes 
    
    asp_vc, asp_os, asp_tpm are simple asps defined in Manifest_example2. *)
-Definition r0 : resource := resrc asp_vc user. 
-Definition r1 : resource := resrc asp_os kernel.
-Definition r2 : resource := resrc asp_tpm TPM.
+Definition r_vc_usr: resource := resrc asp_vc user. 
+Definition r_os_ker : resource := resrc asp_os kernel.
+Definition r_tpm_tpm : resource := resrc asp_tpm TPM.
 
 Theorem eq_resource_dec: forall (x:resource) (y:resource), {x = y} + {x <> y}.
 Proof. 
@@ -60,7 +62,7 @@ Inductive RoleType :=
 | insider : RoleType
 | systemAdmin : RoleType.   
 
-Compute eq_resource_dec r1 r2.
+Compute eq_resource_dec r_os_ker r_tpm_tpm.
 (* this returns right *)
 
 (* [k] = WHO the requestor is 
@@ -69,132 +71,128 @@ Inductive request :=
 | req : requestor -> resource -> request. 
 
 (* To request multiple resources, use a list.  *)
-Definition ExR0 := req Rely r0.
-Definition ExR1 := req Rely r1.
-Definition ExR2 := [ExR0 ; ExR1].
+Definition Req_vc_usr := req Rely r_vc_usr.
+Definition Req_os_ker := req Rely r_os_ker.
+Definition Req_vc_and_os := [Req_vc_usr ; Req_os_ker].
 
 (* The situation describes the type of each party in the attestation scenario. Here is the situation defined relationally.  *)
 Inductive situation' : requestor -> RoleType -> Set := 
-| sit1' : situation' Rely insider.
+| sit_Rely_in' : situation' Rely insider.
 
-(* Situation defined inductivly *)
+(* Situation defined inductivly 
+
+TO DO: ake more general, could have ASPs, resource, target *)
 Inductive situation := 
 | sit : requestor -> RoleType -> situation. 
+
+(* First, relying party is an insider. Next is a system Admin. Then is an outsider. *)
+Definition sit_Rely_in := sit Rely insider. 
+Definition sit_Rely_admin := sit Rely systemAdmin.
+Definition sit_Rely_out := sit Rely outsider. 
 
 (* Context describes the dependency between resources as outlined in "Confining the Adversary" by Rowe. Context will likely be in the Manifest. I'm not sure if we need to reason about it yet but it's here so I don't forget about it. The latter resource here depends on the former *) 
 Inductive context := 
 | contxt : resource -> resource -> context. 
 
 (* resource 0 (measure vc) depends on the measurement of the OS resource 1 (measure os) *)
-Example c1 := contxt r1 r0. 
+Example c1 := contxt r_os_ker r_vc_usr. 
 
-(* Define privacy policy. This is dependent on the request and the system.
-   
-   [k] is the request 
-   [e] is the enviornment for which the policy exists 
+(* Define privacy policy. This is dependent on the resource and the system.
+    
+   [s] is the situation for which the policy exists 
    [r] is the resource in question 
    
    This policy says: 
    1. an outsider only has access to user space measurements 
    2. an insider can request use of the TPM or user space measurement 
    3. an system admin can take user space measurement, kernel measurement, and can access TPM. *)
-Definition privPolicy' (s: situation) (r : request) : Prop := 
+Definition privPolicy' (s: situation) (r : resource) : Prop := 
   match s with 
   | sit _ outsider => match r with 
-                      | req _ (resrc _ user) => True 
+                      | (resrc _ user) => True 
                       | _ => False
                       end
   | sit _ insider => match r with 
-                      | req _ (resrc _ user) => True 
-                      | req _ (resrc _ TPM) => True 
+                      | (resrc _ user) => True 
+                      | (resrc _ TPM) => True 
                       | _ => False
                       end 
   | sit _ systemAdmin => True 
   end. 
 
 (* Assuming the privacy policy will be a list *)
-Fixpoint privPolicy (s : situation) (r: list request) : Prop :=
+Fixpoint privPolicy (s : situation) (r: list resource) : Prop :=
   match r with 
   | [] => True 
   | h :: t => (privPolicy' s h) /\ privPolicy s t 
-  end. 
+  end.
 
 Ltac inv H := inversion H; subst. 
 Ltac left_true H := left; split; simpl; try apply I; try apply H. 
 Ltac not_right H0 := right; unfold not; intros; inv H0; congruence.
+Ltac both H H0 := try left_true H; try not_right H0.
 
 (* For any requested list, either the privacy policy is satisfied or its not. This proof is long and painful. It needs automation.  *)
 Definition privPolicyDec : forall r s, {privPolicy s r} + {~ privPolicy s r}.
 Proof.
   intros r s. generalize dependent s. induction r.
-  + simpl. left. apply I.
-  + simpl. intros. destruct a. destruct r4. destruct a0.
-  (* proofs for user *)
-  ++ destruct s. destruct r5.
-  +++ simpl. specialize IHr with (sit r4 outsider). inv IHr.
+  + simpl. intros. auto.
+  + simpl. intros. destruct a. destruct a0.
+  (* user *)
+  ++ destruct s. destruct r1.
+  +++ simpl. specialize IHr with (sit r0 outsider). inv IHr.
   ++++ left_true H.
   ++++ not_right H0.
-  +++  simpl. specialize IHr with (sit r4 insider). inv IHr.
+  +++ simpl. specialize IHr with (sit r0 insider). inv IHr; simpl.
   ++++ left_true H.
   ++++ not_right H0.
-  +++ simpl. specialize IHr with (sit r4 systemAdmin). inv IHr.
+  +++ simpl. specialize IHr with (sit r0 systemAdmin). inv IHr; simpl.
   ++++ left_true H.
   ++++ not_right H0.
-  (* proofs for kernel *)
-  ++ destruct s. destruct r5.
-  +++ simpl. specialize IHr with (sit r4 outsider). inv IHr.
-  ++++ not_right H0. 
-  ++++ not_right H0.
-  +++  simpl. specialize IHr with (sit r4 insider). inv IHr.
+  (* kernel *)
+  ++  destruct s. destruct r1.
+  +++ simpl. specialize IHr with (sit r0 outsider). inv IHr.
   ++++ not_right H0.
   ++++ not_right H0.
-  +++ simpl. specialize IHr with (sit r4 systemAdmin). inv IHr.
+  +++ simpl. specialize IHr with (sit r0 insider). inv IHr; simpl.
+  ++++ not_right H0.
+  ++++ not_right H0.
+  +++ simpl. specialize IHr with (sit r0 systemAdmin). inv IHr; simpl.
   ++++ left_true H.
   ++++ not_right H0.
-  (* proofs for TPM *)
-  ++ destruct s. destruct r5.
-  +++ simpl. specialize IHr with (sit r4 outsider). inv IHr.
-  ++++ not_right H0. 
+  (* TPM *)
+  ++  destruct s. destruct r1.
+  +++ simpl. specialize IHr with (sit r0 outsider). inv IHr.
   ++++ not_right H0.
-  +++  simpl. specialize IHr with (sit r4 insider). inv IHr.
-  ++++ left_true H. 
   ++++ not_right H0.
-  +++ simpl. specialize IHr with (sit r4 systemAdmin). inv IHr.
-  ++++ left_true H. 
+  +++ simpl. specialize IHr with (sit r0 insider). inv IHr; simpl.
+  ++++ left_true H.
+  ++++ not_right H0.
+  +++ simpl. specialize IHr with (sit r0 systemAdmin). inv IHr; simpl.
+  ++++ left_true H.
   ++++ not_right H0.
 Qed. 
 
 (* INTERESTING: 
   Because everything is types, we don't need to consider the system yet. That comes with executability. *)
 
-(* The relying party request r1 *)
-Print ExR1. 
+(* The relying party request r_os_ker *)
+Print Req_os_ker. 
 
 (* Reason about example requests
-   r0 = asp_vc user. 
-   r1 = asp_os kernel.
-   r2 = asp_tpm TPM. *)
+   r_vc_usr = asp_vc user. 
+   r_os_ker = asp_os kernel.
+   r_tpm_tpm = asp_tpm TPM. *)
 
-Lemma help : True /\ True = True.
-auto. Qed.  
-
-Lemma help' : (True /\ True) -> True /\ True.
-auto. Qed.  
-
-(* in this situation, the relying party is an insider *)
-Definition sit1 := sit Rely insider. 
-
-(* this says, the relying party as an "insider" requests r1 (measurement of os at kernel level) *)
-Theorem  req1': ~ privPolicy sit1 [ExR1].
+(* this says, the relying party as an "insider" requests r_os_ker (measurement of os at kernel level) *)
+Theorem  req1': ~ privPolicy sit_Rely_in [r_os_ker].
 Proof.
   simpl. unfold not. intros. inv H. auto.
 Qed. 
 
-(* relying party as an outsider *)
-Definition sit2 := sit Rely outsider. 
 
 (* an outsider requests access to a user level object *)
-Theorem  req2': privPolicy sit2 [ExR0].
+Theorem  req2': privPolicy sit_Rely_out [r_vc_usr].
 Proof.
   simpl. auto.
 Qed.
@@ -204,4 +202,58 @@ Lemma req_admin : forall rely u res, u = systemAdmin -> privPolicy (sit rely u) 
 Proof.
   intros. inv H. simpl. auto. 
 Qed. 
+
+(* Selection function without proof *)
+Definition reqDep (s: situation) : {r  | (privPolicy' s r)}.
+Admitted. 
+Print reqDep.
+Check reqDep.
+(*  forall s : situation, {r : request | privPolicy' s r} *)
+
+(* subset of all requests that are true for a situation *)
+Definition reqDep' (s : situation) := {r | privPolicy' s r}.
+Check reqDep'.
+(* situation -> Set *)
+
+(* Anything goes for the Admin... this isn't very interesting. *)
+Compute reqDep' sit_Rely_admin.
+
+(* more interesting. How do I prove if something is in the set. *)
+Example rely_dep : reqDep' sit_Rely_in.
+Proof. exists r_tpm_tpm. econstructor. Qed.   
+
+(* prove that measurement exists in the subset *)
+Lemma user_exists : exists (r:resource), 
+  r = proj1_sig rely_dep.
+Proof. exists r_vc_usr. simpl. unfold proj1_sig. Abort.  
+
+End Not_Relationally. 
+
+(*****************************************
+Do this all again but define relationally. 
+******************************************)
+
+Module Relationally.  
+
+  (* base types are ASP types *)
+  Inductive ASPType  := 
+  | user : ASPType 
+  | kernel : ASPType
+  | TPM : ASPType.
+
+  (* Other base types are role types *)
+  Inductive RoleType := 
+  | outsider : RoleType 
+  | insider : RoleType
+  | systemAdmin : RoleType. 
+
+  Inductive ASPs : ASP -> ASPs := 
+  | vc :  ASPs asp_vc.
+
+  (* TO DO : work on this definition *)
+  Inductive privPolicyRel : situation -> request -> Prop := 
+  | out_usr : forall k a r s, privPolicyRel (sit s k) (req r (resrc a user)).
+
+End Relationally. 
+
 
