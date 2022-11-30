@@ -36,14 +36,17 @@ Module ManifestTerm.
   Record Manifest := {
 
       asps : list ASP ;
-      M : list Plc
+      knowsOf : list Plc
+      (* previously M*)
 
 (*
       ; C : list string
       ; key : string
       ; address : nat
-      ; tpm : nat
+      ; tpm_init : nat
 *)
+
+(* TO DO: Add privacy and selection policies to manifest *)
     }.
 
   (** [Environment] is a set of AM's each defined by a [Manifest].
