@@ -214,6 +214,7 @@ Fixpoint privPolicy (e:evidence): Prop :=
   (* SELECTION FUNCTION *)
   Definition selectDep e (_ :term e) := {t:term e | privPolicy e}.
   
+  Print selectDep.
   
   (* Measure the VC *)
   Definition vc := TMeas (EAt target (EBlob VC)).  
@@ -263,8 +264,8 @@ Fixpoint privPolicy (e:evidence): Prop :=
   (* Proof is left in a `False` state. *)
   Example vc_op_okay : selectDep _ vc_op.
   Proof. unfold selectDep. 
-  exists (TMeas (EPar (ESig (EAt target (EBlob OP)) t_priv_key) 
-                      (ESig (EAt target (EBlob VC)) t_priv_key))).
+  exists (TMeas (ESeq (ESig (EAt target (EBlob OP)) t_priv_key) 
+  (ESig (EAt target (EBlob VC)) t_priv_key))).
   unfold privPolicy. split. auto. Abort.
   
 End Subset2.

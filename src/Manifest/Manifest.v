@@ -36,7 +36,8 @@ Module ManifestTerm.
   Record Manifest := {
 
       asps : list ASP ;
-      knowsOf : list Plc
+      knowsOf : list Plc ; 
+      priv : nat
       (* previously M*)
 
 (*
