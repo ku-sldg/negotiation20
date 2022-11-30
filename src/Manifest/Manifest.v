@@ -36,8 +36,7 @@ Module ManifestTerm.
   Record Manifest := {
 
       asps : list ASP ;
-      knowsOf : list Plc ; 
-      priv : nat
+      M : list Plc ; 
       (* previously M*)
 
 (*
@@ -63,72 +62,6 @@ Module ManifestTerm.
   Definition e_update (m : Environment) (x : Plc) (v : (option Manifest)) :=
     fun x' => if plc_dec x x' then v else m x'.
 
-  Lemma e_apply_empty: forall x, @e_empty x = None.
-  Proof.
-    intros.
-    auto.
-  Qed.
-
-  Lemma e_update_eq : forall (m: Environment) x v,
-      (e_update m x v) x = v.
-  Proof.
-    intros. unfold e_update.
-    case (plc_dec x x).
-    * intro H. reflexivity.
-    * intro H. contradiction.
-  Qed.
-
-  Theorem e_update_neq : forall v x1 x2 (m:Environment),
-      x1 <> x2 -> (e_update m x1 v) x2 = m x2.
-  Proof.
-    intros v x1 x2 m.
-    intros H.
-    unfold e_update.
-    case (plc_dec x1 x2); intros H1; [contradiction | reflexivity].
-  Qed.
-
-  Theorem e_update_shadow : forall (m:Environment) v1 v2 x,
-      e_update (e_update m x v1) x v2
-      = e_update m x v2.
-  Proof.
-    intros m v1 v2 x.
-    unfold e_update.
-    apply functional_extensionality.
-    intros x0.
-    case (plc_dec x x0).
-    * intros H; reflexivity.
-    * intros H; reflexivity.
-  Qed.
-  
-  Theorem e_update_same : forall x (m : Environment),
-      e_update m x (m x) = m.
-  Proof.
-    intros x m.
-    unfold e_update.
-    apply functional_extensionality.
-    intros x0.
-    case (plc_dec x x0).
-    * intros H; subst; reflexivity.
-    * intros H; reflexivity.
-  Qed.
-
-  Theorem e_update_permute : forall v1 v2 x1 x2 (m : Environment),
-      x2 <> x1 ->
-      (e_update (e_update m x2 v2) x1 v1)
-      = (e_update (e_update m x1 v1) x2 v2).
-  Proof.
-    intros v1 v2 x1 x2 m.
-    intros H.
-    unfold e_update.
-    apply functional_extensionality.
-    intros x.
-    case (plc_dec x1 x).
-    * intros H1. subst.
-      ** case (plc_dec x2 x); intros; contradiction || reflexivity.
-    * intros H1. subst.
-      ** case (plc_dec x2 x); intros; reflexivity.
-  Qed.
-
   (** Definition of environments for use in examples and proofs.  Note they
    * build constructively through [e3] that is the map for this system
    *)
@@ -140,6 +73,8 @@ Module ManifestTerm.
   Definition e3 :=
     e_update e2 Appraise (Some {| asps := [HSH] ; M:= [] |}).
   
+  
+
   Inductive System : Type :=
   | env : Environment -> System
   | union : System -> System -> System.
