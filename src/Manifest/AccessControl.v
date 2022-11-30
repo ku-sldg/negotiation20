@@ -241,14 +241,38 @@ Module Relationally.
   | kernel : ASPType
   | TPM : ASPType.
 
+  Inductive ASPs : ASP -> ASPType -> Prop  := 
+  | vc : ASPs asp_vc user
+  | os : ASPs asp_os kernel
+  | tpm : ASPs asp_tpm TPM.
+
+  Inductive ASPs' := 
+  | tyASP (a: ASP) ( aty : ASPType).
+
+  Lemma ASP_dec : forall a1 a2 : ASP, {a1 = a2} + {a1 <> a2}.
+  Proof.
+    repeat decide equality.
+  Qed.
+
+  Check ASPs.
+  
+  Lemma ASPs_dec : forall a1 a2 : ASPs, 
+
   (* Other base types are role types *)
   Inductive RoleType := 
   | outsider : RoleType 
   | insider : RoleType
   | systemAdmin : RoleType. 
 
-  Inductive ASPs : ASP -> ASPs := 
-  | vc :  ASPs asp_vc.
+
+
+  Inductive attester : requestor -> RoleType -> Prop := 
+  | req_out : attester Rely outsider
+  | req_in : attester Rely insider
+  | req_admin : attester Rely systemAdmin.
+
+  Inductive situaiton := 
+  | att_sit : forall (a : attester), situaiton a. 
 
   (* TO DO : work on this definition *)
   Inductive privPolicyRel : situation -> request -> Prop := 

@@ -14,9 +14,15 @@ Import Manifest.ManifestTerm.
 
 Require Import String.
 
+Require Import AccessControl. 
+
 Set Implicit Arguments.
 
 (* TO DO check out Disclose.v & event semantics in term_defs.v *) 
+
+Print request. 
+(* | req : string -> UserType -> resource -> request
+   | many : request -> request -> request. *)
 
 (* Two states: 
     1. answer state. 
@@ -28,14 +34,12 @@ Set Implicit Arguments.
       answer state.  *)
 Inductive refine_state := 
 | proposal (pr : list Term)
-| requesting (input accumulator : list Term) (s:System) (p:Plc).
-
-Check requesting.
+| requesting (input : request) (accumulator : list Term) (s:System) (p:Plc).
 
 (* the initialization state starts with the request and an 
    empty list *)
-Inductive init (req : list Term) (s: System) (p:Plc) : refine_state -> Prop := 
-| Init : init req s p (requesting req [] s p).
+Inductive init (r : request) (s: System) (p:Plc) : refine_state -> Prop := 
+| Init : init r s p (requesting r [] s p).
 
 (* the final state is the list of terms that are acceptable. AKA the proposal. *)
 Inductive final : refine_state -> Prop := 
@@ -43,6 +47,7 @@ Inductive final : refine_state -> Prop :=
 
 Definition check_exe (t:Term) (k:Plc) (s:System) : list Term := 
   if executables_dec t k s then [t] else [].
+
 
 Inductive step : refine_state -> refine_state -> Prop := 
 | Done : forall acc s p, 
