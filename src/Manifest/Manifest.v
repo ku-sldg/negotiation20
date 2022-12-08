@@ -63,41 +63,56 @@ Module ManifestTerm.
     fun x' => if plc_dec x x' then v else m x'.
 
   (** Definition of environments for use in examples and proofs.  Note they
-   * build constructively through [e3] that is the map for this system
+   * build constructively through [e_App] that is the map for this system
    *)
   Definition e0 := e_empty.
-  Definition e1 :=
-    e_update e0 Rely (Some {| asps := [aspc1]; M:= [Target] |}).
-  Definition e2 :=
-    e_update e1 Target (Some {| asps := [SIG;  aspc2]; M:= [Appraise] |}).
-  Definition e3 :=
-    e_update e2 Appraise (Some {| asps := [HSH] ; M:= [] |}).
+  Definition e_Rely :=
+    e_update e_empty Rely (Some {| asps := [aspc1]; M:= [Target] |}).
+  Definition e_Targ :=
+    e_update e_empty Target (Some {| asps := [SIG;  aspc2]; M:= [Appraise] |}).
+  Definition e_App :=
+    e_update e_empty Appraise (Some {| asps := [HSH] ; M:= [] |}).
   
-  
+  (* A System is all attestation managers in the enviornement *)
+  Definition System := list Environment.
 
-  Inductive System : Type :=
+  (* Inductive System : Type :=
   | env : Environment -> System
   | union : System -> System -> System.
 
-  Local Hint Constructors System : core.
+  Local Hint Constructors System : core. *)
   
   (* Definition of system using environements defined above. *)
 
-  Definition example_sys_1 := env e3. 
+  Definition example_sys_1 := [e_Rely; e_Targ; e_App]. 
   
   Definition hasASPe(k:string)(e:Environment)(a:ASP):Prop :=
     match (e k) with
     | None => False
     | Some m => In a m.(asps)
     end.      
+    
+    Fixpoint hasASPs(k:string)(s:System)(a:ASP):Prop :=
+      match s with
+      | [] => False
+      | s1 :: s2 => (hasASPe k s1 a) \/ (hasASPs k s2 a)
+      end.
+      
+    Example ex1: hasASPe Rely e_Rely aspc1.
+    Proof. unfold hasASPe. simpl. left. reflexivity. Qed.
+  
+    Example ex2: hasASPe Rely e_App CPY -> False.
+    Proof. unfold hasASPe. simpl. intros. inverts H. Qed.
+    
+    Example ex5: hasASPs Rely (example_sys_1) aspc1.
+    Proof. unfold hasASPs. unfold hasASPe. simpl. left. left. reflexivity. Qed.
+  
+    (* I'm not quite sure what this is trying to say... 
+     * This is currently false but I'm not sure if you want it to be true... *)
+    Example ex6: hasASPs Appraise (example_sys_1) aspc1.
+    Proof. unfold hasASPs. unfold hasASPe. simpl. Abort. 
 
-  Fixpoint hasASPs(k:string)(s:System)(a:ASP):Prop :=
-    match s with
-    | env e => (hasASPe k e a)
-    | union s1 s2 => (hasASPs k s1 a) \/ (hasASPs k s2 a)
-    end.
-
-  Theorem hasASP_dec: forall k e a, {hasASPe k e a}+{~hasASPe k e a}.
+  Theorem hasASPe_dec: forall k e a, {hasASPe k e a}+{~hasASPe k e a}.
   Proof.
     intros k e a.
     unfold hasASPe.
@@ -116,25 +131,13 @@ Module ManifestTerm.
   Proof.
     intros k e a.
     induction e.
-    + simpl in *. apply hasASP_dec.
-    + simpl in *.  inverts IHe1; inverts IHe2.
-    ++ left. left. apply H.
-    ++ left. left. apply H.
-    ++ left. right. apply H0.
-    ++ right. unfold not in *. intros. inversion H1. congruence. congruence.
-  Defined.
-  
-  Example ex1: hasASPe Rely e3 aspc1.
-  Proof. unfold hasASPe. simpl. left. reflexivity. Qed.
-
-  Example ex2: hasASPe Rely e3 CPY -> False.
-  Proof. unfold hasASPe. simpl. intros. destruct H. inverts H. assumption. Qed.
-  
-  Example ex5: hasASPs Rely (env e3) aspc1.
-  Proof. unfold hasASPs. unfold hasASPe. simpl. left. reflexivity. Qed.
-
-  Example ex6: hasASPs Rely (union (env e3) (env e2)) aspc1.
-  Proof. unfold hasASPs. left. unfold hasASPe. simpl. left. reflexivity. Qed.
+    + simpl in *. right. unfold not. intros. apply H.
+    + simpl in *. pose proof hasASPe_dec k a0 a. inverts H. 
+    ++ left. left. apply H0.
+    ++ inverts IHe.
+    +++ left. right. apply H.
+    +++ right. unfold not. intros. inverts H1; auto.
+  Qed.             
 
   Theorem in_dec {A:Type}: (forall x y:A, {x = y} + {x <> y}) -> 
     forall (a:A) (l:list A), {In a l} + {~ In a l}.
@@ -190,22 +193,22 @@ Module ManifestTerm.
       ++ right. unfold not in *. intros. inverts H1; congruence.
     Qed.
 
-  Example ex3: knowsOfe Rely e3 Target.
+  Example ex3: knowsOfe Rely e_App Target.
   Proof.
     unfold knowsOfe. simpl. auto.
   Qed.
   
-  Example ex4: knowsOfe Rely e3 Appraise -> False.
+  Example ex4: knowsOfe Rely e_App Appraise -> False.
   Proof.
     unfold knowsOfe. simpl. intros. destruct H. inverts H. assumption.
   Qed.
 
-  Example ex7: knowsOfs Rely (env e3) Target.
+  Example ex7: knowsOfs Rely (env e_App) Target.
   Proof.
     unfold knowsOfs,knowsOfe. simpl. auto.
   Qed.
 
-  Example ex8: knowsOfs Rely (union (env e3) (env e2)) Target.
+  Example ex8: knowsOfs Rely (union (env e_App) (env e_Targ)) Target.
   Proof.
     unfold knowsOfs,knowsOfe. simpl. auto.
   Qed.
@@ -268,10 +271,10 @@ Module ManifestTerm.
                  | |- ?A => idtac A
                  end.
 
-  Example ex9: (executable (asp SIG) Target e3).
+  Example ex9: (executable (asp SIG) Target e_App).
   Proof. prove_exec. Qed.
   
-  Example ex10: (executable (asp CPY) Target e3) -> False.
+  Example ex10: (executable (asp CPY) Target e_App) -> False.
   Proof.
     intros Hcontra.
     simpl in *.
@@ -281,14 +284,14 @@ Module ManifestTerm.
     inversion H. discriminate. apply H0.
   Qed.
 
-  Example ex11: (executable (lseq (asp SIG) (asp SIG)) Target e3).
+  Example ex11: (executable (lseq (asp SIG) (asp SIG)) Target e_App).
   Proof. prove_exec. Qed.
 
   Example ex12: (executable (lseq (asp aspc1)
                               (att Target
                                  (lseq (asp SIG)
                                     (asp SIG))))
-                  Rely e3).
+                  Rely e_App).
   Proof. prove_exec. intros. split. 
     cbv in *. left. reflexivity. 
     cbv in *. left. reflexivity.   Qed.
@@ -309,7 +312,7 @@ Module ManifestTerm.
                                 (att Target
                                    (lseq (asp SIG)
                                       (asp SIG))))
-                  Rely (union (env e3) (env e2))).
+                  Rely (union (env e_App) (env e_Targ))).
   Proof. prove_execs. simpl. intros. split.
     +  unfold hasASPe. cbv; left; left; reflexivity.
     + unfold hasASPe. cbv. left. left. reflexivity. 
@@ -351,10 +354,10 @@ Module ManifestTerm.
     | None => False
     end.
 
-  Example ex14: (R e3 Rely Target).
+  Example ex14: (R e_App Rely Target).
   Proof. cbv. auto. Qed.
 
-  Example ex15: (R e3 Rely Appraise) -> False.
+  Example ex15: (R e_App Rely Appraise) -> False.
   Proof.
     prove_exec.
     intros HContra.
@@ -370,12 +373,12 @@ Module ManifestTerm.
     | union s1 s2 => Rs s1 k1 k2 \/ Rs s2 k1 k2
     end.
 
-  Example ex16: (Rs (env e3) Rely Target).
+  Example ex16: (Rs (env e_App) Rely Target).
   Proof.
     unfold Rs. apply ex14.
   Qed.
 
-  Example ex17: (Rs (union (env e3) (env e2)) Rely Target).
+  Example ex17: (Rs (union (env e_App) (env e_Targ)) Rely Target).
   Proof.
     unfold Rs. left. apply ex14.
   Qed.
@@ -392,14 +395,14 @@ Module ManifestTerm.
 
   Local Hint Constructors trc : base.
   
-  Lemma ex18: (trc (R e3) Rely Rely).
+  Lemma ex18: (trc (R e_App) Rely Rely).
   Proof.
     auto with base.
   Qed.
 
   (** [Measure] relation from [Rely] to [Appraise]
    *)
-  Lemma ex19: (trc (R e3) Rely Appraise).
+  Lemma ex19: (trc (R e_App) Rely Appraise).
   Proof.
     eapply TrcFront. constructor. reflexivity.
     eapply TrcFront. constructor. reflexivity.
@@ -415,7 +418,7 @@ Module ManifestTerm.
 
   Local Hint Constructors trcs : base.
 
-  Lemma ex20: (trcs (Rs (union (env e3) (env e2))) Rely Appraise).
+  Lemma ex20: (trcs (Rs (union (env e_App) (env e_Targ))) Rely Appraise).
   Proof.
     eapply TrcFronts. constructor. unfold Rs. constructor. reflexivity.
     eapply TrcFronts. constructor. unfold Rs. constructor. reflexivity.
@@ -434,7 +437,7 @@ Module ManifestTerm.
     { exec := executable
     }.
 
-  Compute manExec.(exec) (asp NULL) Rely e3.
+  Compute manExec.(exec) (asp NULL) Rely e_App.
 
   #[local]
   Instance sysExec: Executable Term string System :=
