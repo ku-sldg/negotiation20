@@ -86,13 +86,13 @@ Module ManifestTerm.
 
   Definition example_sys_1 := [e_Rely; e_Targ; e_App]. 
   
-  Definition hasASPe(k:string)(e:Environment)(a:ASP):Prop :=
+  Definition hasASPe(k:Plc)(e:Environment)(a:ASP):Prop :=
     match (e k) with
     | None => False
     | Some m => In a m.(asps)
     end.      
     
-    Fixpoint hasASPs(k:string)(s:System)(a:ASP):Prop :=
+    Fixpoint hasASPs(k:Plc)(s:System)(a:ASP):Prop :=
       match s with
       | [] => False
       | s1 :: s2 => (hasASPe k s1 a) \/ (hasASPs k s2 a)
@@ -154,7 +154,7 @@ Module ManifestTerm.
   (** Determine if manifest [k] from [e] knows how to communicate from [k]
    * to [p]
    *)
-  Definition knowsOfe(k:string)(e:Environment)(p:Plc):Prop :=
+  Definition knowsOfe(k:Plc)(e:Environment)(p:Plc):Prop :=
     match (e k) with
     | None => False
     | Some m => In p m.(M)
@@ -175,7 +175,7 @@ Module ManifestTerm.
     auto.
   Qed.
   
-  Fixpoint knowsOfs(k:string)(s:System)(p:Plc):Prop :=
+  Fixpoint knowsOfs(k:Plc)(s:System)(p:Plc):Prop :=
     match s with
     | [] => False
     | s1 :: ss => (knowsOfe k s1 p) \/ (knowsOfs k ss p)
@@ -200,22 +200,22 @@ Module ManifestTerm.
       +++ right. unfold not. intros. inversion H1; auto.
     Qed. 
 
-  Example ex3: knowsOfe Rely e_App Target.
+  Example ex3: knowsOfs Rely example_sys_1 Target.
   Proof.
-    unfold knowsOfe. simpl. auto.
+    unfold knowsOfs. simpl. left. unfold knowsOfe. simpl.  auto.
   Qed.
   
   Example ex4: knowsOfe Rely e_App Appraise -> False.
   Proof.
-    unfold knowsOfe. simpl. intros. destruct H. inverts H. assumption.
+    unfold knowsOfe. simpl. intros. destruct H. 
   Qed.
 
-  Example ex7: knowsOfs Rely (env e_App) Target.
+  Example ex7: knowsOfs Rely example_sys_1 Target.
   Proof.
     unfold knowsOfs,knowsOfe. simpl. auto.
   Qed.
 
-  Example ex8: knowsOfs Rely (union (env e_App) (env e_Targ)) Target.
+  Example ex8: knowsOfs Rely [e_Rely] Target.
   Proof.
     unfold knowsOfs,knowsOfe. simpl. auto.
   Qed.
@@ -224,7 +224,7 @@ Module ManifestTerm.
    * environment [e]?  Are ASPs available at the right attesation managers
    * and are necessary communications allowed?
    *)
-  Fixpoint executable(t:Term)(k:string)(e:Environment):Prop :=
+  Fixpoint executable(t:Term)(k:Plc)(e:Environment):Prop :=
     match t with
     | asp a  => hasASPe k e a
     | att p t => knowsOfe k e p -> executable t p e
@@ -235,7 +235,7 @@ Module ManifestTerm.
 
   Theorem executable_dec:forall t k e,{(executable t k e)}+{~(executable t k e)}.
     intros.  generalize k. induction t; intros.
-    + unfold executable. apply hasASP_dec.
+    + unfold executable. apply hasASPe_dec.
     + simpl. assert (H:{knowsOfe k0 e p}+{~knowsOfe k0 e p}). apply knowsOfe_dec. destruct H. destruct (IHt p).
       ++ left. intros. assumption.
       ++ right. unfold not. intros. unfold not in n. apply n. apply H. assumption.
@@ -257,7 +257,7 @@ Module ManifestTerm.
    * system [s]?  Are ASPs available at the right attestation managers
    * and are necessary communications allowed?
    *)
-  Fixpoint executables(t:Term)(k:string)(s:System):Prop :=
+  Fixpoint executables(t:Term)(k:Plc)(s:System):Prop :=
     match t with
     | asp a  => hasASPs k s a
     | att p t => knowsOfs k s p -> executables t p s
@@ -278,7 +278,8 @@ Module ManifestTerm.
                  | |- ?A => idtac A
                  end.
 
-  Example ex9: (executable (asp SIG) Target e_App).
+  (* Is asp SIG executable on the on target place in the Targets's enviornement?*)
+  Example ex9: (executable (asp SIG) Target e_Targ).
   Proof. prove_exec. Qed.
   
   Example ex10: (executable (asp CPY) Target e_App) -> False.
@@ -287,11 +288,9 @@ Module ManifestTerm.
     simpl in *.
     cbv in *.
     destruct Hcontra.
-    discriminate.
-    inversion H. discriminate. apply H0.
   Qed.
 
-  Example ex11: (executable (lseq (asp SIG) (asp SIG)) Target e_App).
+  Example ex11: (executable (lseq (asp SIG) (asp SIG)) Target e_Targ).
   Proof. prove_exec. Qed.
 
   Example ex12: (executable (lseq (asp aspc1)
@@ -299,9 +298,19 @@ Module ManifestTerm.
                                  (lseq (asp SIG)
                                     (asp SIG))))
                   Rely e_App).
-  Proof. prove_exec. intros. split. 
+  Proof. prove_exec. intros. Abort. (* split. 
     cbv in *. left. reflexivity. 
-    cbv in *. left. reflexivity.   Qed.
+    cbv in *. left. reflexivity.   Qed. *)
+
+  Example ex12': (executables (lseq (asp aspc1)
+                              (att Target
+                                 (lseq (asp SIG)
+                                    (asp SIG))))
+                  Rely example_sys_1).
+  Proof. prove_exec. intros. simpl. unfold hasASPe. simpl.
+    left. left. reflexivity.   
+    cbv in *. split. right.  left. left.  reflexivity. 
+    cbv in *. right. left.  left. reflexivity.   Qed.
 
   Ltac prove_execs :=
     simpl; auto; match goal with
@@ -315,7 +324,7 @@ Module ManifestTerm.
                  end.
 
 
-  Example ex13: (executables (lseq (asp aspc1)
+  (* Example ex13: (executables (lseq (asp aspc1)
                                 (att Target
                                    (lseq (asp SIG)
                                       (asp SIG))))
@@ -323,7 +332,7 @@ Module ManifestTerm.
   Proof. prove_execs. simpl. intros. split.
     +  unfold hasASPe. cbv; left; left; reflexivity.
     + unfold hasASPe. cbv. left. left. reflexivity. 
-  Qed.
+  Qed. *)
 
   Check executables. 
 
@@ -355,7 +364,7 @@ Module ManifestTerm.
 
   (** Moving on to reasoning about system M *)
   
-  Definition R(e:Environment)(k1 k2:string):Prop :=
+  Definition R(e:Environment)(k1 k2:Plc):Prop :=
     match (e k1) with
     | Some m => In k2 m.(M)
     | None => False
@@ -374,7 +383,7 @@ Module ManifestTerm.
     * assumption.
   Qed.
   
-  Fixpoint Rs(s:System)(k1 k2:string):Prop :=
+  Fixpoint Rs(s:System)(k1 k2:Plc):Prop :=
     match s with
     | env e => R e k1 k2
     | union s1 s2 => Rs s1 k1 k2 \/ Rs s2 k1 k2
