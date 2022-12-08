@@ -149,8 +149,8 @@ Module ManifestTerm.
   Definition hasASPe(k:string)(e:Environment)(a:ASP):Prop :=
     match (e k) with
     | None => False
-    | Some m => In a m.(asps)
-    end.      
+    | Some m => In a (asps m)
+    end.
 
   Fixpoint hasASPs(k:string)(s:System)(a:ASP):Prop :=
     match s with
