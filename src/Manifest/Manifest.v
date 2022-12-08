@@ -334,7 +334,7 @@ Module ManifestTerm.
     + unfold hasASPe. cbv. left. left. reflexivity. 
   Qed. *)
 
-  Check executables. 
+  Check executables.
 
   (** Is term [t] executable on the attestation mnanager named [k] in
    * system [s]?  Are ASPs available at the right attestation managers
@@ -370,10 +370,10 @@ Module ManifestTerm.
     | None => False
     end.
 
-  Example ex14: (R e_App Rely Target).
+  Example ex14: (R e_Rely Rely Target).
   Proof. cbv. auto. Qed.
 
-  Example ex15: (R e_App Rely Appraise) -> False.
+  Example ex15: (R e_Rely Rely Appraise) -> False.
   Proof.
     prove_exec.
     intros HContra.
