@@ -2,4 +2,6 @@
 *.vos
 *.conf
 .makefile.d
+Makefile.coq
+.CoqMakefile.d
 .DS_Store
