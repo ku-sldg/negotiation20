@@ -174,24 +174,31 @@ Module ManifestTerm.
     destruct H0. apply H. subst. auto. apply n. assumption.
     auto.
   Qed.
-    
+  
+  Fixpoint knowsOfs(k:string)(s:System)(p:Plc):Prop :=
+    match s with
+    | [] => False
+    | s1 :: ss => (knowsOfe k s1 p) \/ (knowsOfs k ss p)
+    end.
+
+  (***** old definition 
   Fixpoint knowsOfs(k:string)(s:System)(p:Plc):Prop :=
     match s with
     | env e => (knowsOfe k e p)
     | union s1 s2 => (knowsOfs k s1 p) \/ (knowsOfs k s2 p)
-    end.
+    end. *)
 
     Theorem knowsOfs_dec:forall k s p, {(knowsOfs k s p)}+{~(knowsOfs k s p)}.
     Proof.
       intros k s p.
       induction s; simpl in *.
-      + apply knowsOfe_dec.
-      + inverts IHs1; inverts IHs2.
-      ++ left. left. apply H. 
-      ++ left. left. apply H.
-      ++ left. right. apply H0.
-      ++ right. unfold not in *. intros. inverts H1; congruence.
-    Qed.
+      + right. unfold not. intros. inversion H.     
+      + pose proof knowsOfe_dec k a p. inverts H.
+      ++ left. left. apply H0.
+      ++ inverts IHs.
+      +++ left. right. apply H.
+      +++ right. unfold not. intros. inversion H1; auto.
+    Qed. 
 
   Example ex3: knowsOfe Rely e_App Target.
   Proof.
