@@ -51,16 +51,18 @@ Module ManifestTerm.
 
    Check Policy.
 
-  (* The relying party can share measurement result from ASPC1 with any party *) 
+(* Policy describes privacy constraints applies to measurement operations. 
+
+  Below are relational definitions of Policy. Within the definition, we list each ASP the AM has and state who can recieve a measurement of said ASP. The relying party can share the measurement of aspc1 with p. The target can share the measurement aspc2 with the appraiser and SIG with anyone. The appraiser can share a hash with anyone. 
+*)
+
   Inductive rely_Policy : ASP -> Plc -> Prop := 
   | p_aspc1 : forall p, rely_Policy aspc1 p. 
 
-  (* The target can run aspc2 and share measurement result for the appraiser *)
   Inductive tar_Policy : ASP -> Plc -> Prop := 
   | p_aspc0 : tar_Policy aspc2 Appraise 
-  | p_SIG : tar_Policy SIG Appraise. 
+  | p_SIG : forall p, tar_Policy SIG p. 
 
-  (* the appraiser has one asp, HSH, and it will share hash measurement with anyone *)
   Inductive app_Policy : ASP -> Plc -> Prop := 
   | p_HSH : forall p, app_Policy HSH p. 
 
