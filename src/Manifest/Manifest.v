@@ -8,30 +8,38 @@ Require Import Cop.Copland.
 Import Copland.Term.
 Require Import Utils.Utilities.
 
-(** Stuff to do:
+(** TO Do:
  * - Model finder migration from Chlipala
- * - Flesh out INI and Manifest types
+ * - Selection policy in manifest? 
+ * - Properties of privacy policy? 
  *)
 
 Module ManifestTerm.
 
-  (* Objects can be deduced from ASP *)
-
+  (* Motivated by the Flexible Mechanisms for Remote Attestation, 
+     we have three present parties in this attestation scheme. 
+     These are used for example purposes. *)
   Notation Rely := "Rely"%string.
   Notation Target := "Target"%string.
   Notation Appraise := "Appraise"%string.
 
-  Notation aspc0 :=
-    (ASPC ALL EXTD (asp_paramsC "asp0"%string ["x"%string;"y"%string] Target Target)).
+  (* Introducing three asps for reasoning purposes. *)
   Notation aspc1 :=
     (ASPC ALL EXTD (asp_paramsC "asp1"%string ["x"%string;"y"%string] Target Target)).
   Notation aspc2 :=
-    (ASPC ALL EXTD (asp_paramsC "asp2"%string ["vc"%string] Target Target)).
+    (ASPC ALL EXTD (asp_paramsC "asp2"%string ["x"%string] Target Target)).
 
-  (** [Manifest] defines an attestation manger a list of ASPs and other
-   * managers it is aware of.  [Manifest] defines a single AM and its
-   * interconnections.  [add] simulates address information and [tpm]
-   * simulates cruft necessary to initialize its TPM.
+  (** [Manifest] defines a single attestation manger and its interconnections.  
+      Information includes: 
+   * asps:  a list of ASPs (measurement operations the AM can preform)
+   * M : measures relation (other AMs the current AM knows of)  
+   * C : context relation (other AMs the current AM depends on)
+   * Policy : local policy specific to the current AM. Minimally includes privacy policy and may possibly include selection policy   
+   
+   * Other information not necessary for reasoning includes: 
+   * [key] simulates public key 
+   * [address] simulates address information and 
+   * [tpm] simulates cruft necessary to initialize its TPM
    *)
   Record Manifest := {
 
@@ -46,21 +54,21 @@ Module ManifestTerm.
       ; tpm_init : nat
 *)
 
-(* TO DO: Add privacy and selection policies to manifest *)
+(* TO DO: Add selection policies to manifest *)
     }.
 
    Check Policy.
 
-(* Policy describes privacy constraints applies to measurement operations. 
+(* Policy describes privacy constraints applied to measurement operations. 
 
-  Below are relational definitions of Policy. Within the definition, we list each ASP the AM has and state who can recieve a measurement of said ASP. The relying party can share the measurement of aspc1 with p. The target can share the measurement aspc2 with the appraiser and SIG with anyone. The appraiser can share a hash with anyone. 
+  Below are relational definitions of Policy. Within the definition, we list each ASP on the AM and state who can recieve a measurement of said ASP (ie doesn't expose sensitive information in the context). The relying party can share the measurement of aspc1 with p. The target can share the measurement aspc2 with the appraiser and SIG with anyone. The appraiser can share a hash with anyone. 
 *)
 
   Inductive rely_Policy : ASP -> Plc -> Prop := 
   | p_aspc1 : forall p, rely_Policy aspc1 p. 
 
   Inductive tar_Policy : ASP -> Plc -> Prop := 
-  | p_aspc0 : tar_Policy aspc2 Appraise 
+  | p_aspc2 : tar_Policy aspc2 Appraise 
   | p_SIG : forall p, tar_Policy SIG p. 
 
   Inductive app_Policy : ASP -> Plc -> Prop := 
@@ -79,7 +87,7 @@ Module ManifestTerm.
   Definition e_update (m : Environment) (x : Plc) (v : (option Manifest)) :=
     fun x' => if plc_dec x x' then v else m x'.
 
-  (** Definition of environments for use in examples and proofs.  Note there are 3 AM's present... Relying Party, Target, and Appraiser, each have an AM. 
+  (** Definition of environments for use in examples and proofs.  Note there are 3 AM's present... Relying Party, Target, and Appraiser, each have one AM. 
    *)
   Definition e0 := e_empty.
   Definition e_Rely :=
@@ -92,42 +100,36 @@ Module ManifestTerm.
   (* A System is all attestation managers in the enviornement *)
   Definition System := list Environment.
 
-  (* Inductive System : Type :=
-  | env : Environment -> System
-  | union : System -> System -> System.
-
-  Local Hint Constructors System : core. *)
-  
-  (* Definition of system using environements defined above. *)
-
+  (* In our example, the system includes the relying party, the target, and the appraiser *)
   Definition example_sys_1 := [e_Rely; e_Targ; e_App]. 
   
+  (* Within the enviornment e, does the AM at place k have ASP a? *)
   Definition hasASPe(k:Plc)(e:Environment)(a:ASP):Prop :=
     match (e k) with
     | None => False
     | Some m => In a m.(asps)
     end.      
     
+    (* Within the system s, does the AM located at place k have ASP a? *)
     Fixpoint hasASPs(k:Plc)(s:System)(a:ASP):Prop :=
       match s with
       | [] => False
       | s1 :: s2 => (hasASPe k s1 a) \/ (hasASPs k s2 a)
       end.
       
+    (* Prove the relying party has aspc1 in the relying party's enviornement *)
     Example ex1: hasASPe Rely e_Rely aspc1.
     Proof. unfold hasASPe. simpl. left. reflexivity. Qed.
   
-    Example ex2: hasASPe Rely e_App CPY -> False.
-    Proof. unfold hasASPe. simpl. intros. inverts H. Qed.
+    (* relying party does not have copy *)
+    Example ex2: hasASPe Rely e_Rely CPY -> False.
+    Proof. unfold hasASPe. simpl. intros. inverts H. inverts H0. auto. Qed.
     
+    (* Prove the Relying party has aspc2 within the system *)
     Example ex5: hasASPs Rely (example_sys_1) aspc1.
-    Proof. unfold hasASPs. unfold hasASPe. simpl. left. left. reflexivity. Qed.
-  
-    (* I'm not quite sure what this is trying to say... 
-     * This is currently false but I'm not sure if you want it to be true... *)
-    Example ex6: hasASPs Appraise (example_sys_1) aspc1.
-    Proof. unfold hasASPs. unfold hasASPe. simpl. Abort. 
+    Proof. unfold hasASPs. unfold hasASPe. simpl. left. left. reflexivity. Qed. 
 
+  (* Proof that hasASPe is decidable *)
   Theorem hasASPe_dec: forall k e a, {hasASPe k e a}+{~hasASPe k e a}.
   Proof.
     intros k e a.
@@ -143,6 +145,7 @@ Module ManifestTerm.
     * cbv. right. intros. assumption.
   Defined.
 
+  (* prove hasASPs is decidable *)
   Theorem hasASPs_dec: forall k e a, {hasASPs k e a}+{~hasASPs k e a}.
   Proof.
     intros k e a.
@@ -153,19 +156,7 @@ Module ManifestTerm.
     ++ inverts IHe.
     +++ left. right. apply H.
     +++ right. unfold not. intros. inverts H1; auto.
-  Qed.             
-
-  Theorem in_dec {A:Type}: (forall x y:A, {x = y} + {x <> y}) -> 
-    forall (a:A) (l:list A), {In a l} + {~ In a l}.
-  Proof. 
-    intros. induction l.
-    + right. auto.
-    + inversion IHl.
-    ++ left. simpl. right. auto.
-    ++ specialize X with a a0. inversion X.
-    +++ simpl. left. left. apply eq_sym. apply H0.
-    +++ simpl. right. unfold not. intros. inversion H1. apply eq_sym in H2. destruct H0. apply H2. destruct H. apply H2.
-  Defined.
+  Qed.   
   
   (** Determine if manifest [k] from [e] knows how to communicate from [k]
    * to [p]
@@ -176,6 +167,7 @@ Module ManifestTerm.
     | Some m => In p m.(M)
     end.
 
+  (* Prove knowsOfe is decidable *)
   Theorem knowsOfe_dec:forall k e p, {(knowsOfe k e p)}+{~(knowsOfe k e p)}.
   Proof.
     intros k e p.
@@ -191,12 +183,16 @@ Module ManifestTerm.
     auto.
   Qed.
   
+  (** Determine if place [k] within the system [s] knows 
+   * how to communicate with [p]
+   *)
   Fixpoint knowsOfs(k:Plc)(s:System)(p:Plc):Prop :=
     match s with
     | [] => False
     | s1 :: ss => (knowsOfe k s1 p) \/ (knowsOfs k ss p)
     end.
 
+    (* decidability of knowsOfs*)
     Theorem knowsOfs_dec:forall k s p, {(knowsOfs k s p)}+{~(knowsOfs k s p)}.
     Proof.
       intros k s p.
@@ -209,32 +205,42 @@ Module ManifestTerm.
       +++ right. unfold not. intros. inversion H1; auto.
     Qed. 
 
+  (* the relying party knows of the target within system 1*)
   Example ex3: knowsOfs Rely example_sys_1 Target.
   Proof.
     unfold knowsOfs. simpl. left. unfold knowsOfe. simpl.  auto.
   Qed.
   
+  (* the relying party does not directly know of the appraiser *)
   Example ex4: knowsOfe Rely e_App Appraise -> False.
   Proof.
     unfold knowsOfe. simpl. intros. destruct H. 
   Qed.
 
+  (* the relying party is aware of the target in system 1*)
   Example ex7: knowsOfs Rely example_sys_1 Target.
   Proof.
     unfold knowsOfs,knowsOfe. simpl. auto.
   Qed.
 
+  (* if the relying party was it's own system, it would still be aware of the target *)
   Example ex8: knowsOfs Rely [e_Rely] Target.
   Proof.
     unfold knowsOfs,knowsOfe. simpl. auto.
   Qed.
 
+  (** Determine if place [k] within the environment [e]  
+   * depends on place [p] (the context relation)
+   *)
   Definition dependsOne (k:Plc)(e:Environment)(p:Plc):Prop :=
     match (e k) with
     | None => False
     | Some m => In p m.(C)
     end.
 
+  (** Determine if place [k] within the system [s]  
+   * depends on place [p] (the context relation)
+   *)
   Fixpoint dependsOns (k:Plc)(s:System)(p:Plc):Prop :=
     match s with
     | [] => False
@@ -253,6 +259,7 @@ Module ManifestTerm.
     unfold dependsOns. simpl. unfold dependsOne. simpl. auto.
   Qed.   
 
+  (* depends on (context relation) is decidable *)
   Theorem dependsOne_dec : forall k e p, {(dependsOne k e p)}+{~(dependsOne k e p)}.
   Proof.
     intros k e p.
@@ -292,6 +299,7 @@ Module ManifestTerm.
     | bpar _ t1 t2 => executable t1 k e /\ executable t2 k e
     end.
 
+  (* executability of a term is decidable *)
   Theorem executable_dec:forall t k e,{(executable t k e)}+{~(executable t k e)}.
     intros.  generalize k. induction t; intros.
     + unfold executable. apply hasASPe_dec.
@@ -341,6 +349,7 @@ Module ManifestTerm.
   Example ex9: (executable (asp SIG) Target e_Targ).
   Proof. prove_exec. Qed.
   
+  (* copy is not executable on the target in the appraiser's environment *)
   Example ex10: (executable (asp CPY) Target e_App) -> False.
   Proof.
     intros Hcontra.
@@ -349,6 +358,7 @@ Module ManifestTerm.
     destruct Hcontra.
   Qed.
 
+  (* two signature operations are executable on the target*)
   Example ex11: (executable (lseq (asp SIG) (asp SIG)) Target e_Targ).
   Proof. prove_exec. Qed.
 
@@ -361,6 +371,7 @@ Module ManifestTerm.
     cbv in *. left. reflexivity. 
     cbv in *. left. reflexivity.   Qed. *)
 
+  (* the relying party can ask the target to run aspc1 and signature operations within system 1 *)
   Example ex12': (executables (lseq (asp aspc1)
                               (att Target
                                  (lseq (asp SIG)
@@ -383,15 +394,20 @@ Module ManifestTerm.
                  end.
 
 
+  (* With the way I (anna) redefinied enviornement this doesn't work anymore.. *)
   (* Example ex13: (executables (lseq (asp aspc1)
                                 (att Target
                                    (lseq (asp SIG)
                                       (asp SIG))))
-                  Rely (union (env e_App) (env e_Targ))).
-  Proof. prove_execs. simpl. intros. split.
+                  Rely [e_App; e_Targ]).
+  Proof. 
+    prove_exec. simpl. unfold hasASPe. simpl. (* this is false... figure out why later...  *)
+    
+    
+    prove_execs. simpl. intros. split.
     +  unfold hasASPe. cbv; left; left; reflexivity.
     + unfold hasASPe. cbv. left. left. reflexivity. 
-  Qed. *)
+  Qed. *) 
 
   Check executables.
 
@@ -420,6 +436,8 @@ Module ManifestTerm.
       right. unfold not. intros H. destruct H. contradiction.
     Defined.
 
+
+(**** I STOPPED HERE - Anna ****)
 
   (** Moving on to reasoning about system M *)
   
