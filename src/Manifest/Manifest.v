@@ -37,10 +37,9 @@ Module ManifestTerm.
 
       asps : list ASP ;
       M : list Plc ; 
-      (* previously M*)
+      C : list Plc ; 
 
 (*
-      ; C : list string
       ; key : string
       ; address : nat
       ; tpm_init : nat
@@ -67,11 +66,11 @@ Module ManifestTerm.
    *)
   Definition e0 := e_empty.
   Definition e_Rely :=
-    e_update e_empty Rely (Some {| asps := [aspc1]; M:= [Target] |}).
+    e_update e_empty Rely (Some {| asps := [aspc1]; M:= [Target] ; C := [] |}).
   Definition e_Targ :=
-    e_update e_empty Target (Some {| asps := [SIG;  aspc2]; M:= [Appraise] |}).
+    e_update e_empty Target (Some {| asps := [SIG;  aspc2]; M:= [Appraise] ; C := [] |}).
   Definition e_App :=
-    e_update e_empty Appraise (Some {| asps := [HSH] ; M:= [] |}).
+    e_update e_empty Appraise (Some {| asps := [HSH] ; M:= [] ; C := [Target] |}).
   
   (* A System is all attestation managers in the enviornement *)
   Definition System := list Environment.
@@ -181,13 +180,6 @@ Module ManifestTerm.
     | s1 :: ss => (knowsOfe k s1 p) \/ (knowsOfs k ss p)
     end.
 
-  (***** old definition 
-  Fixpoint knowsOfs(k:string)(s:System)(p:Plc):Prop :=
-    match s with
-    | env e => (knowsOfe k e p)
-    | union s1 s2 => (knowsOfs k s1 p) \/ (knowsOfs k s2 p)
-    end. *)
-
     Theorem knowsOfs_dec:forall k s p, {(knowsOfs k s p)}+{~(knowsOfs k s p)}.
     Proof.
       intros k s p.
@@ -219,7 +211,31 @@ Module ManifestTerm.
   Proof.
     unfold knowsOfs,knowsOfe. simpl. auto.
   Qed.
-  
+
+  Definition dependsOne (k:Plc)(e:Environment)(p:Plc):Prop :=
+    match (e k) with
+    | None => False
+    | Some m => In p m.(C)
+    end.
+
+  Fixpoint dependsOns (k:Plc)(s:System)(p:Plc):Prop :=
+    match s with
+    | [] => False
+    | s1 :: ss => (dependsOne k s1 p) \/ (dependsOns k ss p)
+    end.
+
+  (* the appriser depends on target *)
+  Example ex81 : dependsOne Appraise e_App Target.
+  Proof.
+    unfold dependsOne. simpl. auto.
+  Qed.   
+
+  (* within the system, we see that the appraiser depends on target *)
+  Example ex82 : dependsOns Appraise example_sys_1 Target.
+  Proof. 
+    unfold dependsOns. simpl. unfold dependsOne. simpl. auto.
+  Qed.   
+    
   (** Is term [t] exectuable on the attestation manager named [k] in
    * environment [e]?  Are ASPs available at the right attesation managers
    * and are necessary communications allowed?
