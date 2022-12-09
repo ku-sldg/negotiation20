@@ -38,6 +38,7 @@ Module ManifestTerm.
       asps : list ASP ;
       M : list Plc ; 
       C : list Plc ; 
+      Policy : ASP -> Plc -> Prop ;
 
 (*
       ; key : string
@@ -47,6 +48,21 @@ Module ManifestTerm.
 
 (* TO DO: Add privacy and selection policies to manifest *)
     }.
+
+   Check Policy.
+
+  (* The relying party can share measurement result from ASPC1 with any party *) 
+  Inductive rely_Policy : ASP -> Plc -> Prop := 
+  | p_aspc1 : forall p, rely_Policy aspc1 p. 
+
+  (* The target can run aspc2 and share measurement result for the appraiser *)
+  Inductive tar_Policy : ASP -> Plc -> Prop := 
+  | p_aspc0 : tar_Policy aspc2 Appraise 
+  | p_SIG : tar_Policy SIG Appraise. 
+
+  (* the appraiser has one asp, HSH, and it will share hash measurement with anyone *)
+  Inductive app_Policy : ASP -> Plc -> Prop := 
+  | p_HSH : forall p, app_Policy HSH p. 
 
   (** [Environment] is a set of AM's each defined by a [Manifest].
    * The domain of an [Environment] provides names for each [Manifest].
@@ -61,16 +77,15 @@ Module ManifestTerm.
   Definition e_update (m : Environment) (x : Plc) (v : (option Manifest)) :=
     fun x' => if plc_dec x x' then v else m x'.
 
-  (** Definition of environments for use in examples and proofs.  Note they
-   * build constructively through [e_App] that is the map for this system
+  (** Definition of environments for use in examples and proofs.  Note there are 3 AM's present... Relying Party, Target, and Appraiser, each have an AM. 
    *)
   Definition e0 := e_empty.
   Definition e_Rely :=
-    e_update e_empty Rely (Some {| asps := [aspc1]; M:= [Target] ; C := [] |}).
+    e_update e_empty Rely (Some {| asps := [aspc1]; M:= [Target] ; C := [] ; Policy := rely_Policy |}).
   Definition e_Targ :=
-    e_update e_empty Target (Some {| asps := [SIG;  aspc2]; M:= [Appraise] ; C := [] |}).
+    e_update e_empty Target (Some {| asps := [SIG;  aspc2]; M:= [Appraise] ; C := [] ; Policy := tar_Policy|}).
   Definition e_App :=
-    e_update e_empty Appraise (Some {| asps := [HSH] ; M:= [] ; C := [Target] |}).
+    e_update e_empty Appraise (Some {| asps := [HSH] ; M:= [] ; C := [Target] ; Policy := app_Policy |}).
   
   (* A System is all attestation managers in the enviornement *)
   Definition System := list Environment.
@@ -235,6 +250,32 @@ Module ManifestTerm.
   Proof. 
     unfold dependsOns. simpl. unfold dependsOne. simpl. auto.
   Qed.   
+
+  Theorem dependsOne_dec : forall k e p, {(dependsOne k e p)}+{~(dependsOne k e p)}.
+  Proof.
+    intros k e p.
+    unfold dependsOne.
+    destruct (e k).
+    +  induction (C m).
+    ++ auto.
+    ++ simpl. inversion IHl.
+    +++  auto.
+    +++ assert (H': {a = p } + { a <> p}). {repeat decide equality. } inversion H'.
+    ++++ left. left. apply H0.
+    ++++ right. unfold not. intros. inversion H1; auto.
+    + auto.
+  Qed.       
+
+  Theorem dependsOns_dec : forall k s p, {dependsOns k s p} + {~ dependsOns k s p}.
+  Proof.
+    intros. induction s. 
+    + simpl. auto.
+    + simpl. pose proof dependsOne_dec k a p. inversion IHs.
+    ++ left. right. apply H0. 
+    ++ inversion H.
+    +++ left. left. apply H1.
+    +++ right. unfold not. intros. inversion H2; auto.
+  Qed.            
     
   (** Is term [t] exectuable on the attestation manager named [k] in
    * environment [e]?  Are ASPs available at the right attesation managers
