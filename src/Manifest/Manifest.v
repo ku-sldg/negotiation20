@@ -53,8 +53,6 @@ Module ManifestTerm.
       ; address : nat
       ; tpm_init : nat
 *)
-
-(* TO DO: Add selection policies to manifest *)
     }.
 
    Check Policy.
@@ -222,6 +220,11 @@ Module ManifestTerm.
   Proof.
     unfold knowsOfs,knowsOfe. simpl. auto.
   Qed.
+
+  (* the relying party is aware of the target in system 1*)
+  Example ex7': knowsOfs Rely example_sys_1 Appraise.
+  Proof.
+    unfold knowsOfs,knowsOfe. simpl. auto. Abort. 
 
   (* if the relying party was it's own system, it would still be aware of the target *)
   Example ex8: knowsOfs Rely [e_Rely] Target.
