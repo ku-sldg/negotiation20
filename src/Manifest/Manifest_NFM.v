@@ -120,6 +120,19 @@ match (e k) with
 | Some m => In p m.(M)
 end.
 
+Print System.
+Print Environment.
+
+(** Determine if place [k] within the system [s] knows of [p]
+*)
+Fixpoint knowsOfs(k:Plc)(s:System)(p:Plc):Prop :=
+match s with
+| [] => False
+| s1 :: ss => (knowsOfe k s1 p) \/ (knowsOfs k ss p)
+end.
+(* need this second k to change.... *)
+
+
 (* Prove knowsOfe is decidable. This means, for any enviornment [e] 
    either the current place [p] is aware of place [p] or it's not.  *)
 Theorem knowsOfe_dec:forall k e p, {(knowsOfe k e p)}+{~(knowsOfe k e p)}.
@@ -135,14 +148,6 @@ Proof.
   +++ simpl. inverts IHl; auto. right. unfold not. intros. inverts H2; auto.
 Defined.
 
-(** Determine if place [k] within the system [s] knows 
-* how to communicate with [p]
-*)
-Fixpoint knowsOfs(k:Plc)(s:System)(p:Plc):Prop :=
-match s with
-| [] => False
-| s1 :: ss => (knowsOfe k s1 p) \/ (knowsOfs k ss p)
-end.
 
 (* decidability of knowsOfs. For any system [s], either [k] knows 
    of [p] within the system or they do not. *)
@@ -293,7 +298,11 @@ Notation aspc1 :=
 Notation aspc2 :=
   (ASPC ALL EXTD (asp_paramsC "asp2"%string ["x"%string] Target Target)).
 
-(* Below are relational definitions of Policy. Within the definition, we list each ASP on the AM and state who can recieve a measurement of said ASP (ie doesn't expose sensitive information in the context). The relying party can share the measurement of aspc1 with p. The target can share the measurement aspc2 with the appraiser and SIG with anyone. The appraiser can share a hash with anyone. 
+(* Below are relational definitions of Policy. Within the definition, we list each ASP on the AM and state who can recieve a measurement of said ASP (ie doesn't expose sensitive information in the context). 
+
+  * The relying party can share the measurement of aspc1 with p. 
+  * The target can share the measurement aspc2 with the appraiser and SIG with anyone. 
+  * The appraiser can share a hash with anyone. 
 *)
 
 Inductive rely_Policy : ASP -> Plc -> Prop := 
@@ -306,7 +315,9 @@ Inductive tar_Policy : ASP -> Plc -> Prop :=
 Inductive app_Policy : ASP -> Plc -> Prop := 
 | p_HSH : forall p, app_Policy HSH p. 
 
-(** Definition of environments for use in examples and proofs.  Note there are 3 AM's present... Relying Party, Target, and Appraiser, each have one AM. 
+(* Definition of environments for use in examples and proofs.  
+  Note there are 3 AM's present... 
+    Relying Party, Target, and Appraiser, each have one AM. 
 *)
 Definition e0 := e_empty.
 Definition e_Rely :=
@@ -327,46 +338,53 @@ Definition example_sys_1 := [e_Rely; e_Targ; e_App].
 Example ex1: hasASPe Rely e_Rely aspc1.
 Proof. unfold hasASPe. simpl. left. reflexivity. Qed.
 
-(* relying party does not have copy *)
+(* relying party does not have the ASP copy *)
 Example ex2: hasASPe Rely e_Rely CPY -> False.
 Proof. unfold hasASPe. simpl. intros. inverts H. inverts H0. auto. Qed.
 
 (* Prove the Relying party has aspc2 within the system *)
-Example ex5: hasASPs Rely (example_sys_1) aspc1.
+Example ex3: hasASPs Rely (example_sys_1) aspc1.
 Proof. unfold hasASPs. unfold hasASPe. simpl. left. left. reflexivity. Qed. 
 
 (* the relying party knows of the target within system 1*)
-Example ex3: knowsOfs Rely example_sys_1 Target.
+Example ex4: knowsOfs Rely example_sys_1 Target.
 Proof.
 unfold knowsOfs. simpl. left. unfold knowsOfe. simpl.  auto.
 Qed.
 
 (* the relying party does not directly know of the appraiser *)
-Example ex4: knowsOfe Rely e_App Appraise -> False.
+Example ex5: knowsOfe Rely e_App Appraise -> False.
 Proof.
 unfold knowsOfe. simpl. intros. destruct H. 
 Qed.
 
+(* the relying party does not knows of the appraiser within the system... 
+   should be that the relying party knows of the target and the target knows of the appraiser....  *)
+Example ex5': knowsOfs Rely example_sys_1 Appraise -> False.
+Proof.
+unfold knowsOfs. simpl. unfold knowsOfe. simpl. intros. inverts H. inverts H0. inverts H. apply H. inverts H0. apply H. inverts H. apply H0. apply H0.
+Qed.
+
 (* the relying party is aware of the target in system 1*)
-Example ex7: knowsOfs Rely example_sys_1 Target.
+Example ex6: knowsOfs Rely example_sys_1 Target.
 Proof.
 unfold knowsOfs,knowsOfe. simpl. auto.
 Qed.
 
 (* if the relying party was it's own system, it would still be aware of the target *)
-Example ex8: knowsOfs Rely [e_Rely] Target.
+Example ex7: knowsOfs Rely [e_Rely] Target.
 Proof.
 unfold knowsOfs,knowsOfe. simpl. auto.
 Qed.
 
 (* the appriser depends on target *)
-Example ex81 : dependsOne Appraise e_App Target.
+Example ex8 : dependsOne Appraise e_App Target.
 Proof.
 unfold dependsOne. simpl. auto.
 Qed.   
 
 (* within the system, we see that the appraiser depends on target *)
-Example ex82 : dependsOns Appraise example_sys_1 Target.
+Example ex9 : dependsOns Appraise example_sys_1 Target.
 Proof. 
 unfold dependsOns. simpl. unfold dependsOne. simpl. auto.
 Qed.   
@@ -380,11 +398,11 @@ Ltac prove_exec :=
                  end.
 
 (* Is asp SIG executable on the on target place in the Targets's enviornement?*)
-Example ex9: (executable (asp SIG) Target e_Targ).
+Example ex10: (executable (asp SIG) Target e_Targ).
 Proof. prove_exec. Qed.
 
 (* copy is not executable on the target in the appraiser's environment *)
-Example ex10: (executable (asp CPY) Target e_App) -> False.
+Example ex11: (executable (asp CPY) Target e_App) -> False.
 Proof.
   intros Hcontra.
   simpl in *.
@@ -393,11 +411,11 @@ Proof.
 Qed.
 
 (* two signature operations are executable on the target*)
-Example ex11: (executable (lseq (asp SIG) (asp SIG)) Target e_Targ).
+Example ex12: (executable (lseq (asp SIG) (asp SIG)) Target e_Targ).
 Proof. prove_exec. Qed.
 
 (* the relying party can ask the target to run aspc1 and signature operations within system 1 *)
-Example ex12': (executables (lseq (asp aspc1)
+Example ex13: (executables (lseq (asp aspc1)
                             (att Target
                                 (lseq (asp SIG)
                                 (asp SIG))))
