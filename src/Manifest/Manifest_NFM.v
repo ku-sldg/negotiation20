@@ -8,11 +8,19 @@ Require Import Cop.Copland.
 Import Copland.Term.
 Require Import Utils.Utilities.
 
+(***********************************
+  FORMALIZATION OF ATTESTATION
+      PROTOCOL NEGOTIATION
+
+  By: Anna Fritz and 
+      Dr. Perry Alexander 
+  Date: January 6th, 2023
+************************************)
 
 (** [Manifest] defines a single attestation manger and its interconnections.  
     Information includes: 
 * asps:  a list of ASPs (measurement operations the AM can preform)
-* M : measures relation (other AMs the current AM knows of)  
+* M : can measure relation (other AMs the current AM knows of)  
 * C : context relation (other AMs the current AM depends on)
 * Policy : local policy specific to the current AM.
 *          Minimally includes privacy policy and may possibly include selection policy   
@@ -49,58 +57,62 @@ Definition e_empty : Environment := (fun _ => None).
 Definition e_update (m : Environment) (x : Plc) (v : (option Manifest)) :=
     fun x' => if plc_dec x x' then v else m x'.
 
-(* A System is all attestation managers in the enviornement *)
+(* A [System] is all attestation managers in the enviornement *)
 Definition System := list Environment.
 
 (*****************************
   REASONING ABOUT MANIFESTS
 *****************************)
 
-(* Within the enviornment e, does the AM at place k have ASP a? *)
+(* Within the enviornment [e], does the AM at place [k] have ASP [a]? *)
 Definition hasASPe(k:Plc)(e:Environment)(a:ASP):Prop :=
 match (e k) with
 | None => False
 | Some m => In a m.(asps)
 end.      
 
-(* Within the system s, does the AM located at place k have ASP a? *)
+(* Within the system [s], does the AM located at place [k] have ASP [a]? *)
 Fixpoint hasASPs(k:Plc)(s:System)(a:ASP):Prop :=
     match s with
     | [] => False
     | s1 :: s2 => (hasASPe k s1 a) \/ (hasASPs k s2 a)
     end.
 
-(* Proof that hasASPe is decidable *)
+(* Proof that hasASPe is decidable. This means, for any enviornment [e] 
+   either the ASP [a] is present or it's not. *)
 Theorem hasASPe_dec: forall k e a, {hasASPe k e a}+{~hasASPe k e a}.
 Proof.
-intros k e a.
-unfold hasASPe.
-destruct (e k).
-* induction (asps m).
-    right. unfold not. intros. inverts H.
-    case (ASP_dec a a0).
-    intros H. subst. left. simpl. auto.
-    intros H. unfold not in H. destruct IHl. left. simpl. auto.
-    right. unfold not. intros. unfold not in n. simpl in H0.
-    destruct H0. apply H. subst. auto. apply n. assumption.
-* cbv. right. intros. assumption.
+  intros k e a.
+  unfold hasASPe.
+  destruct (e k).
+  + induction (asps m).
+  ++ auto.
+  ++ inverts IHl.
+  +++ simpl. left. right. apply H.
+  +++ simpl. assert (asp_dec : {a = a0} + {a<>a0}). 
+           { repeat decide equality. }    
+      inverts asp_dec.
+  ++++ left. auto.
+  ++++ right. unfold not. intros. inverts H1; auto.
+  + auto.      
 Defined.
 
-(* prove hasASPs is decidable *)
+(* prove hasASPs is decidable. This means, for any system [s] 
+   either the ASP [a] is present or it's not. *)
 Theorem hasASPs_dec: forall k e a, {hasASPs k e a}+{~hasASPs k e a}.
 Proof.
-intros k e a.
-induction e.
-+ simpl in *. right. unfold not. intros. apply H.
-+ simpl in *. pose proof hasASPe_dec k a0 a. inverts H. 
-++ left. left. apply H0.
-++ inverts IHe.
-+++ left. right. apply H.
-+++ right. unfold not. intros. inverts H1; auto.
+  intros k e a.
+  induction e.
+  + simpl in *. right. unfold not. intros. apply H.
+  + simpl in *. pose proof hasASPe_dec k a0 a. inverts H. 
+  ++ left. left. apply H0.
+  ++ inverts IHe.
+  +++ left. right. apply H.
+  +++ right. unfold not. intros. inverts H1; auto.
 Qed. 
 
-(** Determine if manifest [k] from [e] knows how to communicate from [k]
-* to [p]
+(* Determine if manifest [k] from [e] knows how to 
+   communicate from [k] to [p]
 *)
 Definition knowsOfe(k:Plc)(e:Environment)(p:Plc):Prop :=
 match (e k) with
@@ -108,20 +120,19 @@ match (e k) with
 | Some m => In p m.(M)
 end.
 
-(* Prove knowsOfe is decidable *)
+(* Prove knowsOfe is decidable. This means, for any enviornment [e] 
+   either the current place [p] is aware of place [p] or it's not.  *)
 Theorem knowsOfe_dec:forall k e p, {(knowsOfe k e p)}+{~(knowsOfe k e p)}.
 Proof.
-intros k e p.
-unfold knowsOfe.
-destruct (e k).
-induction (M m).
-right. simpl. unfold not. intros. assumption.
-case (string_dec p a).
-intros. subst. left. simpl. auto.
-intros H. unfold not in H. destruct IHl. left. simpl. auto.
-right. unfold not. intros. unfold not in n. simpl in H0.
-destruct H0. apply H. subst. auto. apply n. assumption.
-auto.
+  intros k e p.
+  unfold knowsOfe.
+  destruct (e k); auto.
+  + induction (M m).
+  ++ auto.
+  ++ assert (H: {p = a} + {p <> a}). {repeat decide equality. }
+     inversion H.
+  +++ simpl. left. auto.
+  +++ simpl. inverts IHl; auto. right. unfold not. intros. inverts H2; auto.
 Qed.
 
 (** Determine if place [k] within the system [s] knows 
@@ -133,7 +144,8 @@ match s with
 | s1 :: ss => (knowsOfe k s1 p) \/ (knowsOfs k ss p)
 end.
 
-(* decidability of knowsOfs*)
+(* decidability of knowsOfs. For any system [s], either [k] knows 
+   of [p] within the system or they do not. *)
 Theorem knowsOfs_dec:forall k s p, {(knowsOfs k s p)}+{~(knowsOfs k s p)}.
 Proof.
     intros k s p.
@@ -147,8 +159,7 @@ Proof.
 Qed. 
 
 (** Determine if place [k] within the environment [e]  
-* depends on place [p] (the context relation)
-*)
+    depends on place [p] (the context relation) *)
 Definition dependsOne (k:Plc)(e:Environment)(p:Plc):Prop :=
 match (e k) with
 | None => False
@@ -164,7 +175,8 @@ match s with
 | s1 :: ss => (dependsOne k s1 p) \/ (dependsOns k ss p)
 end.
 
-(* depends on (context relation) is decidable *)
+(* decidability of dependsOne. For any enviornment [e], either the AM at place
+   [k] depends on something at place [p] or it does not. *)
 Theorem dependsOne_dec : forall k e p, {(dependsOne k e p)}+{~(dependsOne k e p)}.
 Proof.
   intros k e p.
@@ -180,6 +192,8 @@ Proof.
   + auto.
 Qed.       
 
+(* decidability of dependsOns. For any system [s], either the AM at place
+   [k] depends on something at place [p] or it does not. *)
 Theorem dependsOns_dec : forall k s p, {dependsOns k s p} + {~ dependsOns k s p}.
 Proof.
   intros. induction s. 
@@ -196,10 +210,10 @@ Qed.
 *****************************)
 
 
-(** Is term [t] exectuable on the attestation manager named [k] in
-   * environment [e]?  Are ASPs available at the right attesation managers
-   * and are necessary communications allowed?
-   *)
+(** Is term [t] exectuable on the attestation manager named [k] in 
+    environment [e]?  Are ASPs available at the right attesation managers
+    and are necessary communications allowed?
+*)
 Fixpoint executable(t:Term)(k:Plc)(e:Environment):Prop :=
 match t with
 | asp a  => hasASPe k e a
@@ -209,25 +223,26 @@ match t with
 | bpar _ t1 t2 => executable t1 k e /\ executable t2 k e
 end.
 
+Ltac right_dest_contr H := right; unfold not; intros H; destruct H; contradiction.
+
 (* executability of a term is decidable *)
 Theorem executable_dec:forall t k e,{(executable t k e)}+{~(executable t k e)}.
 intros.  generalize k. induction t; intros.
 + unfold executable. apply hasASPe_dec.
-+ simpl. assert (H:{knowsOfe k0 e p}+{~knowsOfe k0 e p}). apply knowsOfe_dec. destruct H. destruct (IHt p).
-    ++ left. intros. assumption.
-    ++ right. unfold not. intros. unfold not in n. apply n. apply H. assumption.
-    ++ simpl. assert (H:{knowsOfe k0 e p}+{~knowsOfe k0 e p}). apply knowsOfe_dec. destruct H.
-        +++ contradiction.
-        +++ left. intros. congruence. 
-+ simpl. specialize IHt1 with k0. specialize IHt2 with k0. destruct IHt1,IHt2. left. split ; assumption. right. unfold not. intros H. destruct H. contradiction.
-    right. unfold not. intros. destruct H. contradiction.
-    right. unfold not. intros H. destruct H. contradiction.
-+ simpl. specialize IHt1 with k0. specialize IHt2 with k0. destruct IHt1,IHt2. left. split ; assumption. right. unfold not. intros H. destruct H. contradiction.
-    right. unfold not. intros. destruct H. contradiction.
-    right. unfold not. intros H. destruct H. contradiction.
-+ simpl. specialize IHt1 with k0. specialize IHt2 with k0. destruct IHt1,IHt2. left. split ; assumption. right. unfold not. intros H. destruct H. contradiction.
-    right. unfold not. intros. destruct H. contradiction.
-    right. unfold not. intros H. destruct H. contradiction.
++ simpl. pose proof knowsOfe_dec k0 e p. destruct H.
+++ destruct (IHt p).
++++ left; auto.
++++ right. unfold not. intros; auto.
+++ destruct (IHt p).
++++ left; auto. 
++++ left. intros. congruence.
++ simpl. specialize IHt1 with k0. specialize IHt2 with k0. 
+  destruct IHt1,IHt2; try right_dest_contr H. 
+++ left. split ; assumption.
++ simpl. specialize IHt1 with k0. specialize IHt2 with k0. destruct IHt1,IHt2; try right_dest_contr H. 
+++ left. split ; assumption.
++ simpl. specialize IHt1 with k0. specialize IHt2 with k0. destruct IHt1,IHt2; try right_dest_contr H.
+++  left. split ; assumption.
 Defined.
 
 (** Is term [t] executable on the attestation mnanager named [k] in
