@@ -109,7 +109,7 @@ Proof.
   ++ inverts IHe.
   +++ left. right. apply H.
   +++ right. unfold not. intros. inverts H1; auto.
-Qed. 
+Defined. 
 
 (* Determine if manifest [k] from [e] knows how to 
    communicate from [k] to [p]
@@ -133,7 +133,7 @@ Proof.
      inversion H.
   +++ simpl. left. auto.
   +++ simpl. inverts IHl; auto. right. unfold not. intros. inverts H2; auto.
-Qed.
+Defined.
 
 (** Determine if place [k] within the system [s] knows 
 * how to communicate with [p]
@@ -156,7 +156,7 @@ Proof.
     ++ inverts IHs.
     +++ left. right. apply H.
     +++ right. unfold not. intros. inversion H1; auto.
-Qed. 
+Defined. 
 
 (** Determine if place [k] within the environment [e]  
     depends on place [p] (the context relation) *)
@@ -190,7 +190,7 @@ Proof.
   ++++ left. left. apply H0.
   ++++ right. unfold not. intros. inversion H1; auto.
   + auto.
-Qed.       
+Defined.       
 
 (* decidability of dependsOns. For any system [s], either the AM at place
    [k] depends on something at place [p] or it does not. *)
@@ -203,7 +203,7 @@ Proof.
   ++ inversion H.
   +++ left. left. apply H1.
   +++ right. unfold not. intros. inversion H2; auto.
-Qed. 
+Defined. 
 
 (*****************************
     EXECUTABILITY 
@@ -262,20 +262,17 @@ Theorem executables_dec : forall t k s, {executables t k s} + {~executables t k 
 Proof.
 intros.  generalize k s. induction t; intros.
 + unfold executables. apply hasASPs_dec.
-+ simpl. assert (H:{knowsOfs k0 s0 p}+{~knowsOfs k0 s0 p}). apply knowsOfs_dec. destruct (IHt p s0).
-    ++ left. intros. assumption.
-    ++ destruct H.
-    +++ right. unfold not. intros. apply n. apply H. assumption.
-    +++ left. intros. congruence. 
-+ simpl. specialize IHt1 with k0 s0. specialize IHt2 with k0 s0. destruct IHt1,IHt2. left. split ; assumption. right. unfold not. intros H. destruct H. contradiction.
-    right. unfold not. intros. destruct H. contradiction.
-    right. unfold not. intros H. destruct H. contradiction.
-+ simpl. specialize IHt1 with k0 s1. specialize IHt2 with k0 s1. destruct IHt1,IHt2. left. split ; assumption. right. unfold not. intros H. destruct H. contradiction.
-    right. unfold not. intros. destruct H. contradiction.
-    right. unfold not. intros H. destruct H. contradiction.
-+ simpl. specialize IHt1 with k0 s1. specialize IHt2 with k0 s1. destruct IHt1,IHt2. left. split ; assumption. right. unfold not. intros H. destruct H. contradiction.
-    right. unfold not. intros. destruct H. contradiction.
-    right. unfold not. intros H. destruct H. contradiction.
++ simpl. pose proof knowsOfs_dec k0 s0 p. destruct (IHt p s0).
+++ left. intros. assumption.
+++ destruct H.
++++ right. unfold not. intros. apply n. apply H. assumption.
++++ left. intros. congruence. 
++ simpl. specialize IHt1 with k0 s0. specialize IHt2 with k0 s0. destruct IHt1,IHt2; try right_dest_contr H.
+++ left. split ; assumption.
++ simpl. specialize IHt1 with k0 s1. specialize IHt2 with k0 s1. destruct IHt1,IHt2; try right_dest_contr H.
+++ left. split ; assumption.
++ simpl. specialize IHt1 with k0 s1. specialize IHt2 with k0 s1. destruct IHt1,IHt2; try right_dest_contr H.
+++ left. split ; assumption. 
 Defined.
 
 (*****************************
@@ -290,7 +287,7 @@ Notation Rely := "Rely"%string.
 Notation Target := "Target"%string.
 Notation Appraise := "Appraise"%string.
 
-  (* Introducing three asps for reasoning purposes. *)
+(* Introducing three asps for reasoning purposes. *)
 Notation aspc1 :=
   (ASPC ALL EXTD (asp_paramsC "asp1"%string ["x"%string;"y"%string] Target Target)).
 Notation aspc2 :=
