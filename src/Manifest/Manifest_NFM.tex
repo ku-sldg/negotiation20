@@ -14,17 +14,17 @@
 
 \begin{coqdoccode}
 \coqdocnoindent
-\coqdockw{Require} \coqdockw{Import} \coqexternalref{}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.micromega.Lia}{\coqdoclibrary{Lia}}.\coqdoceol
+\coqdockw{Require} \coqdockw{Import} \coqdocvar{Lia}.\coqdoceol
 \coqdocnoindent
-\coqdockw{Require} \coqdockw{Import} \coqexternalref{}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Relations.Relations}{\coqdoclibrary{Relations}}.\coqdoceol
+\coqdockw{Require} \coqdockw{Import} \coqdocvar{Relations}.\coqdoceol
 \coqdocnoindent
-\coqdockw{Require} \coqdockw{Import} \coqexternalref{}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Logic.FunctionalExtensionality}{\coqdoclibrary{Logic.FunctionalExtensionality}}.\coqdoceol
+\coqdockw{Require} \coqdockw{Import} \coqdocvar{Logic.FunctionalExtensionality}.\coqdoceol
 \coqdocnoindent
-\coqdockw{Require} \coqdockw{Import} \coqexternalref{}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Lists.List}{\coqdoclibrary{Lists.List}}.\coqdoceol
+\coqdockw{Require} \coqdockw{Import} \coqdocvar{Lists.List}.\coqdoceol
 \coqdocnoindent
-\coqdockw{Import} \coqexternalref{ListNotations}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Lists.List}{\coqdocmodule{ListNotations}}.\coqdoceol
+\coqdockw{Import} \coqdocvar{ListNotations}.\coqdoceol
 \coqdocnoindent
-\coqdockw{Require} \coqdockw{Import} \coqexternalref{}{http://coq.inria.fr/distrib/V8.16.0/stdlib//Coq.Strings.String}{\coqdoclibrary{String}}.\coqdoceol
+\coqdockw{Require} \coqdockw{Import} \coqdocvar{String}.\coqdoceol
 \coqdocnoindent
 \coqdockw{Require} \coqdockw{Import} \coqdocvar{Cop.Copland}.\coqdoceol
 \coqdocnoindent
@@ -32,39 +32,34 @@
 \coqdocnoindent
 \coqdockw{Require} \coqdockw{Import} \coqdocvar{Utils.Utilities}.\coqdoceol
 \coqdocemptyline
-\coqdocemptyline
 \end{coqdoccode}
-\coqdocvar{Manifest} defines a single attestation manger and its interconnections.  
+****************************
+\section{FORMALIZATION OF ATTESTATION PROTOCOL NEGOTIATION}
+
+
+
+
+  By: Anna Fritz and 
+      Dr. Perry Alexander 
+  Date: January 6th, 2023
+
+
+\section{Manifests}
+
+
+    \coqdocvar{Manifest} defines a single attestation manger and its interconnections.  
     Information includes: 
-\section{asps:  a list of ASPs (measurement operations the AM can preform)}
+  asps:  a list of ASPs (measurement operations the AM can preform),
+  M : can measure relation (other AMs the current AM knows of),  
+  C : context relation (other AMs the current AM depends on),
+  Policy : local policy specific to the current AM.
+           Minimally includes privacy policy and may possibly include selection policy   
 
 
-\section{M : can measure relation (other AMs the current AM knows of)}
-
-
-\section{C : context relation (other AMs the current AM depends on)}
-
-
-\section{Policy : local policy specific to the current AM.}
-
-
-\section{Minimally includes privacy policy and may possibly include selection policy}
-
-
-
-
-\section{Other information not necessary for reasoning includes:}
-
-
-\section{\texorpdfstring{\protect}{key}\coqdocvar{key} simulates public key}
-
-
-\section{\texorpdfstring{\protect}{address}\coqdocvar{address} simulates address information and}
-
-
-\section{\texorpdfstring{\protect}{tpm}\coqdocvar{tpm} simulates cruft necessary to initialize its TPM}
-
-
+  Other information not necessary for reasoning includes: 
+  \coqdocvar{key} simulates public key 
+  \coqdocvar{address} simulates address information and 
+  \coqdocvar{tpm} simulates cruft necessary to initialize its TPM
 
 \begin{coqdoccode}
 \coqdocnoindent
@@ -74,7 +69,7 @@
 \coqdocindent{1.50em}
 \coqdocvar{asps} : \coqdocvar{list} \coqdocvar{ASP} ;\coqdoceol
 \coqdocindent{1.50em}
-\coqdocvar{M} : \coqdocvar{list} \coqdocvar{Plc} ; \coqdoceol
+\coqdocvar{K} : \coqdocvar{list} \coqdocvar{Plc} ; \coqdoceol
 \coqdocindent{1.50em}
 \coqdocvar{C} : \coqdocvar{list} \coqdocvar{Plc} ; \coqdoceol
 \coqdocindent{1.50em}
@@ -88,15 +83,9 @@
 \coqdocemptyline
 \end{coqdoccode}
 \coqdocvar{Environment} is a set of AM's each defined by a \coqdocvar{Manifest}.
-\section{The domain of an \texorpdfstring{\protect}{Environment}\coqdocvar{Environment} provides names for each \texorpdfstring{\protect}{Manifest}\coqdocvar{Manifest}.}
-
-
-\section{Names should be the hash of their public key, but this restriction}
-
-
-\section{is not enforced here.}
-
-
+  The domain of an \coqdocvar{Environment} provides names for each \coqdocvar{Manifest}.
+  Names should be the hash of their public key, but this restriction
+  is not enforced here. 
 
 \begin{coqdoccode}
 \coqdocemptyline
@@ -111,9 +100,22 @@
 \coqdocindent{2.00em}
 \coqdockw{fun} \coqdocvar{x'} \ensuremath{\Rightarrow} \coqdockw{if} \coqdocvar{plc\_dec} \coqdocvar{x} \coqdocvar{x'} \coqdockw{then} \coqdocvar{v} \coqdockw{else} \coqdocvar{m} \coqdocvar{x'}.\coqdoceol
 \coqdocemptyline
+\end{coqdoccode}
+A \coqdocvar{System} is all attestation managers in the enviornement 
+\begin{coqdoccode}
+\coqdocemptyline
 \coqdocnoindent
 \coqdockw{Definition} \coqdocvar{System} := \coqdocvar{list} \coqdocvar{Environment}.\coqdoceol
 \coqdocemptyline
+\end{coqdoccode}
+****************************
+\section{REASONING ABOUT MANIFESTS}
+
+
+
+
+ Within the enviornment \coqdocvar{e}, does the AM at place \coqdocvar{k} have ASP \coqdocvar{a}? 
+\begin{coqdoccode}
 \coqdocemptyline
 \coqdocnoindent
 \coqdockw{Definition} \coqdocvar{hasASPe}(\coqdocvar{k}:\coqdocvar{Plc})(\coqdocvar{e}:\coqdocvar{Environment})(\coqdocvar{a}:\coqdocvar{ASP}):\coqdockw{Prop} :=\coqdoceol
@@ -126,6 +128,10 @@
 \coqdocnoindent
 \coqdockw{end}.\coqdoceol
 \coqdocemptyline
+\end{coqdoccode}
+Within the system \coqdocvar{s}, does the AM located at place \coqdocvar{k} have ASP \coqdocvar{a}? 
+\begin{coqdoccode}
+\coqdocemptyline
 \coqdocnoindent
 \coqdockw{Fixpoint} \coqdocvar{hasASPs}(\coqdocvar{k}:\coqdocvar{Plc})(\coqdocvar{s}:\coqdocvar{System})(\coqdocvar{a}:\coqdocvar{ASP}):\coqdockw{Prop} :=\coqdoceol
 \coqdocindent{2.00em}
@@ -136,6 +142,11 @@
 \ensuremath{|} \coqdocvar{s1} :: \coqdocvar{s2} \ensuremath{\Rightarrow} (\coqdocvar{hasASPe} \coqdocvar{k} \coqdocvar{s1} \coqdocvar{a}) \ensuremath{\lor} (\coqdocvar{hasASPs} \coqdocvar{k} \coqdocvar{s2} \coqdocvar{a})\coqdoceol
 \coqdocindent{2.00em}
 \coqdockw{end}.\coqdoceol
+\coqdocemptyline
+\end{coqdoccode}
+Proof that hasASPe is decidable. This means, for any enviornment \coqdocvar{e} 
+   either the ASP \coqdocvar{a} is present or it's not. 
+\begin{coqdoccode}
 \coqdocemptyline
 \coqdocnoindent
 \coqdockw{Theorem} \coqdocvar{hasASPe\_dec}: \coqdockw{\ensuremath{\forall}} \coqdocvar{k} \coqdocvar{e} \coqdocvar{a}, \{\coqdocvar{hasASPe} \coqdocvar{k} \coqdocvar{e} \coqdocvar{a}\}+\{\~{}\coqdocvar{hasASPe} \coqdocvar{k} \coqdocvar{e} \coqdocvar{a}\}.\coqdoceol
@@ -170,6 +181,11 @@
 \coqdocnoindent
 \coqdockw{Defined}.\coqdoceol
 \coqdocemptyline
+\end{coqdoccode}
+prove hasASPs is decidable. This means, for any system \coqdocvar{s} 
+   either the ASP \coqdocvar{a} is present or it's not. 
+\begin{coqdoccode}
+\coqdocemptyline
 \coqdocnoindent
 \coqdockw{Theorem} \coqdocvar{hasASPs\_dec}: \coqdockw{\ensuremath{\forall}} \coqdocvar{k} \coqdocvar{e} \coqdocvar{a}, \{\coqdocvar{hasASPs} \coqdocvar{k} \coqdocvar{e} \coqdocvar{a}\}+\{\~{}\coqdocvar{hasASPs} \coqdocvar{k} \coqdocvar{e} \coqdocvar{a}\}.\coqdoceol
 \coqdocnoindent
@@ -193,6 +209,12 @@
 \coqdocnoindent
 \coqdockw{Defined}.\coqdoceol
 \coqdocemptyline
+\end{coqdoccode}
+Determine if manifest \coqdocvar{k} from \coqdocvar{e} knows how to 
+   communicate from \coqdocvar{k} to \coqdocvar{p}
+
+\begin{coqdoccode}
+\coqdocemptyline
 \coqdocnoindent
 \coqdockw{Definition} \coqdocvar{knowsOfe}(\coqdocvar{k}:\coqdocvar{Plc})(\coqdocvar{e}:\coqdocvar{Environment})(\coqdocvar{p}:\coqdocvar{Plc}):\coqdockw{Prop} :=\coqdoceol
 \coqdocnoindent
@@ -200,7 +222,7 @@
 \coqdocnoindent
 \ensuremath{|} \coqdocvar{None} \ensuremath{\Rightarrow} \coqdocvar{False}\coqdoceol
 \coqdocnoindent
-\ensuremath{|} \coqdocvar{Some} \coqdocvar{m} \ensuremath{\Rightarrow} \coqdocvar{In} \coqdocvar{p} \coqdocvar{m}.(\coqdocvar{M})\coqdoceol
+\ensuremath{|} \coqdocvar{Some} \coqdocvar{m} \ensuremath{\Rightarrow} \coqdocvar{In} \coqdocvar{p} \coqdocvar{m}.(\coqdocvar{K})\coqdoceol
 \coqdocnoindent
 \coqdockw{end}.\coqdoceol
 \coqdocemptyline
@@ -209,10 +231,7 @@
 \coqdocnoindent
 \coqdockw{Print} \coqdocvar{Environment}.\coqdoceol
 \coqdocemptyline
-\end{coqdoccode}
-Determine if place \coqdocvar{k} within the system \coqdocvar{s} knows of \coqdocvar{p}
-
-\begin{coqdoccode}
+\coqdocemptyline
 \coqdocnoindent
 \coqdockw{Fixpoint} \coqdocvar{knowsOfs}(\coqdocvar{k}:\coqdocvar{Plc})(\coqdocvar{s}:\coqdocvar{System})(\coqdocvar{p}:\coqdocvar{Plc}):\coqdockw{Prop} :=\coqdoceol
 \coqdocnoindent
@@ -223,6 +242,11 @@ Determine if place \coqdocvar{k} within the system \coqdocvar{s} knows of \coqdo
 \ensuremath{|} \coqdocvar{s1} :: \coqdocvar{ss} \ensuremath{\Rightarrow} (\coqdocvar{knowsOfe} \coqdocvar{k} \coqdocvar{s1} \coqdocvar{p}) \ensuremath{\lor} (\coqdocvar{knowsOfs} \coqdocvar{k} \coqdocvar{ss} \coqdocvar{p})\coqdoceol
 \coqdocnoindent
 \coqdockw{end}.\coqdoceol
+\coqdocemptyline
+\end{coqdoccode}
+Prove knowsOfe is decidable. This means, for any enviornment \coqdocvar{e} 
+   either the current place \coqdocvar{p} is aware of place \coqdocvar{p} or it's not.  
+\begin{coqdoccode}
 \coqdocemptyline
 \coqdocnoindent
 \coqdockw{Theorem} \coqdocvar{knowsOfe\_dec}:\coqdockw{\ensuremath{\forall}} \coqdocvar{k} \coqdocvar{e} \coqdocvar{p}, \{(\coqdocvar{knowsOfe} \coqdocvar{k} \coqdocvar{e} \coqdocvar{p})\}+\{\~{}(\coqdocvar{knowsOfe} \coqdocvar{k} \coqdocvar{e} \coqdocvar{p})\}.\coqdoceol
@@ -235,7 +259,7 @@ Determine if place \coqdocvar{k} within the system \coqdocvar{s} knows of \coqdo
 \coqdocindent{1.00em}
 \coqdoctac{destruct} (\coqdocvar{e} \coqdocvar{k}); \coqdoctac{auto}.\coqdoceol
 \coqdocindent{1.00em}
-+ \coqdoctac{induction} (\coqdocvar{M} \coqdocvar{m}).\coqdoceol
++ \coqdoctac{induction} (\coqdocvar{K} \coqdocvar{m}).\coqdoceol
 \coqdocindent{1.00em}
 ++ \coqdoctac{auto}.\coqdoceol
 \coqdocindent{1.00em}
@@ -248,6 +272,11 @@ Determine if place \coqdocvar{k} within the system \coqdocvar{s} knows of \coqdo
 +++ \coqdoctac{simpl}. \coqdocvar{inverts} \coqdocvar{IHl}; \coqdoctac{auto}. \coqdoctac{right}. \coqdoctac{unfold} \coqdocvar{not}. \coqdoctac{intros}. \coqdocvar{inverts} \coqdocvar{H2}; \coqdoctac{auto}.\coqdoceol
 \coqdocnoindent
 \coqdockw{Defined}.\coqdoceol
+\coqdocemptyline
+\end{coqdoccode}
+decidability of knowsOfs. For any system \coqdocvar{s}, either \coqdocvar{k} knows 
+   of \coqdocvar{p} within the system or they do not. 
+\begin{coqdoccode}
 \coqdocemptyline
 \coqdocnoindent
 \coqdockw{Theorem} \coqdocvar{knowsOfs\_dec}:\coqdockw{\ensuremath{\forall}} \coqdocvar{k} \coqdocvar{s} \coqdocvar{p}, \{(\coqdocvar{knowsOfs} \coqdocvar{k} \coqdocvar{s} \coqdocvar{p})\}+\{\~{}(\coqdocvar{knowsOfs} \coqdocvar{k} \coqdocvar{s} \coqdocvar{p})\}.\coqdoceol
@@ -288,9 +317,9 @@ Determine if place \coqdocvar{k} within the environment \coqdocvar{e}
 \coqdockw{end}.\coqdoceol
 \coqdocemptyline
 \end{coqdoccode}
-Determine if place \coqdocvar{k} within the system \coqdocvar{s} depends on place \coqdocvar{p} (the context relation)
-
+Determine if place \coqdocvar{k} within the system \coqdocvar{s} depends on place \coqdocvar{p} (the context relation) 
 \begin{coqdoccode}
+\coqdocemptyline
 \coqdocnoindent
 \coqdockw{Fixpoint} \coqdocvar{dependsOns} (\coqdocvar{k}:\coqdocvar{Plc})(\coqdocvar{s}:\coqdocvar{System})(\coqdocvar{p}:\coqdocvar{Plc}):\coqdockw{Prop} :=\coqdoceol
 \coqdocnoindent
@@ -301,6 +330,11 @@ Determine if place \coqdocvar{k} within the system \coqdocvar{s} depends on plac
 \ensuremath{|} \coqdocvar{s1} :: \coqdocvar{ss} \ensuremath{\Rightarrow} (\coqdocvar{dependsOne} \coqdocvar{k} \coqdocvar{s1} \coqdocvar{p}) \ensuremath{\lor} (\coqdocvar{dependsOns} \coqdocvar{k} \coqdocvar{ss} \coqdocvar{p})\coqdoceol
 \coqdocnoindent
 \coqdockw{end}.\coqdoceol
+\coqdocemptyline
+\end{coqdoccode}
+decidability of dependsOne. For any enviornment \coqdocvar{e}, either the AM at place
+   \coqdocvar{k} depends on something at place \coqdocvar{p} or it does not. 
+\begin{coqdoccode}
 \coqdocemptyline
 \coqdocnoindent
 \coqdockw{Theorem} \coqdocvar{dependsOne\_dec} : \coqdockw{\ensuremath{\forall}} \coqdocvar{k} \coqdocvar{e} \coqdocvar{p}, \{(\coqdocvar{dependsOne} \coqdocvar{k} \coqdocvar{e} \coqdocvar{p})\}+\{\~{}(\coqdocvar{dependsOne} \coqdocvar{k} \coqdocvar{e} \coqdocvar{p})\}.\coqdoceol
@@ -331,6 +365,10 @@ Determine if place \coqdocvar{k} within the system \coqdocvar{s} depends on plac
 \coqdocnoindent
 \coqdockw{Defined}.\coqdoceol
 \coqdocemptyline
+\end{coqdoccode}
+decidability of dependsOns. For any system \coqdocvar{s}, either the AM at place \coqdocvar{k} depends on something at place \coqdocvar{p} or it does not. 
+\begin{coqdoccode}
+\coqdocemptyline
 \coqdocnoindent
 \coqdockw{Theorem} \coqdocvar{dependsOns\_dec} : \coqdockw{\ensuremath{\forall}} \coqdocvar{k} \coqdocvar{s} \coqdocvar{p}, \{\coqdocvar{dependsOns} \coqdocvar{k} \coqdocvar{s} \coqdocvar{p}\} + \{\~{} \coqdocvar{dependsOns} \coqdocvar{k} \coqdocvar{s} \coqdocvar{p}\}.\coqdoceol
 \coqdocnoindent
@@ -352,13 +390,18 @@ Determine if place \coqdocvar{k} within the system \coqdocvar{s} depends on plac
 \coqdocnoindent
 \coqdockw{Defined}.\coqdoceol
 \coqdocemptyline
-\coqdocemptyline
 \end{coqdoccode}
-Is term \coqdocvar{t} exectuable on the attestation manager named \coqdocvar{k} in 
-    environment \coqdocvar{e}?  Are ASPs available at the right attesation managers
-    and are necessary communications allowed?
+***************************
+\section{EXECUTABILITY}
 
+
+
+
+ Is term \coqdocvar{t} exectuable on the attestation manager named \coqdocvar{k} in 
+    environment \coqdocvar{e}?  Are ASPs available at the right attesation managers
+    and are necessary communications allowed? 
 \begin{coqdoccode}
+\coqdocemptyline
 \coqdocnoindent
 \coqdockw{Fixpoint} \coqdocvar{executable}(\coqdocvar{t}:\coqdocvar{Term})(\coqdocvar{k}:\coqdocvar{Plc})(\coqdocvar{e}:\coqdocvar{Environment}):\coqdockw{Prop} :=\coqdoceol
 \coqdocnoindent
@@ -378,6 +421,10 @@ Is term \coqdocvar{t} exectuable on the attestation manager named \coqdocvar{k} 
 \coqdocemptyline
 \coqdocnoindent
 \coqdockw{Ltac} \coqdocvar{right\_dest\_contr} \coqdocvar{H} := \coqdoctac{right}; \coqdoctac{unfold} \coqdocvar{not}; \coqdoctac{intros} \coqdocvar{H}; \coqdoctac{destruct} \coqdocvar{H}; \coqdocvar{contradiction}.\coqdoceol
+\coqdocemptyline
+\end{coqdoccode}
+executability of a term is decidable 
+\begin{coqdoccode}
 \coqdocemptyline
 \coqdocnoindent
 \coqdockw{Theorem} \coqdocvar{executable\_dec}:\coqdockw{\ensuremath{\forall}} \coqdocvar{t} \coqdocvar{k} \coqdocvar{e},\{(\coqdocvar{executable} \coqdocvar{t} \coqdocvar{k} \coqdocvar{e})\}+\{\~{}(\coqdocvar{executable} \coqdocvar{t} \coqdocvar{k} \coqdocvar{e})\}.\coqdoceol
@@ -418,13 +465,8 @@ Is term \coqdocvar{t} exectuable on the attestation manager named \coqdocvar{k} 
 \coqdocemptyline
 \end{coqdoccode}
 Is term \coqdocvar{t} executable on the attestation mnanager named \coqdocvar{k} in
-\section{system \texorpdfstring{\protect}{s}\coqdocvar{s}?  Are ASPs available at the right attestation managers}
-
-
-\section{and are necessary communications allowed?}
-
-
-
+  system \coqdocvar{s}?  Are ASPs available at the right attestation managers
+  and are necessary communications allowed? 
 \begin{coqdoccode}
 \coqdocnoindent
 \coqdockw{Fixpoint} \coqdocvar{executables}(\coqdocvar{t}:\coqdocvar{Term})(\coqdocvar{k}:\coqdocvar{Plc})(\coqdocvar{s}:\coqdocvar{System}):\coqdockw{Prop} :=\coqdoceol
@@ -473,7 +515,17 @@ Is term \coqdocvar{t} executable on the attestation mnanager named \coqdocvar{k}
 \coqdocnoindent
 \coqdockw{Defined}.\coqdoceol
 \coqdocemptyline
-\coqdocemptyline
+\end{coqdoccode}
+***************************
+\section{EXAMPLE SYSTEM}
+
+
+
+
+ Motivated by the Flexible Mechanisms for Remote Attestation, 
+we have three present parties in this attestation scheme. 
+These are used for example purposes. 
+\begin{coqdoccode}
 \coqdocemptyline
 \coqdocnoindent
 \coqdockw{Notation} \coqdocvar{Rely} := "Rely"\%\coqdocvar{string}.\coqdoceol
@@ -482,6 +534,9 @@ Is term \coqdocvar{t} executable on the attestation mnanager named \coqdocvar{k}
 \coqdocnoindent
 \coqdockw{Notation} \coqdocvar{Appraise} := "Appraise"\%\coqdocvar{string}.\coqdoceol
 \coqdocemptyline
+\end{coqdoccode}
+Introducing three asps for reasoning purposes. 
+\begin{coqdoccode}
 \coqdocnoindent
 \coqdockw{Notation} \coqdocvar{aspc1} :=\coqdoceol
 \coqdocindent{1.00em}
@@ -491,6 +546,15 @@ Is term \coqdocvar{t} executable on the attestation mnanager named \coqdocvar{k}
 \coqdocindent{1.00em}
 (\coqdocvar{ASPC} \coqdocvar{ALL} \coqdocvar{EXTD} (\coqdocvar{asp\_paramsC} "asp2"\%\coqdocvar{string} ["x"\%\coqdocvar{string}] \coqdocvar{Target} \coqdocvar{Target})).\coqdoceol
 \coqdocemptyline
+\end{coqdoccode}
+Below are relational definitions of Policy. Within the definition, we list each ASP on the AM and state who can recieve a measurement of said ASP (ie doesn't expose sensitive information in the context). 
+
+
+   The relying party can share the measurement of aspc1 with p. 
+   The target can share the measurement aspc2 with the appraiser and SIG with anyone. 
+   The appraiser can share a hash with anyone. 
+
+\begin{coqdoccode}
 \coqdocemptyline
 \coqdocnoindent
 \coqdockw{Inductive} \coqdocvar{rely\_Policy} : \coqdocvar{ASP} \ensuremath{\rightarrow} \coqdocvar{Plc} \ensuremath{\rightarrow} \coqdockw{Prop} := \coqdoceol
@@ -509,39 +573,70 @@ Is term \coqdocvar{t} executable on the attestation mnanager named \coqdocvar{k}
 \coqdocnoindent
 \ensuremath{|} \coqdocvar{p\_HSH} : \coqdockw{\ensuremath{\forall}} \coqdocvar{p}, \coqdocvar{app\_Policy} \coqdocvar{HSH} \coqdocvar{p}.\coqdoceol
 \coqdocemptyline
+\end{coqdoccode}
+Definition of environments for use in examples and proofs.  
+  Note there are 3 AM's present... 
+    Relying Party, Target, and Appraiser, each have one AM. 
+\begin{coqdoccode}
+\coqdocemptyline
 \coqdocnoindent
 \coqdockw{Definition} \coqdocvar{e0} := \coqdocvar{e\_empty}.\coqdoceol
 \coqdocnoindent
 \coqdockw{Definition} \coqdocvar{e\_Rely} :=\coqdoceol
 \coqdocindent{2.00em}
-\coqdocvar{e\_update} \coqdocvar{e\_empty} \coqdocvar{Rely} (\coqdocvar{Some} \{| \coqdocvar{asps} := [\coqdocvar{aspc1}]; \coqdocvar{M}:= [\coqdocvar{Target}] ; \coqdocvar{C} := [] ; \coqdocvar{Policy} := \coqdocvar{rely\_Policy} |\}).\coqdoceol
+\coqdocvar{e\_update} \coqdocvar{e\_empty} \coqdocvar{Rely} (\coqdocvar{Some} \{| \coqdocvar{asps} := [\coqdocvar{aspc1}]; \coqdocvar{K}:= [\coqdocvar{Target}] ; \coqdocvar{C} := [] ; \coqdocvar{Policy} := \coqdocvar{rely\_Policy} |\}).\coqdoceol
 \coqdocnoindent
 \coqdockw{Definition} \coqdocvar{e\_Targ} :=\coqdoceol
 \coqdocindent{2.00em}
-\coqdocvar{e\_update} \coqdocvar{e\_empty} \coqdocvar{Target} (\coqdocvar{Some} \{| \coqdocvar{asps} := [\coqdocvar{SIG};  \coqdocvar{aspc2}]; \coqdocvar{M}:= [\coqdocvar{Appraise}] ; \coqdocvar{C} := [] ; \coqdocvar{Policy} := \coqdocvar{tar\_Policy}|\}).\coqdoceol
+\coqdocvar{e\_update} \coqdocvar{e\_empty} \coqdocvar{Target} (\coqdocvar{Some} \{| \coqdocvar{asps} := [\coqdocvar{SIG};  \coqdocvar{aspc2}]; \coqdocvar{K}:= [\coqdocvar{Appraise}] ; \coqdocvar{C} := [] ; \coqdocvar{Policy} := \coqdocvar{tar\_Policy}|\}).\coqdoceol
 \coqdocnoindent
 \coqdockw{Definition} \coqdocvar{e\_App} :=\coqdoceol
 \coqdocindent{2.00em}
-\coqdocvar{e\_update} \coqdocvar{e\_empty} \coqdocvar{Appraise} (\coqdocvar{Some} \{| \coqdocvar{asps} := [\coqdocvar{HSH}] ; \coqdocvar{M}:= [] ; \coqdocvar{C} := [\coqdocvar{Target}] ; \coqdocvar{Policy} := \coqdocvar{app\_Policy} |\}).\coqdoceol
+\coqdocvar{e\_update} \coqdocvar{e\_empty} \coqdocvar{Appraise} (\coqdocvar{Some} \{| \coqdocvar{asps} := [\coqdocvar{HSH}] ; \coqdocvar{K}:= [] ; \coqdocvar{C} := [\coqdocvar{Target}] ; \coqdocvar{Policy} := \coqdocvar{app\_Policy} |\}).\coqdoceol
+\coqdocemptyline
+\end{coqdoccode}
+In our example, the system includes the relying party, the target, and the appraiser 
+\begin{coqdoccode}
 \coqdocemptyline
 \coqdocnoindent
 \coqdockw{Definition} \coqdocvar{example\_sys\_1} := [\coqdocvar{e\_Rely}; \coqdocvar{e\_Targ}; \coqdocvar{e\_App}].\coqdoceol
 \coqdocemptyline
+\end{coqdoccode}
+***************************
+\section{EXAMPLE SYSTEM PROPERTIES}
+
+
+
+
+ Prove the relying party has aspc1 in the relying party's enviornement 
+\begin{coqdoccode}
 \coqdocemptyline
 \coqdocnoindent
 \coqdockw{Example} \coqdocvar{ex1}: \coqdocvar{hasASPe} \coqdocvar{Rely} \coqdocvar{e\_Rely} \coqdocvar{aspc1}.\coqdoceol
 \coqdocnoindent
 \coqdockw{Proof}. \coqdoctac{unfold} \coqdocvar{hasASPe}. \coqdoctac{simpl}. \coqdoctac{left}. \coqdoctac{reflexivity}. \coqdockw{Qed}.\coqdoceol
 \coqdocemptyline
+\end{coqdoccode}
+relying party does not have the ASP copy 
+\begin{coqdoccode}
+\coqdocemptyline
 \coqdocnoindent
 \coqdockw{Example} \coqdocvar{ex2}: \coqdocvar{hasASPe} \coqdocvar{Rely} \coqdocvar{e\_Rely} \coqdocvar{CPY} \ensuremath{\rightarrow} \coqdocvar{False}.\coqdoceol
 \coqdocnoindent
 \coqdockw{Proof}. \coqdoctac{unfold} \coqdocvar{hasASPe}. \coqdoctac{simpl}. \coqdoctac{intros}. \coqdocvar{inverts} \coqdocvar{H}. \coqdocvar{inverts} \coqdocvar{H0}. \coqdoctac{auto}. \coqdockw{Qed}.\coqdoceol
 \coqdocemptyline
+\end{coqdoccode}
+Prove the Relying party has aspc2 within the system 
+\begin{coqdoccode}
+\coqdocemptyline
 \coqdocnoindent
 \coqdockw{Example} \coqdocvar{ex3}: \coqdocvar{hasASPs} \coqdocvar{Rely} (\coqdocvar{example\_sys\_1}) \coqdocvar{aspc1}.\coqdoceol
 \coqdocnoindent
 \coqdockw{Proof}. \coqdoctac{unfold} \coqdocvar{hasASPs}. \coqdoctac{unfold} \coqdocvar{hasASPe}. \coqdoctac{simpl}. \coqdoctac{left}. \coqdoctac{left}. \coqdoctac{reflexivity}. \coqdockw{Qed}.\coqdoceol
+\coqdocemptyline
+\end{coqdoccode}
+the relying party knows of the target within system 1
+\begin{coqdoccode}
 \coqdocemptyline
 \coqdocnoindent
 \coqdockw{Example} \coqdocvar{ex4}: \coqdocvar{knowsOfs} \coqdocvar{Rely} \coqdocvar{example\_sys\_1} \coqdocvar{Target}.\coqdoceol
@@ -552,6 +647,10 @@ Is term \coqdocvar{t} executable on the attestation mnanager named \coqdocvar{k}
 \coqdocnoindent
 \coqdockw{Qed}.\coqdoceol
 \coqdocemptyline
+\end{coqdoccode}
+the relying party does not directly know of the appraiser 
+\begin{coqdoccode}
+\coqdocemptyline
 \coqdocnoindent
 \coqdockw{Example} \coqdocvar{ex5}: \coqdocvar{knowsOfe} \coqdocvar{Rely} \coqdocvar{e\_App} \coqdocvar{Appraise} \ensuremath{\rightarrow} \coqdocvar{False}.\coqdoceol
 \coqdocnoindent
@@ -560,6 +659,11 @@ Is term \coqdocvar{t} executable on the attestation mnanager named \coqdocvar{k}
 \coqdoctac{unfold} \coqdocvar{knowsOfe}. \coqdoctac{simpl}. \coqdoctac{intros}. \coqdoctac{destruct} \coqdocvar{H}.\coqdoceol
 \coqdocnoindent
 \coqdockw{Qed}.\coqdoceol
+\coqdocemptyline
+\end{coqdoccode}
+the relying party does not knows of the appraiser within the system... 
+   should be that the relying party knows of the target and the target knows of the appraiser....  
+\begin{coqdoccode}
 \coqdocemptyline
 \coqdocnoindent
 \coqdockw{Example} \coqdocvar{ex5'}: \coqdocvar{knowsOfs} \coqdocvar{Rely} \coqdocvar{example\_sys\_1} \coqdocvar{Appraise} \ensuremath{\rightarrow} \coqdocvar{False}.\coqdoceol
@@ -570,6 +674,10 @@ Is term \coqdocvar{t} executable on the attestation mnanager named \coqdocvar{k}
 \coqdocnoindent
 \coqdockw{Qed}.\coqdoceol
 \coqdocemptyline
+\end{coqdoccode}
+the relying party is aware of the target in system 1
+\begin{coqdoccode}
+\coqdocemptyline
 \coqdocnoindent
 \coqdockw{Example} \coqdocvar{ex6}: \coqdocvar{knowsOfs} \coqdocvar{Rely} \coqdocvar{example\_sys\_1} \coqdocvar{Target}.\coqdoceol
 \coqdocnoindent
@@ -578,6 +686,10 @@ Is term \coqdocvar{t} executable on the attestation mnanager named \coqdocvar{k}
 \coqdoctac{unfold} \coqdocvar{knowsOfs},\coqdocvar{knowsOfe}. \coqdoctac{simpl}. \coqdoctac{auto}.\coqdoceol
 \coqdocnoindent
 \coqdockw{Qed}.\coqdoceol
+\coqdocemptyline
+\end{coqdoccode}
+if the relying party was it's own system, it would still be aware of the target 
+\begin{coqdoccode}
 \coqdocemptyline
 \coqdocnoindent
 \coqdockw{Example} \coqdocvar{ex7}: \coqdocvar{knowsOfs} \coqdocvar{Rely} [\coqdocvar{e\_Rely}] \coqdocvar{Target}.\coqdoceol
@@ -588,6 +700,10 @@ Is term \coqdocvar{t} executable on the attestation mnanager named \coqdocvar{k}
 \coqdocnoindent
 \coqdockw{Qed}.\coqdoceol
 \coqdocemptyline
+\end{coqdoccode}
+the appriser depends on target 
+\begin{coqdoccode}
+\coqdocemptyline
 \coqdocnoindent
 \coqdockw{Example} \coqdocvar{ex8} : \coqdocvar{dependsOne} \coqdocvar{Appraise} \coqdocvar{e\_App} \coqdocvar{Target}.\coqdoceol
 \coqdocnoindent
@@ -596,6 +712,10 @@ Is term \coqdocvar{t} executable on the attestation mnanager named \coqdocvar{k}
 \coqdoctac{unfold} \coqdocvar{dependsOne}. \coqdoctac{simpl}. \coqdoctac{auto}.\coqdoceol
 \coqdocnoindent
 \coqdockw{Qed}.\coqdoceol
+\coqdocemptyline
+\end{coqdoccode}
+within the system, we see that the appraiser depends on target 
+\begin{coqdoccode}
 \coqdocemptyline
 \coqdocnoindent
 \coqdockw{Example} \coqdocvar{ex9} : \coqdocvar{dependsOns} \coqdocvar{Appraise} \coqdocvar{example\_sys\_1} \coqdocvar{Target}.\coqdoceol
@@ -621,10 +741,18 @@ Is term \coqdocvar{t} executable on the attestation mnanager named \coqdocvar{k}
 \coqdocindent{8.50em}
 \coqdockw{end}.\coqdoceol
 \coqdocemptyline
+\end{coqdoccode}
+Is asp SIG executable on the on target place in the Targets's enviornement?
+\begin{coqdoccode}
+\coqdocemptyline
 \coqdocnoindent
 \coqdockw{Example} \coqdocvar{ex10}: (\coqdocvar{executable} (\coqdocvar{asp} \coqdocvar{SIG}) \coqdocvar{Target} \coqdocvar{e\_Targ}).\coqdoceol
 \coqdocnoindent
 \coqdockw{Proof}. \coqdocvar{prove\_exec'}. \coqdockw{Qed}.\coqdoceol
+\coqdocemptyline
+\end{coqdoccode}
+copy is not executable on the target in the appraiser's environment 
+\begin{coqdoccode}
 \coqdocemptyline
 \coqdocnoindent
 \coqdockw{Example} \coqdocvar{ex11}: (\coqdocvar{executable} (\coqdocvar{asp} \coqdocvar{CPY}) \coqdocvar{Target} \coqdocvar{e\_App}) \ensuremath{\rightarrow} \coqdocvar{False}.\coqdoceol
@@ -635,10 +763,18 @@ Is term \coqdocvar{t} executable on the attestation mnanager named \coqdocvar{k}
 \coqdocnoindent
 \coqdockw{Qed}.\coqdoceol
 \coqdocemptyline
+\end{coqdoccode}
+two signature operations are executable on the target
+\begin{coqdoccode}
+\coqdocemptyline
 \coqdocnoindent
 \coqdockw{Example} \coqdocvar{ex12}: (\coqdocvar{executable} (\coqdocvar{lseq} (\coqdocvar{asp} \coqdocvar{SIG}) (\coqdocvar{asp} \coqdocvar{SIG})) \coqdocvar{Target} \coqdocvar{e\_Targ}).\coqdoceol
 \coqdocnoindent
 \coqdockw{Proof}. \coqdocvar{prove\_exec'}. \coqdockw{Qed}.\coqdoceol
+\coqdocemptyline
+\end{coqdoccode}
+the relying party can ask the target to run aspc1 and signature operations within system 1 
+\begin{coqdoccode}
 \coqdocemptyline
 \coqdocnoindent
 \coqdockw{Example} \coqdocvar{ex13}: (\coqdocvar{executables} (\coqdocvar{lseq} (\coqdocvar{asp} \coqdocvar{aspc1})\coqdoceol
