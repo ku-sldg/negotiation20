@@ -171,8 +171,7 @@ match (e k) with
 | Some m => In p m.(C)
 end.
 
-(** Determine if place [k] within the system [s]  
-* depends on place [p] (the context relation)
+(** Determine if place [k] within the system [s] depends on place [p] (the context relation)
 *)
 Fixpoint dependsOns (k:Plc)(s:System)(p:Plc):Prop :=
 match s with
@@ -197,8 +196,7 @@ Proof.
   + auto.
 Defined.       
 
-(* decidability of dependsOns. For any system [s], either the AM at place
-   [k] depends on something at place [p] or it does not. *)
+(* decidability of dependsOns. For any system [s], either the AM at place [k] depends on something at place [p] or it does not. *)
 Theorem dependsOns_dec : forall k s p, {dependsOns k s p} + {~ dependsOns k s p}.
 Proof.
   intros. induction s. 
@@ -255,30 +253,29 @@ Defined.
 * and are necessary communications allowed?
 *)
 Fixpoint executables(t:Term)(k:Plc)(s:System):Prop :=
-match t with
-| asp a  => hasASPs k s a
-| att p t => knowsOfs k s p -> executables t p s
-| lseq t1 t2 => executables t1 k s /\ executables t2 k s
-| bseq _ t1 t2 => executables t1 k s /\ executables t2 k s
-| bpar _ t1 t2 => executables t1 k s /\ executables t2 k s
+  match t with
+  | asp a  => hasASPs k s a
+  | att p t => knowsOfs k s p -> executables t p s
+  | lseq t1 t2 => executables t1 k s /\ executables t2 k s
+  | bseq _ t1 t2 => executables t1 k s /\ executables t2 k s
+  | bpar _ t1 t2 => executables t1 k s /\ executables t2 k s
 end.
+
+Ltac prove_exec :=
+    match goal with
+    | |- {executables (asp _) _ _} + {_} => unfold executables; apply hasASPs_dec
+    | IHt1 : _ , IHt2 : _ |- {executables _ ?k ?s} + {_} => simpl; specialize IHt1 with k s; specialize IHt2 with k s; destruct IHt1,IHt2 ; try( left; split ; assumption)
+    end.
 
 Theorem executables_dec : forall t k s, {executables t k s} + {~executables t k s}.
 Proof.
-intros.  generalize k s. induction t; intros.
-+ unfold executables. apply hasASPs_dec.
-+ simpl. pose proof knowsOfs_dec k0 s0 p. destruct (IHt p s0).
-++ left. intros. assumption.
-++ destruct H.
-+++ right. unfold not. intros. apply n. apply H. assumption.
-+++ left. intros. congruence. 
-+ simpl. specialize IHt1 with k0 s0. specialize IHt2 with k0 s0. destruct IHt1,IHt2; try right_dest_contr H.
-++ left. split ; assumption.
-+ simpl. specialize IHt1 with k0 s1. specialize IHt2 with k0 s1. destruct IHt1,IHt2; try right_dest_contr H.
-++ left. split ; assumption.
-+ simpl. specialize IHt1 with k0 s1. specialize IHt2 with k0 s1. destruct IHt1,IHt2; try right_dest_contr H.
-++ left. split ; assumption. 
-Defined.
+intros.  generalize k s. induction t; intros; try prove_exec; try right_dest_contr H.
++ simpl. destruct (IHt p s0).
+++ auto.
+++ pose proof knowsOfs_dec k0 s0 p. destruct H.
++++ right. unfold not; intros. intuition.
++++ left. intros. congruence.
+Defined. 
 
 (*****************************
     EXAMPLE SYSTEM 
@@ -389,30 +386,27 @@ Proof.
 unfold dependsOns. simpl. unfold dependsOne. simpl. auto.
 Qed.   
 
-Ltac prove_exec :=
+Ltac prove_exec' :=
     simpl; auto; match goal with
                  | |- hasASPe _ _ _ => cbv; left; reflexivity
                  | |- knowsOfe _ _ _ => unfold knowsOfe; simpl; left; reflexivity
-                 | |- _ /\ _ => split; prove_exec
+                 | |- _ /\ _ => split; prove_exec'
                  | |- ?A => idtac A
                  end.
 
 (* Is asp SIG executable on the on target place in the Targets's enviornement?*)
 Example ex10: (executable (asp SIG) Target e_Targ).
-Proof. prove_exec. Qed.
+Proof. prove_exec'. Qed.
 
 (* copy is not executable on the target in the appraiser's environment *)
 Example ex11: (executable (asp CPY) Target e_App) -> False.
 Proof.
-  intros Hcontra.
-  simpl in *.
-  cbv in *.
-  destruct Hcontra.
+  intros Hcontra; cbv in *; destruct Hcontra.
 Qed.
 
 (* two signature operations are executable on the target*)
 Example ex12: (executable (lseq (asp SIG) (asp SIG)) Target e_Targ).
-Proof. prove_exec. Qed.
+Proof. prove_exec'. Qed.
 
 (* the relying party can ask the target to run aspc1 and signature operations within system 1 *)
 Example ex13: (executables (lseq (asp aspc1)
@@ -420,9 +414,8 @@ Example ex13: (executables (lseq (asp aspc1)
                                 (lseq (asp SIG)
                                 (asp SIG))))
                 Rely example_sys_1).
-Proof. prove_exec. intros. simpl. unfold hasASPe. simpl.
-left. left. reflexivity.   
-cbv in *. split. right.  left. left.  reflexivity. 
-cbv in *. right. left.  left. reflexivity.   Qed.
+Proof. 
+  prove_exec'; cbv; auto.
+Qed.
 
 (* END OF FILE *)
