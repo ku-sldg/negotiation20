@@ -33,7 +33,7 @@ Require Import Utils.Utilities.
 Record Manifest := {
 
    asps : list ASP ;
-   M : list Plc ; 
+   K : list Plc ; 
    C : list Plc ; 
    Policy : ASP -> Plc -> Prop ;
 
@@ -117,7 +117,7 @@ Defined.
 Definition knowsOfe(k:Plc)(e:Environment)(p:Plc):Prop :=
 match (e k) with
 | None => False
-| Some m => In p m.(M)
+| Some m => In p m.(K)
 end.
 
 Print System.
@@ -140,7 +140,7 @@ Proof.
   intros k e p.
   unfold knowsOfe.
   destruct (e k); auto.
-  + induction (M m).
+  + induction (K m).
   ++ auto.
   ++ assert (H: {p = a} + {p <> a}). {repeat decide equality. }
      inversion H.
@@ -318,11 +318,11 @@ Inductive app_Policy : ASP -> Plc -> Prop :=
 *)
 Definition e0 := e_empty.
 Definition e_Rely :=
-    e_update e_empty Rely (Some {| asps := [aspc1]; M:= [Target] ; C := [] ; Policy := rely_Policy |}).
+    e_update e_empty Rely (Some {| asps := [aspc1]; K:= [Target] ; C := [] ; Policy := rely_Policy |}).
 Definition e_Targ :=
-    e_update e_empty Target (Some {| asps := [SIG;  aspc2]; M:= [Appraise] ; C := [] ; Policy := tar_Policy|}).
+    e_update e_empty Target (Some {| asps := [SIG;  aspc2]; K:= [Appraise] ; C := [] ; Policy := tar_Policy|}).
 Definition e_App :=
-    e_update e_empty Appraise (Some {| asps := [HSH] ; M:= [] ; C := [Target] ; Policy := app_Policy |}).
+    e_update e_empty Appraise (Some {| asps := [HSH] ; K:= [] ; C := [Target] ; Policy := app_Policy |}).
 
 (* In our example, the system includes the relying party, the target, and the appraiser *)
 Definition example_sys_1 := [e_Rely; e_Targ; e_App]. 
