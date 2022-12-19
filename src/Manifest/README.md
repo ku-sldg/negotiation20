@@ -1,3 +1,16 @@
-This folder contains information about the design of manifest. The LOCAL manifest is used to capture AM specific information while the GLOBAL manifest is used to capture the attestation system. 
+This folder contains information about the design of `manifest`. 
 
-Formalize for local and global manifests exists in these files. 
+The manifest includes (for reasoning purposes):
+  - list of executing ASPs
+  - measures relation
+  - context relation
+  - privacy policy
+  - selection policy
+  
+ In implementation, the manifest will also include keys, ids, and tpm initalization information. 
+ 
+ The `enviornment` is a mapping form place to manifest. 
+ 
+ The `system` is a collection of enviornments. 
+ 
+ 
