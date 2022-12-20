@@ -443,4 +443,23 @@ Proof.
   prove_exec'; cbv; auto.
 Qed.
 
+Print relation.
+
+Theorem tar_Policy_dec: forall (p:ASP->Plc->Prop)(asp:ASP)(plc:Plc), {(p asp plc)}+{~(p asp plc)}.
+Proof.
+  intros p.
+  intros asp0.
+  destruct asp0.
+  destruct plc.
+    
+
+    Notation aspc2 :=
+  (ASPC ALL EXTD (asp_paramsC "asp2"%string ["x"%string] Target Target)).
+
+
+Inductive tar_Policy : ASP -> Plc -> Prop := 
+| p_aspc2 : tar_Policy aspc2 Appraise 
+| p_SIG : forall p, tar_Policy SIG p. 
+
+
 (* END OF FILE *)
