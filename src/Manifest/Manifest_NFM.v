@@ -445,21 +445,42 @@ Qed.
 
 Print relation.
 
-Theorem tar_Policy_dec: forall (p:ASP->Plc->Prop)(asp:ASP)(plc:Plc), {(p asp plc)}+{~(p asp plc)}.
+Theorem string_dec: forall (s s':string), {s=s'}+{s<>s'}.
 Proof.
-  intros p.
-  intros asp0.
-  destruct asp0.
+  intros s s'.
+  repeat decide equality.
+Defined.
+
+Theorem plc_dec: forall (p p':Plc),{p=p'}+{p<>p'}.
+Proof.
+  intros p p'.
+  apply string_dec.
+Defined.
+
+Check ASP_dec.
+
+Theorem tar_Policy_dec: forall (asp:ASP)(plc:Plc), {(tar_Policy asp plc)}+{~(tar_Policy asp plc)}.
+Proof.
+  intros asp.
+  intros plc.
+  destruct asp.
   destruct plc.
-    
+  right. unfold not. intros Hneg. inverts Hneg.
+  right. unfold not. intros Hneg. inverts Hneg.
+  right. unfold not. intros Hneg. inverts Hneg.
+  destruct (ASPC s f a).
+  right. unfold not. intros Hneg. inverts Hneg.
+  right. unfold not. intros Hneg. inverts Hneg.
 
-    Notation aspc2 :=
-  (ASPC ALL EXTD (asp_paramsC "asp2"%string ["x"%string] Target Target)).
+  
 
+  Notation aspc2 :=
+    (ASPC ALL EXTD (asp_paramsC "asp2"%string ["x"%string] Target Target)).
 
-Inductive tar_Policy : ASP -> Plc -> Prop := 
-| p_aspc2 : tar_Policy aspc2 Appraise 
-| p_SIG : forall p, tar_Policy SIG p. 
-
+(*
+  Inductive tar_Policy : ASP -> Plc -> Prop := 
+  | p_aspc2 : tar_Policy aspc2 Appraise 
+  | p_SIG : forall p, tar_Policy SIG p. 
+*)  
 
 (* END OF FILE *)
