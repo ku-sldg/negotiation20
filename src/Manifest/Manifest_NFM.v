@@ -459,6 +459,10 @@ Defined.
 
 Check ASP_dec.
 
+(** A proof that [tar_Policy] is decidable.  If we can show all policies are
+ * decidable, life is good.  This is a start.
+ *)
+
 Theorem tar_Policy_dec: forall (asp:ASP)(plc:Plc), {(tar_Policy asp plc)}+{~(tar_Policy asp plc)}.
 Proof.
   intros asp.
@@ -468,19 +472,36 @@ Proof.
   right. unfold not. intros Hneg. inverts Hneg.
   right. unfold not. intros Hneg. inverts Hneg.
   right. unfold not. intros Hneg. inverts Hneg.
-  destruct (ASPC s f a).
-  right. unfold not. intros Hneg. inverts Hneg.
-  right. unfold not. intros Hneg. inverts Hneg.
-
-  
-
-  Notation aspc2 :=
-    (ASPC ALL EXTD (asp_paramsC "asp2"%string ["x"%string] Target Target)).
+  assert ({(ASPC s f a)=aspc2} + {(ASPC s f a)<>aspc2}).
+  apply ASP_dec.
+  assert ({(plc = "Appraise"%string)} + {(plc <> "Appraise"%string)}).
+  apply plc_dec.
+  destruct H. destruct H0. subst.
+  left. rewrite e. apply p_aspc2.
+  right. rewrite e. unfold not in *. intros Hneg. apply n. inversion Hneg. reflexivity.
+  destruct H0.
+  right. unfold not in *. intros Hneg. apply n. inversion Hneg. reflexivity.
+  right. unfold not in *. intros Hneg. apply n. inversion Hneg. reflexivity.
+  left. apply p_SIG.
+  right. unfold not in *. intros Hneg. inverts Hneg.
+Qed.
 
 (*
   Inductive tar_Policy : ASP -> Plc -> Prop := 
   | p_aspc2 : tar_Policy aspc2 Appraise 
   | p_SIG : forall p, tar_Policy SIG p. 
 *)  
+
+Theorem Policy_dec: forall (p:ASP->Plc->Prop)(asp:ASP)(plc:Plc), {(p asp plc)}+{~(p asp plc)}.
+Proof.
+  intros p asp plc.
+  destruct asp.
+  + right. unfold not. intros Hneg.
+Abort.
+
+(*  
+  Notation aspc2 :=
+    (ASPC ALL EXTD (asp_paramsC "asp2"%string ["x"%string] Target Target)).
+ *)
 
 (* END OF FILE *)
