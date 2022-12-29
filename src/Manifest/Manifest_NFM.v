@@ -492,11 +492,27 @@ Qed.
   | p_SIG : forall p, tar_Policy SIG p. 
 *)  
 
+Inductive empty_rel: ASP -> Plc -> Prop :=.
+
+Theorem empty_Policy_dec: forall (asp:ASP)(plc:Plc), {(empty_rel asp plc)}+{~(empty_rel asp plc)}.
+Proof.
+  intros asp0. intros plc.
+  destruct asp0; destruct plc;
+  right; unfold not; intros Hneg; inversion Hneg.
+Qed.
+
+(** I can do this proof for all _inductively_ defined relations.  However,
+ * there are relations that are not inductively defined that I can't deal 
+ * with in the same way.  Not sure how to state this in a proof.  Without
+ * the inductve relation there is nothing to evaluate and using [Prop] means
+ * no exclusive middle.
+ *)
+
 Theorem Policy_dec: forall (p:ASP->Plc->Prop)(asp:ASP)(plc:Plc), {(p asp plc)}+{~(p asp plc)}.
 Proof.
   intros p asp plc.
-  destruct asp.
-  + right. unfold not. intros Hneg.
+  destruct asp; destruct plc.
+  left.
 Abort.
 
 (*  
