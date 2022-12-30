@@ -508,11 +508,26 @@ Qed.
  * no exclusive middle.
  *)
 
-Theorem Policy_dec: forall (p:ASP->Plc->Prop)(asp:ASP)(plc:Plc), {(p asp plc)}+{~(p asp plc)}.
+Lemma or_example :
+  forall n m : nat, n = 0 \/ m = 0 -> n * m = 0.
 Proof.
-  intros p asp plc.
-  destruct asp; destruct plc.
-  left.
+  (* This pattern implicitly does case analysis on
+     n = 0 ∨ m = 0 *)
+  intros n m [Hn | Hm].
+  - (* Here, n = 0 *)
+    rewrite Hn. reflexivity.
+  - (* Here, m = 0 *)
+    rewrite Hm. rewrite <- mult_n_O.
+    reflexivity.
+Qed.
+
+Axiom LEM: forall p:Prop, p \/ ~p.
+
+Theorem Policy_dec: forall (p:ASP->Plc->Prop)(asp:ASP)(plc:Plc), ((p asp plc) \/ ~(p asp plc)) -> {(p asp plc)}+{~(p asp plc)}.
+Proof.
+  intros p. intros asp. intros plc. intros [Ht | Hf].
+  
+  propositional.
 Abort.
 
 (*  
