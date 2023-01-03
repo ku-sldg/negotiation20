@@ -468,29 +468,51 @@ Proof.
   intros asp.
   intros plc.
   destruct asp.
-  destruct plc.
-  right. unfold not. intros Hneg. inverts Hneg.
   right. unfold not. intros Hneg. inverts Hneg.
   right. unfold not. intros Hneg. inverts Hneg.
   assert ({(ASPC s f a)=aspc2} + {(ASPC s f a)<>aspc2}).
   apply ASP_dec.
   assert ({(plc = "Appraise"%string)} + {(plc <> "Appraise"%string)}).
   apply plc_dec.
-  destruct H. destruct H0. subst.
+  destruct H; destruct H0. subst.
   left. rewrite e. apply p_aspc2.
   right. rewrite e. unfold not in *. intros Hneg. apply n. inversion Hneg. reflexivity.
-  destruct H0.
   right. unfold not in *. intros Hneg. apply n. inversion Hneg. reflexivity.
   right. unfold not in *. intros Hneg. apply n. inversion Hneg. reflexivity.
   left. apply p_SIG.
   right. unfold not in *. intros Hneg. inverts Hneg.
 Qed.
 
-(*
-  Inductive tar_Policy : ASP -> Plc -> Prop := 
-  | p_aspc2 : tar_Policy aspc2 Appraise 
-  | p_SIG : forall p, tar_Policy SIG p. 
-*)  
+Definition checkPolicy(k:Plc)(e:Environment)(a:ASP):Prop :=
+match (e k) with
+| None => False
+| Some m => (m.(Policy) a k)
+end.
+
+Fixpoint term_Policy(t:Term)(k:Plc)(e:Environment):Prop :=
+  match t with
+  | asp a  => checkPolicy k e a
+  | att p t0 => knowsOfe k e p /\ term_Policy t0 p e
+  | lseq t1 t2 => term_Policy t1 k e /\ term_Policy t2 k e
+  | bseq _ t1 t2 => term_Policy t1 k e /\ term_Policy t2 k e
+  | bpar _ t1 t2 => term_Policy t1 k e /\ term_Policy t2 k e
+  end.
+
+Theorem term_Policy_dec:forall t k e,
+    (forall k e a, {(checkPolicy k e a)} + {~(checkPolicy k e a)}) -> {(term_Policy t k e)}+{~(term_Policy t k e)}.
+Proof.
+  intros t k e.
+  intros H.
+  destruct t.
+  + simpl. auto.
+  + simpl.
+  assert ({knowsOfe k e p} + {~ knowsOfe k e p}). apply knowsOfe_dec.
+  destruct H0.
+  left. split. assumption.
+  
+
+
+  
 
 Inductive empty_rel: ASP -> Plc -> Prop :=.
 
@@ -501,6 +523,15 @@ Proof.
   right; unfold not; intros Hneg; inversion Hneg.
 Qed.
 
+Inductive total_rel: ASP -> Plc -> Prop :=
+| all_True: forall (a:ASP)(p:Plc), total_rel a p.
+
+Theorem total_Policy_dec: forall a p, {total_rel a p}+{~(total_rel a p)}.
+Proof.
+  intros a p.
+  destruct a; destruct p; left; apply all_True.
+Qed.
+
 (** I can do this proof for all _inductively_ defined relations.  However,
  * there are relations that are not inductively defined that I can't deal 
  * with in the same way.  Not sure how to state this in a proof.  Without
@@ -508,18 +539,15 @@ Qed.
  * no exclusive middle.
  *)
 
-Lemma or_example :
-  forall n m : nat, n = 0 \/ m = 0 -> n * m = 0.
-Proof.
-  (* This pattern implicitly does case analysis on
-     n = 0 ∨ m = 0 *)
-  intros n m [Hn | Hm].
-  - (* Here, n = 0 *)
-    rewrite Hn. reflexivity.
-  - (* Here, m = 0 *)
-    rewrite Hm. rewrite <- mult_n_O.
-    reflexivity.
-Qed.
+Definition sound (t:Term)(k:Plc)(e:Environment) := (executable t k e) /\ (term_Policy t k e).
+
+Theorem sound_dec: forall t p a e asp, {a asp p e}+{~(a asp p e)} -> {sound t p a e}+{~(sound t p a e)}.
+  intros t p a e asp.
+  intros H.
+  unfold sound.
+  destruct H.
+  
+
 
 Axiom LEM: forall p:Prop, p \/ ~p.
 
