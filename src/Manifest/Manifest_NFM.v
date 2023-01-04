@@ -129,7 +129,7 @@ end.
 Print System.
 Print Environment.
 
-(*** Determine if place [k] within the system [s] knows of [p] *)
+(** Determine if place [k] within the system [s] knows of [p] *)
 
 Fixpoint knowsOfs(k:Plc)(s:System)(p:Plc):Prop :=
 match s with
@@ -154,7 +154,6 @@ Proof.
   +++ simpl. left. auto.
   +++ simpl. inverts IHl; auto. right. unfold not. intros. inverts H2; auto.
 Defined.
-
 
 (** decidability of knowsOfs. For any system [s], either [k] knows 
    of [p] within the system or they do not. *)
@@ -288,28 +287,31 @@ intros.  generalize k s. induction t; intros; try prove_exec; try right_dest_con
 Defined. 
 
 (** ***************************
-   * EXAMPLE SYSTEM 
-*****************************)
+ * EXAMPLE SYSTEM 
+ *****************************)
 
 (** Motivated by the Flexible Mechanisms for Remote Attestation, 
-we have three present parties in this attestation scheme. 
-These are used for example purposes. *)
+ * we have three present parties in this attestation scheme. 
+ * These are used for example purposes.
+ *)
 
 Notation Rely := "Rely"%string.
 Notation Target := "Target"%string.
 Notation Appraise := "Appraise"%string.
 
-(** Introducing three asps for reasoning purposes. *)
+(** Introducing three asps for testing purposes. *)
 Notation aspc1 :=
   (ASPC ALL EXTD (asp_paramsC "asp1"%string ["x"%string;"y"%string] Target Target)).
 Notation aspc2 :=
   (ASPC ALL EXTD (asp_paramsC "asp2"%string ["x"%string] Target Target)).
 
-(** Below are relational definitions of Policy. Within the definition, we list each ASP on the AM and state who can recieve a measurement of said ASP (ie doesn't expose sensitive information in the context). 
-
-   The relying party can share the measurement of aspc1 with p. 
-   The target can share the measurement aspc2 with the appraiser and SIG with anyone. 
-   The appraiser can share a hash with anyone. 
+(** Below are relational definitions of Policy. Within the definition, we
+ * list each ASP on the AM and state who can recieve a measurement of said
+ * ASP (ie doesn't expose sensitive information in the context).
+ * 
+ * The relying party can share the measurement of aspc1 with p. 
+ * The target can share the measurement aspc2 with the appraiser and SIG
+ * with anyone. The appraiser can share a hash with anyone. 
 *)
 
 Inductive rely_Policy : ASP -> Plc -> Prop := 
@@ -323,8 +325,9 @@ Inductive app_Policy : ASP -> Plc -> Prop :=
 | p_HSH : forall p, app_Policy HSH p. 
 
 (** Definition of environments for use in examples and proofs.  
-  Note there are 3 AM's present... 
-    Relying Party, Target, and Appraiser, each have one AM. *)
+ * Note there are 3 AM's present... 
+ * Relying Party, Target, and Appraiser, each have one AM.
+ *)
 
 Definition e0 := e_empty.
 Definition e_Rely :=
@@ -334,59 +337,69 @@ Definition e_Targ :=
 Definition e_App :=
     e_update e_empty Appraise (Some {| asps := [HSH] ; K:= [] ; C := [Target] ; Policy := app_Policy |}).
 
-(** In our example, the system includes the relying party, the target, and the appraiser *)
+(** In our example, the system includes the relying party, the target,
+ * and the appraiser
+ *)
 
 Definition example_sys_1 := [e_Rely; e_Targ; e_App]. 
 
 (** ***************************
   * EXAMPLE SYSTEM PROPERTIES
-*****************************)
+  *****************************)
 
 (** Prove the relying party has aspc1 in the relying party's enviornement *)
 
 Example ex1: hasASPe Rely e_Rely aspc1.
 Proof. unfold hasASPe. simpl. left. reflexivity. Qed.
 
-(** relying party does not have the ASP copy *)
+(** relying party does not have the ASP copy
+ *)
 
 Example ex2: hasASPe Rely e_Rely CPY -> False.
 Proof. unfold hasASPe. simpl. intros. inverts H. inverts H0. auto. Qed.
 
-(** Prove the Relying party has aspc2 within the system *)
+(** Prove the Relying party has aspc2 within the system
+ *)
 
 Example ex3: hasASPs Rely (example_sys_1) aspc1.
 Proof. unfold hasASPs. unfold hasASPe. simpl. left. left. reflexivity. Qed. 
 
-(** the relying party knows of the target within system 1*)
+(** the relying party knows of the target within system 1
+ *)
 
 Example ex4: knowsOfs Rely example_sys_1 Target.
 Proof.
 unfold knowsOfs. simpl. left. unfold knowsOfe. simpl.  auto.
 Qed.
 
-(** the relying party does not directly know of the appraiser *)
+(** the relying party does not directly know of the appraiser
+ *)
 
 Example ex5: knowsOfe Rely e_App Appraise -> False.
 Proof.
-unfold knowsOfe. simpl. intros. destruct H. 
+  unfold knowsOfe. simpl. intros. destruct H. 
 Qed.
 
 (** the relying party does not knows of the appraiser within the system... 
-   should be that the relying party knows of the target and the target knows of the appraiser....  *)
+ * should be that the relying party knows of the target and the target
+ * knows of the appraiser....
+ *)
 
 Example ex5': knowsOfs Rely example_sys_1 Appraise -> False.
 Proof.
 unfold knowsOfs. simpl. unfold knowsOfe. simpl. intros. inverts H. inverts H0. inverts H. apply H. inverts H0. apply H. inverts H. apply H0. apply H0.
 Qed.
 
-(** the relying party is aware of the target in system 1*)
+(** the relying party is aware of the target in system 1 *)
 
 Example ex6: knowsOfs Rely example_sys_1 Target.
 Proof.
 unfold knowsOfs,knowsOfe. simpl. auto.
 Qed.
 
-(** if the relying party was it's own system, it would still be aware of the target *)
+(** if the relying party was it's own system, it would still be aware of
+ * the target
+ *)
 
 Example ex7: knowsOfs Rely [e_Rely] Target.
 Proof.
@@ -404,9 +417,15 @@ Qed.
 
 Example ex9 : dependsOns Appraise example_sys_1 Target.
 Proof. 
-unfold dependsOns. simpl. unfold dependsOne. simpl. auto.
-Qed.   
+  unfold dependsOns.
+  simpl.
+  unfold dependsOne.
+  simpl.
+  auto.
+Qed.
 
+(** Proof tactic for executability
+ *)
 Ltac prove_exec' :=
     simpl; auto; match goal with
                  | |- hasASPe _ _ _ => cbv; left; reflexivity
@@ -415,24 +434,30 @@ Ltac prove_exec' :=
                  | |- ?A => idtac A
                  end.
 
-(** Is asp SIG executable on the on target place in the Targets's enviornement?*)
+(** Is asp SIG executable on the on target place in the Targets's
+ * enviornement?
+ *)
 
 Example ex10: (executable (asp SIG) Target e_Targ).
 Proof. prove_exec'. Qed.
 
-(** copy is not executable on the target in the appraiser's environment *)
+(** copy is not executable on the target in the appraiser's environment
+ *)
 
 Example ex11: (executable (asp CPY) Target e_App) -> False.
 Proof.
   intros Hcontra; cbv in *; destruct Hcontra.
 Qed.
 
-(** two signature operations are executable on the target*)
+(** two signature operations are executable on the target
+ *)
 
 Example ex12: (executable (lseq (asp SIG) (asp SIG)) Target e_Targ).
 Proof. prove_exec'. Qed.
 
-(** the relying party can ask the target to run aspc1 and signature operations within system 1 *)
+(** the relying party can ask the target to run aspc1 and signature
+ * operations within system 1
+ *) 
 
 Example ex13: (executables (lseq (asp aspc1)
                             (att Target
@@ -483,84 +508,70 @@ Proof.
   right. unfold not in *. intros Hneg. inverts Hneg.
 Qed.
 
-Definition checkASPPolicy(p k:Plc)(e:Environment)(a:ASP):Prop :=
-match (e k) with
+Definition checkASPPolicy(p:Plc)(e:Environment)(a:ASP):Prop :=
+match (e p) with (* Look for p in the environment *)
 | None => False
-| Some m => (Policy m a p)
+| Some m => (Policy m a p) (* Policy from m allows p to run a *)
 end.
 
-Fixpoint checkTermPolicy(p:Plc)(t:Term)(k:Plc)(e:Environment):Prop :=
+Fixpoint checkTermPolicy(t:Term)(k:Plc)(e:Environment):Prop :=
   match t with
-  | asp a  => checkASPPolicy p k e a
-  | att r t0 => checkTermPolicy p t0 r e
-  | lseq t1 t2 => checkTermPolicy p t1 k e /\ checkTermPolicy p t2 k e
-  | bseq _ t1 t2 => checkTermPolicy p t1 k e /\ checkTermPolicy p t2 k e
-  | bpar _ t1 t2 => checkTermPolicy p t1 k e /\ checkTermPolicy p t2 k e
+  | asp a  => checkASPPolicy k e a
+  | att r t0 => checkTermPolicy t0 k e
+  | lseq t1 t2 => checkTermPolicy t1 k e /\ checkTermPolicy t2 k e
+  | bseq _ t1 t2 => checkTermPolicy t1 k e /\ checkTermPolicy t2 k e
+  | bpar _ t1 t2 => checkTermPolicy t1 k e /\ checkTermPolicy t2 k e
   end.
 
-Theorem checkTermPolicy_dec:forall p t k e,
-    (forall p0 k0 e0 a0, {(checkASPPolicy p0 k0 e0 a0)} + {~(checkASPPolicy p0 k0 e0 a0)}) ->
-    {(checkTermPolicy p t k e)}+{~(checkTermPolicy p t k e)}.
+Theorem checkTermPolicy_dec:forall t k e,
+    (forall p0 e0 a0, {(checkASPPolicy p0 e0 a0)} + {~(checkASPPolicy p0 e0 a0)}) ->
+    {(checkTermPolicy t k e)}+{~(checkTermPolicy t k e)}.
 Proof.
-  intros p t k e.
+  intros t k e.
   intros H.
   induction t.
   simpl. apply H.
-  + destruct IHt
-    simpl.
-  
-  
-
-
-  
-
-Inductive empty_rel: ASP -> Plc -> Prop :=.
-
-Theorem empty_Policy_dec: forall (asp:ASP)(plc:Plc), {(empty_rel asp plc)}+{~(empty_rel asp plc)}.
-Proof.
-  intros asp0. intros plc.
-  destruct asp0; destruct plc;
-  right; unfold not; intros Hneg; inversion Hneg.
+  simpl. assumption.
+  simpl; destruct IHt1,IHt2.
+  left. split; assumption.
+  right. unfold not. intros Hneg. destruct Hneg. contradiction.
+  right. unfold not. intros Hneg. destruct Hneg. contradiction.
+  right. unfold not. intros Hneg. destruct Hneg. contradiction.
+  simpl; destruct IHt1,IHt2.
+  left. split; assumption.
+  right. unfold not. intros Hneg. destruct Hneg. contradiction.
+  right. unfold not. intros Hneg. destruct Hneg. contradiction.
+  right. unfold not. intros Hneg. destruct Hneg. contradiction.
+  simpl; destruct IHt1,IHt2.
+  left. split; assumption.
+  right. unfold not. intros Hneg. destruct Hneg. contradiction.
+  right. unfold not. intros Hneg. destruct Hneg. contradiction.
+  right. unfold not. intros Hneg. destruct Hneg. contradiction.
 Qed.
 
-Inductive total_rel: ASP -> Plc -> Prop :=
-| all_True: forall (a:ASP)(p:Plc), total_rel a p.
+(** Soundness is executability and policy adherence *)
 
-Theorem total_Policy_dec: forall a p, {total_rel a p}+{~(total_rel a p)}.
-Proof.
-  intros a p.
-  destruct a; destruct p; left; apply all_True.
-Qed.
+Definition sound (t:Term)(k:Plc)(e:Environment) :=
+  (executable t k e) /\ (checkTermPolicy t k e).
 
-(** I can do this proof for all _inductively_ defined relations.  However,
- * there are relations that are not inductively defined that I can't deal 
- * with in the same way.  Not sure how to state this in a proof.  Without
- * the inductve relation there is nothing to evaluate and using [Prop] means
- * no exclusive middle.
+(** Prove soundness is decidable with the assumption necessary for policy
+ * adherence decidability.
  *)
 
-Definition sound (t:Term)(k:Plc)(e:Environment) := (executable t k e) /\ (term_Policy t k e).
-
-Theorem sound_dec: forall t p a e asp, {a asp p e}+{~(a asp p e)} -> {sound t p a e}+{~(sound t p a e)}.
-  intros t p a e asp.
+Theorem sound_dec: forall t p e,
+    (forall p0 e0 a0, {(checkASPPolicy p0 e0 a0)} + {~(checkASPPolicy p0 e0 a0)})
+    -> {sound t p e}+{~(sound t p e)}.
+Proof.
+  intros t p e.
   intros H.
   unfold sound.
-  destruct H.
-  
-
-
-Axiom LEM: forall p:Prop, p \/ ~p.
-
-Theorem Policy_dec: forall (p:ASP->Plc->Prop)(asp:ASP)(plc:Plc), ((p asp plc) \/ ~(p asp plc)) -> {(p asp plc)}+{~(p asp plc)}.
-Proof.
-  intros p. intros asp. intros plc. intros [Ht | Hf].
-  
-  propositional.
-Abort.
-
-(*  
-  Notation aspc2 :=
-    (ASPC ALL EXTD (asp_paramsC "asp2"%string ["x"%string] Target Target)).
- *)
+  assert ({executable t p e}+{~(executable t p e)}). apply executable_dec.
+  assert ({checkTermPolicy t p e}+{~(checkTermPolicy t p e)}). apply checkTermPolicy_dec. intros. apply H.
+  destruct H0,H1.
+  left. split; assumption.
+  right. unfold not. intros. destruct H0. contradiction.
+  right. unfold not. intros. destruct H0. contradiction.
+  right. unfold not. intros. destruct H0. contradiction.
+Qed.
 
 (* END OF FILE *)
