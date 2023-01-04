@@ -8,6 +8,8 @@ Require Import Cop.Copland.
 Import Copland.Term.
 Require Import Utils.Utilities.
 
+Module Manifest.
+
 (** ****************************
   * FORMALIZATION OF ATTESTATION PROTOCOL NEGOTIATION
 
@@ -573,5 +575,7 @@ Proof.
   right. unfold not. intros. destruct H0. contradiction.
   right. unfold not. intros. destruct H0. contradiction.
 Qed.
+
+End Manifest.
 
 (* END OF FILE *)
