@@ -483,32 +483,32 @@ Proof.
   right. unfold not in *. intros Hneg. inverts Hneg.
 Qed.
 
-Definition checkPolicy(k:Plc)(e:Environment)(a:ASP):Prop :=
+Definition checkASPPolicy(p k:Plc)(e:Environment)(a:ASP):Prop :=
 match (e k) with
 | None => False
-| Some m => (m.(Policy) a k)
+| Some m => (Policy m a p)
 end.
 
-Fixpoint term_Policy(t:Term)(k:Plc)(e:Environment):Prop :=
+Fixpoint checkTermPolicy(p:Plc)(t:Term)(k:Plc)(e:Environment):Prop :=
   match t with
-  | asp a  => checkPolicy k e a
-  | att p t0 => knowsOfe k e p /\ term_Policy t0 p e
-  | lseq t1 t2 => term_Policy t1 k e /\ term_Policy t2 k e
-  | bseq _ t1 t2 => term_Policy t1 k e /\ term_Policy t2 k e
-  | bpar _ t1 t2 => term_Policy t1 k e /\ term_Policy t2 k e
+  | asp a  => checkASPPolicy p k e a
+  | att r t0 => checkTermPolicy p t0 r e
+  | lseq t1 t2 => checkTermPolicy p t1 k e /\ checkTermPolicy p t2 k e
+  | bseq _ t1 t2 => checkTermPolicy p t1 k e /\ checkTermPolicy p t2 k e
+  | bpar _ t1 t2 => checkTermPolicy p t1 k e /\ checkTermPolicy p t2 k e
   end.
 
-Theorem term_Policy_dec:forall t k e,
-    (forall k e a, {(checkPolicy k e a)} + {~(checkPolicy k e a)}) -> {(term_Policy t k e)}+{~(term_Policy t k e)}.
+Theorem checkTermPolicy_dec:forall p t k e,
+    (forall p0 k0 e0 a0, {(checkASPPolicy p0 k0 e0 a0)} + {~(checkASPPolicy p0 k0 e0 a0)}) ->
+    {(checkTermPolicy p t k e)}+{~(checkTermPolicy p t k e)}.
 Proof.
-  intros t k e.
+  intros p t k e.
   intros H.
-  destruct t.
-  + simpl. auto.
-  + simpl.
-  assert ({knowsOfe k e p} + {~ knowsOfe k e p}). apply knowsOfe_dec.
-  destruct H0.
-  left. split. assumption.
+  induction t.
+  simpl. apply H.
+  + destruct IHt
+    simpl.
+  
   
 
 
