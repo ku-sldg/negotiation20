@@ -180,6 +180,14 @@ Module ManifestTerm.
     destruct H0. apply H. subst. auto. apply n. assumption.
     auto.
   Qed.
+
+  Definition getPlc (k:Plc)(e:Environment) : list Plc :=
+  match (e k) with
+  | None => []
+  | Some m => m.(M)
+  end.
+
+  Compute getPlc Rely e_Rely.
   
   (** Determine if place [k] within the system [s] knows 
    * how to communicate with [p]
@@ -187,8 +195,15 @@ Module ManifestTerm.
   Fixpoint knowsOfs(k:Plc)(s:System)(p:Plc):Prop :=
     match s with
     | [] => False
-    | s1 :: ss => (knowsOfe k s1 p) \/ (knowsOfs k ss p)
+    | e :: ss => (knowsOfe k e p) \/ match (getPlc k e) with 
+                                       | [] =>  knowsOfs k ss p
+                                       | h :: t => knowsOfs h ss p 
+                                       end
     end.
+
+    Example ex7': knowsOfs Rely example_sys_1 Appraise.
+    Proof.
+      unfold knowsOfs,knowsOfe. simpl. auto. Qed. 
 
     (* decidability of knowsOfs*)
     Theorem knowsOfs_dec:forall k s p, {(knowsOfs k s p)}+{~(knowsOfs k s p)}.
