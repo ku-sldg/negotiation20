@@ -57,7 +57,16 @@ Definition Environment : Type :=  Plc -> (option Manifest).
 Definition e_empty : Environment := (fun _ => None).
 
 Definition e_update (m : Environment) (x : Plc) (v : (option Manifest)) :=
-    fun x' => if plc_dec x x' then v else m x'.
+  fun x' => if plc_dec x x' then v else m x'.
+
+Theorem e_update_reduce: forall m x v y, x<>y -> (e_update m x v) y = m y.
+Proof.
+  intros m x v y.
+  unfold e_update. intros H.
+  destruct (plc_dec x y).
+  contradiction.
+  reflexivity.
+Qed.
 
 (** A [System] is all attestation managers in the enviornement *)
 
@@ -668,10 +677,24 @@ Proof.
   rewrite e.
   unfold checkASPPolicy.
   simpl. apply P2_Policy_dec.
-  right. unfold not. intros Hneg.
-  unfold checkASPPolicy.
-  destruct (checkASPPolicy p e_P2 a).
-  unfold e_P2. unfold e_P1. unfold e_P0. simpl.
+  right. unfold checkASPPolicy.
+  assert (e_P2 p = e_P1 p).
+  unfold e_P2.
+  apply e_update_reduce. unfold not. intros Hneg. rewrite Hneg in *. contradiction.
+  assert (e_P1 p = e_P0 p).
+  unfold e_P2.
+  apply e_update_reduce. unfold not. intros Hneg. rewrite Hneg in *. contradiction.
+  assert (e_P0 p = e_empty p).
+  unfold e_P2.
+  apply e_update_reduce. unfold not. intros Hneg. rewrite Hneg in *. contradiction.
+  unfold not. intros Hneg.
+  rewrite <- H in *.
+  rewrite <- H0 in *.
+  rewrite H1 in *.
+  simpl in Hneg.
+  assumption.
+Qed.
+
 End Manifest.
 
 
