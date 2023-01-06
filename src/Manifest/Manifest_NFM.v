@@ -297,30 +297,32 @@ Defined.
  * These are used for example purposes.
  *)
 
-Notation Rely := "Rely"%string.
-Notation Target := "Target"%string.
-Notation Appraise := "Appraise"%string.
+Notation P0 := "P0"%string.
+Notation P1 := "P1"%string.
+Notation P2 := "P2"%string.
 
 (** Introducing three asps for testing purposes. *)
-Notation aspc1 :=
-  (ASPC ALL EXTD (asp_paramsC "asp1"%string ["x"%string;"y"%string] Target Target)).
-Notation aspc2 :=
-  (ASPC ALL EXTD (asp_paramsC "asp2"%string ["x"%string] Target Target)).
+Notation aVC :=
+  (ASPC ALL EXTD (asp_paramsC "asp1"%string ["x"%string;"y"%string] P1 P1)).
+Notation aHSH :=
+  (ASPC ALL EXTD (asp_paramsC "asp2"%string ["x"%string] P1 P1)).
+Notation aSFS :=
+  (ASPC ALL EXTD (asp_paramsC "asp3"%string ["x"%string] P1 P1)).
 
 (** Below are relational definitions of Policy. Within the definition, we
  * list each ASP on the AM and state who can recieve a measurement of said
  * ASP (ie doesn't expose sensitive information in the context).
  * 
- * The relying party can share the measurement of aspc1 with p. 
- * The target can share the measurement aspc2 with the appraiser and SIG
+ * The relying party can share the measurement of aVC with p. 
+ * The target can share the measurement aHSH with the appraiser and SIG
  * with anyone. The appraiser can share a hash with anyone. 
 *)
 
 Inductive rely_Policy : ASP -> Plc -> Prop := 
-| p_aspc1 : forall p, rely_Policy aspc1 p. 
+| p_aVC : forall p, rely_Policy aVC p. 
 
 Inductive tar_Policy : ASP -> Plc -> Prop := 
-| p_aspc2 : tar_Policy aspc2 Appraise 
+| p_aHSH : tar_Policy aHSH P2 
 | p_SIG : forall p, tar_Policy SIG p. 
 
 Inductive app_Policy : ASP -> Plc -> Prop := 
@@ -332,44 +334,44 @@ Inductive app_Policy : ASP -> Plc -> Prop :=
  *)
 
 Definition e0 := e_empty.
-Definition e_Rely :=
-    e_update e_empty Rely (Some {| asps := [aspc1]; K:= [Target] ; C := [] ; Policy := rely_Policy |}).
+Definition e_P0 :=
+    e_update e_empty P0 (Some {| asps := [aVC]; K:= [P1] ; C := [] ; Policy := rely_Policy |}).
 Definition e_Targ :=
-    e_update e_empty Target (Some {| asps := [SIG;  aspc2]; K:= [Appraise] ; C := [] ; Policy := tar_Policy|}).
+    e_update e_empty P1 (Some {| asps := [SIG;  aHSH]; K:= [P2] ; C := [] ; Policy := tar_Policy|}).
 Definition e_App :=
-    e_update e_empty Appraise (Some {| asps := [HSH] ; K:= [] ; C := [Target] ; Policy := app_Policy |}).
+    e_update e_empty P2 (Some {| asps := [HSH] ; K:= [] ; C := [P1] ; Policy := app_Policy |}).
 
 (** In our example, the system includes the relying party, the target,
  * and the appraiser
  *)
 
-Definition example_sys_1 := [e_Rely; e_Targ; e_App]. 
+Definition example_sys_1 := [e_P0; e_Targ; e_App]. 
 
 (** ***************************
   * EXAMPLE SYSTEM PROPERTIES
   *****************************)
 
-(** Prove the relying party has aspc1 in the relying party's enviornement *)
+(** Prove the relying party has aVC in the relying party's enviornement *)
 
-Example ex1: hasASPe Rely e_Rely aspc1.
+Example ex1: hasASPe P0 e_P0 aVC.
 Proof. unfold hasASPe. simpl. left. reflexivity. Qed.
 
 (** relying party does not have the ASP copy
  *)
 
-Example ex2: hasASPe Rely e_Rely CPY -> False.
+Example ex2: hasASPe P0 e_P0 CPY -> False.
 Proof. unfold hasASPe. simpl. intros. inverts H. inverts H0. auto. Qed.
 
-(** Prove the Relying party has aspc2 within the system
+(** Prove the Relying party has aHSH within the system
  *)
 
-Example ex3: hasASPs Rely (example_sys_1) aspc1.
+Example ex3: hasASPs P0 (example_sys_1) aVC.
 Proof. unfold hasASPs. unfold hasASPe. simpl. left. left. reflexivity. Qed. 
 
 (** the relying party knows of the target within system 1
  *)
 
-Example ex4: knowsOfs Rely example_sys_1 Target.
+Example ex4: knowsOfs P0 example_sys_1 P1.
 Proof.
 unfold knowsOfs. simpl. left. unfold knowsOfe. simpl.  auto.
 Qed.
@@ -377,7 +379,7 @@ Qed.
 (** the relying party does not directly know of the appraiser
  *)
 
-Example ex5: knowsOfe Rely e_App Appraise -> False.
+Example ex5: knowsOfe P0 e_App P2 -> False.
 Proof.
   unfold knowsOfe. simpl. intros. destruct H. 
 Qed.
@@ -387,14 +389,14 @@ Qed.
  * knows of the appraiser....
  *)
 
-Example ex5': knowsOfs Rely example_sys_1 Appraise -> False.
+Example ex5': knowsOfs P0 example_sys_1 P2 -> False.
 Proof.
 unfold knowsOfs. simpl. unfold knowsOfe. simpl. intros. inverts H. inverts H0. inverts H. apply H. inverts H0. apply H. inverts H. apply H0. apply H0.
 Qed.
 
 (** the relying party is aware of the target in system 1 *)
 
-Example ex6: knowsOfs Rely example_sys_1 Target.
+Example ex6: knowsOfs P0 example_sys_1 P1.
 Proof.
 unfold knowsOfs,knowsOfe. simpl. auto.
 Qed.
@@ -403,21 +405,21 @@ Qed.
  * the target
  *)
 
-Example ex7: knowsOfs Rely [e_Rely] Target.
+Example ex7: knowsOfs P0 [e_P0] P1.
 Proof.
 unfold knowsOfs,knowsOfe. simpl. auto.
 Qed.
 
 (** the appriser depends on target *)
 
-Example ex8 : dependsOne Appraise e_App Target.
+Example ex8 : dependsOne P2 e_App P1.
 Proof.
 unfold dependsOne. simpl. auto.
 Qed.   
 
 (** within the system, we see that the appraiser depends on target *)
 
-Example ex9 : dependsOns Appraise example_sys_1 Target.
+Example ex9 : dependsOns P2 example_sys_1 P1.
 Proof. 
   unfold dependsOns.
   simpl.
@@ -436,17 +438,17 @@ Ltac prove_exec' :=
                  | |- ?A => idtac A
                  end.
 
-(** Is asp SIG executable on the on target place in the Targets's
+(** Is asp SIG executable on the on target place in the P1s's
  * enviornement?
  *)
 
-Example ex10: (executable (asp SIG) Target e_Targ).
+Example ex10: (executable (asp SIG) P1 e_Targ).
 Proof. prove_exec'. Qed.
 
 (** copy is not executable on the target in the appraiser's environment
  *)
 
-Example ex11: (executable (asp CPY) Target e_App) -> False.
+Example ex11: (executable (asp CPY) P1 e_App) -> False.
 Proof.
   intros Hcontra; cbv in *; destruct Hcontra.
 Qed.
@@ -454,18 +456,18 @@ Qed.
 (** two signature operations are executable on the target
  *)
 
-Example ex12: (executable (lseq (asp SIG) (asp SIG)) Target e_Targ).
+Example ex12: (executable (lseq (asp SIG) (asp SIG)) P1 e_Targ).
 Proof. prove_exec'. Qed.
 
-(** the relying party can ask the target to run aspc1 and signature
+(** the relying party can ask the target to run aVC and signature
  * operations within system 1
  *) 
 
-Example ex13: (executables (lseq (asp aspc1)
-                            (att Target
+Example ex13: (executables (lseq (asp aVC)
+                            (att P1
                                 (lseq (asp SIG)
                                 (asp SIG))))
-                Rely example_sys_1).
+                P0 example_sys_1).
 Proof. 
   prove_exec'; cbv; auto.
 Qed.
@@ -497,12 +499,12 @@ Proof.
   destruct asp.
   right. unfold not. intros Hneg. inverts Hneg.
   right. unfold not. intros Hneg. inverts Hneg.
-  assert ({(ASPC s f a)=aspc2} + {(ASPC s f a)<>aspc2}).
+  assert ({(ASPC s f a)=aHSH} + {(ASPC s f a)<>aHSH}).
   apply ASP_dec.
-  assert ({(plc = "Appraise"%string)} + {(plc <> "Appraise"%string)}).
+  assert ({(plc = "P2"%string)} + {(plc <> "P2"%string)}).
   apply plc_dec.
   destruct H; destruct H0. subst.
-  left. rewrite e. apply p_aspc2.
+  left. rewrite e. apply p_aHSH.
   right. rewrite e. unfold not in *. intros Hneg. apply n. inversion Hneg. reflexivity.
   right. unfold not in *. intros Hneg. apply n. inversion Hneg. reflexivity.
   right. unfold not in *. intros Hneg. apply n. inversion Hneg. reflexivity.
