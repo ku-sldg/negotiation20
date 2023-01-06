@@ -357,11 +357,11 @@ Global Hint Constructors P2_Policy : core.
 
 Definition e0 := e_empty.
 Definition e_P0 :=
-    e_update e_empty P0 (Some {| asps := [aVC]; K:= [P1] ; C := [] ; Policy := P0_Policy |}).
+    e_update e_empty P0 (Some {| asps := []; K:= [P1] ; C := [] ; Policy := P0_Policy |}).
 Definition e_P1 :=
-    e_update e_P0 P1 (Some {| asps := [SIG;  aHSH]; K:= [P2] ; C := [] ; Policy := P1_Policy|}).
+    e_update e_P0 P1 (Some {| asps := [aVC;  aHSH]; K:= [P2] ; C := [] ; Policy := P1_Policy|}).
 Definition e_P2 :=
-    e_update e_P1 P2 (Some {| asps := [HSH] ; K:= [] ; C := [P1] ; Policy := P2_Policy |}).
+    e_update e_P1 P2 (Some {| asps := [aSFS] ; K:= [] ; C := [P1] ; Policy := P2_Policy |}).
 
 (** In our example, the system includes the relying party, the target,
  * and the appraiser
@@ -375,20 +375,20 @@ Definition example_sys_1 := [e_P0; e_P1; e_P2].
 
 (** Prove the relying party has aVC in the relying party's enviornement *)
 
-Example ex1: hasASPe P0 e_P0 aVC.
+Example ex1: hasASPe P1 e_P1 aVC.
 Proof. unfold hasASPe. simpl. left. reflexivity. Qed.
 
 (** relying party does not have the ASP copy
  *)
 
 Example ex2: hasASPe P0 e_P0 CPY -> False.
-Proof. unfold hasASPe. simpl. intros. inverts H. inverts H0. auto. Qed.
+Proof. unfold hasASPe. simpl. intros. assumption. Qed.
 
 (** Prove the Relying party has aHSH within the system
  *)
 
-Example ex3: hasASPs P0 (example_sys_1) aVC.
-Proof. unfold hasASPs. unfold hasASPe. simpl. left. left. reflexivity. Qed. 
+Example ex3: hasASPs P1 (example_sys_1) aHSH.
+Proof. unfold hasASPs. unfold hasASPe. simpl. propositional. Qed.
 
 (** the relying party knows of the target within system 1
  *)
@@ -454,8 +454,8 @@ Qed.
  *)
 Ltac prove_exec' :=
     simpl; auto; match goal with
-                 | |- hasASPe _ _ _ => cbv; left; reflexivity
-                 | |- knowsOfe _ _ _ => unfold knowsOfe; simpl; left; reflexivity
+                 | |- hasASPe _ _ _ => cbv; propositional
+                 | |- knowsOfe _ _ _ => unfold knowsOfe; simpl; propositional 
                  | |- _ /\ _ => split; prove_exec'
                  | |- ?A => idtac A
                  end.
@@ -464,7 +464,7 @@ Ltac prove_exec' :=
  * enviornement?
  *)
 
-Example ex10: (executable (asp SIG) P1 e_P1).
+Example ex10: (executable (asp aHSH) P1 e_P1).
 Proof. prove_exec'. Qed.
 
 (** copy is not executable on the target in the appraiser's environment
@@ -478,20 +478,20 @@ Qed.
 (** two signature operations are executable on the target
  *)
 
-Example ex12: (executable (lseq (asp SIG) (asp SIG)) P1 e_P1).
+Example ex12: (executable (lseq (asp aHSH) (asp aVC)) P1 e_P1).
 Proof. prove_exec'. Qed.
 
 (** the relying party can ask the target to run aVC and signature
  * operations within system 1
  *) 
 
-Example ex13: (executables (lseq (asp aVC)
+Example ex13: (executables 
                             (att P1
-                                (lseq (asp SIG)
-                                (asp SIG))))
+                                (lseq (asp aVC)
+                                (asp aHSH)))
                 P0 example_sys_1).
-Proof. 
-  prove_exec'; cbv; auto.
+Proof.
+  prove_exec'. cbv. propositional.
 Qed.
 
 Theorem string_dec: forall (s s':string), {s=s'}+{s<>s'}.
@@ -532,7 +532,8 @@ Proof.
   right. unfold not in *. intros Hneg. inverts Hneg.
 Defined.
 
-Theorem P0_Policy_dec: forall (asp:ASP)(plc:Plc), {(P0_Policy asp plc)}+{~(P0_Policy asp plc)}.
+Theorem P0_Policy_dec: forall (asp:ASP)(plc:Plc),
+    {(P0_Policy asp plc)}+{~(P0_Policy asp plc)}.
 Proof.
   intros asp.
   intros plc.
@@ -544,7 +545,8 @@ Proof.
   right. unfold not. intros Hneg. inverts Hneg.
 Defined.
   
-Theorem P1_Policy_dec: forall (asp:ASP)(plc:Plc), {(P1_Policy asp plc)}+{~(P1_Policy asp plc)}.
+Theorem P1_Policy_dec: forall (asp:ASP)(plc:Plc),
+    {(P1_Policy asp plc)}+{~(P1_Policy asp plc)}.
   intros asp.
   intros plc.
   destruct asp.
@@ -569,7 +571,8 @@ Theorem P1_Policy_dec: forall (asp:ASP)(plc:Plc), {(P1_Policy asp plc)}+{~(P1_Po
   right. unfold not. intros Hneg. inverts Hneg.
 Defined.
   
-Theorem P2_Policy_dec: forall (asp:ASP)(plc:Plc), {(P2_Policy asp plc)}+{~(P2_Policy asp plc)}.
+Theorem P2_Policy_dec: forall (asp:ASP)(plc:Plc),
+    {(P2_Policy asp plc)}+{~(P2_Policy asp plc)}.
 Proof.
   intros asp.
   intros plc.
@@ -605,7 +608,7 @@ Fixpoint checkTermPolicy(t:Term)(k:Plc)(e:Environment):Prop :=
   end.
 
 Theorem checkTermPolicy_dec:forall t k e,
-    (forall p0 e0 a0, {(checkASPPolicy p0 e0 a0)} + {~(checkASPPolicy p0 e0 a0)}) ->
+    (forall p0 a0, {(checkASPPolicy p0 e a0)} + {~(checkASPPolicy p0 e a0)}) ->
     {(checkTermPolicy t k e)}+{~(checkTermPolicy t k e)}.
 Proof.
   intros t k e.
@@ -640,7 +643,7 @@ Definition sound (t:Term)(k:Plc)(e:Environment) :=
  *)
 
 Theorem sound_dec: forall t p e,
-    (forall p0 e a0, {(checkASPPolicy p0 e a0)} + {~(checkASPPolicy p0 e a0)})
+    (forall p0 a0, {(checkASPPolicy p0 e a0)} + {~(checkASPPolicy p0 e a0)})
     -> {sound t p e}+{~(sound t p e)}.
 Proof.
   intros t p e.
@@ -655,9 +658,7 @@ Proof.
   right. unfold not. intros. destruct H0. contradiction.
 Defined.
 
-Check sound_dec.
-
-Theorem sound_system: (forall p0 a0, {(checkASPPolicy p0 e_P2 a0)} + {~(checkASPPolicy p0 e_P2 a0)}).
+Theorem sound_local_policies: (forall p0 a0, {(checkASPPolicy p0 e_P2 a0)} + {~(checkASPPolicy p0 e_P2 a0)}).
 Proof.
   intros p a.
   assert ({(p="P0"%string)}+{(p<>"P0"%string)}). apply plc_dec.
@@ -694,6 +695,17 @@ Proof.
   simpl in Hneg.
   assumption.
 Qed.
+
+Theorem sound_system_dec: forall t p, {sound t p e_P2}+{~(sound t p e_P2)}.
+Proof.
+  intros t p.
+  apply sound_dec.
+  intros p0 a0.
+  apply sound_local_policies.
+Defined.
+
+Compute sound_system_dec (asp aHSH) P1.
+Compute sound_system_dec (asp aSFS) P2.
 
 End Manifest.
 
