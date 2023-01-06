@@ -231,6 +231,9 @@ Determine if manifest \coqdocvar{k} from \coqdocvar{e} knows how to
 \coqdocnoindent
 \coqdockw{Print} \coqdocvar{Environment}.\coqdoceol
 \coqdocemptyline
+\end{coqdoccode}
+Determine if place \coqdocvar{k} within the system \coqdocvar{s} knows of \coqdocvar{p} 
+\begin{coqdoccode}
 \coqdocemptyline
 \coqdocnoindent
 \coqdockw{Fixpoint} \coqdocvar{knowsOfs}(\coqdocvar{k}:\coqdocvar{Plc})(\coqdocvar{s}:\coqdocvar{System})(\coqdocvar{p}:\coqdocvar{Plc}):\coqdockw{Prop} :=\coqdoceol
@@ -520,11 +523,16 @@ Is term \coqdocvar{t} executable on the attestation mnanager named \coqdocvar{k}
 \section{EXAMPLE SYSTEM}
 
 
-
+ 
 
  Motivated by the Flexible Mechanisms for Remote Attestation, 
-we have three present parties in this attestation scheme. 
-These are used for example purposes. 
+\section{we have three present parties in this attestation scheme.}
+
+
+\section{These are used for example purposes.}
+
+
+ 
 \begin{coqdoccode}
 \coqdocemptyline
 \coqdocnoindent
@@ -535,7 +543,7 @@ These are used for example purposes.
 \coqdockw{Notation} \coqdocvar{Appraise} := "Appraise"\%\coqdocvar{string}.\coqdoceol
 \coqdocemptyline
 \end{coqdoccode}
-Introducing three asps for reasoning purposes. 
+Introducing three asps for testing purposes. 
 \begin{coqdoccode}
 \coqdocnoindent
 \coqdockw{Notation} \coqdocvar{aspc1} :=\coqdoceol
@@ -547,12 +555,25 @@ Introducing three asps for reasoning purposes.
 (\coqdocvar{ASPC} \coqdocvar{ALL} \coqdocvar{EXTD} (\coqdocvar{asp\_paramsC} "asp2"\%\coqdocvar{string} ["x"\%\coqdocvar{string}] \coqdocvar{Target} \coqdocvar{Target})).\coqdoceol
 \coqdocemptyline
 \end{coqdoccode}
-Below are relational definitions of Policy. Within the definition, we list each ASP on the AM and state who can recieve a measurement of said ASP (ie doesn't expose sensitive information in the context). 
+Below are relational definitions of Policy. Within the definition, we
+\section{list each ASP on the AM and state who can recieve a measurement of said}
 
 
-   The relying party can share the measurement of aspc1 with p. 
-   The target can share the measurement aspc2 with the appraiser and SIG with anyone. 
-   The appraiser can share a hash with anyone. 
+\section{ASP (ie doesn't expose sensitive information in the context).}
+
+
+\section{ }
+
+
+\section{The relying party can share the measurement of aspc1 with p.}
+
+
+\section{The target can share the measurement aspc2 with the appraiser and SIG}
+
+
+\section{with anyone. The appraiser can share a hash with anyone.}
+
+
 
 \begin{coqdoccode}
 \coqdocemptyline
@@ -575,8 +596,13 @@ Below are relational definitions of Policy. Within the definition, we list each 
 \coqdocemptyline
 \end{coqdoccode}
 Definition of environments for use in examples and proofs.  
-  Note there are 3 AM's present... 
-    Relying Party, Target, and Appraiser, each have one AM. 
+\section{Note there are 3 AM's present...}
+
+
+\section{Relying Party, Target, and Appraiser, each have one AM.}
+
+
+ 
 \begin{coqdoccode}
 \coqdocemptyline
 \coqdocnoindent
@@ -595,7 +621,11 @@ Definition of environments for use in examples and proofs.
 \coqdocvar{e\_update} \coqdocvar{e\_empty} \coqdocvar{Appraise} (\coqdocvar{Some} \{| \coqdocvar{asps} := [\coqdocvar{HSH}] ; \coqdocvar{K}:= [] ; \coqdocvar{C} := [\coqdocvar{Target}] ; \coqdocvar{Policy} := \coqdocvar{app\_Policy} |\}).\coqdoceol
 \coqdocemptyline
 \end{coqdoccode}
-In our example, the system includes the relying party, the target, and the appraiser 
+In our example, the system includes the relying party, the target,
+\section{and the appraiser}
+
+
+ 
 \begin{coqdoccode}
 \coqdocemptyline
 \coqdocnoindent
@@ -606,7 +636,7 @@ In our example, the system includes the relying party, the target, and the appra
 \section{EXAMPLE SYSTEM PROPERTIES}
 
 
-
+  
 
  Prove the relying party has aspc1 in the relying party's enviornement 
 \begin{coqdoccode}
@@ -617,7 +647,8 @@ In our example, the system includes the relying party, the target, and the appra
 \coqdockw{Proof}. \coqdoctac{unfold} \coqdocvar{hasASPe}. \coqdoctac{simpl}. \coqdoctac{left}. \coqdoctac{reflexivity}. \coqdockw{Qed}.\coqdoceol
 \coqdocemptyline
 \end{coqdoccode}
-relying party does not have the ASP copy 
+relying party does not have the ASP copy
+ 
 \begin{coqdoccode}
 \coqdocemptyline
 \coqdocnoindent
@@ -626,7 +657,8 @@ relying party does not have the ASP copy
 \coqdockw{Proof}. \coqdoctac{unfold} \coqdocvar{hasASPe}. \coqdoctac{simpl}. \coqdoctac{intros}. \coqdocvar{inverts} \coqdocvar{H}. \coqdocvar{inverts} \coqdocvar{H0}. \coqdoctac{auto}. \coqdockw{Qed}.\coqdoceol
 \coqdocemptyline
 \end{coqdoccode}
-Prove the Relying party has aspc2 within the system 
+Prove the Relying party has aspc2 within the system
+ 
 \begin{coqdoccode}
 \coqdocemptyline
 \coqdocnoindent
@@ -636,6 +668,7 @@ Prove the Relying party has aspc2 within the system
 \coqdocemptyline
 \end{coqdoccode}
 the relying party knows of the target within system 1
+ 
 \begin{coqdoccode}
 \coqdocemptyline
 \coqdocnoindent
@@ -648,21 +681,28 @@ the relying party knows of the target within system 1
 \coqdockw{Qed}.\coqdoceol
 \coqdocemptyline
 \end{coqdoccode}
-the relying party does not directly know of the appraiser 
+the relying party does not directly know of the appraiser
+ 
 \begin{coqdoccode}
 \coqdocemptyline
 \coqdocnoindent
 \coqdockw{Example} \coqdocvar{ex5}: \coqdocvar{knowsOfe} \coqdocvar{Rely} \coqdocvar{e\_App} \coqdocvar{Appraise} \ensuremath{\rightarrow} \coqdocvar{False}.\coqdoceol
 \coqdocnoindent
 \coqdockw{Proof}.\coqdoceol
-\coqdocnoindent
+\coqdocindent{1.00em}
 \coqdoctac{unfold} \coqdocvar{knowsOfe}. \coqdoctac{simpl}. \coqdoctac{intros}. \coqdoctac{destruct} \coqdocvar{H}.\coqdoceol
 \coqdocnoindent
 \coqdockw{Qed}.\coqdoceol
 \coqdocemptyline
 \end{coqdoccode}
 the relying party does not knows of the appraiser within the system... 
-   should be that the relying party knows of the target and the target knows of the appraiser....  
+\section{should be that the relying party knows of the target and the target}
+
+
+\section{knows of the appraiser....}
+
+
+ 
 \begin{coqdoccode}
 \coqdocemptyline
 \coqdocnoindent
@@ -675,7 +715,7 @@ the relying party does not knows of the appraiser within the system...
 \coqdockw{Qed}.\coqdoceol
 \coqdocemptyline
 \end{coqdoccode}
-the relying party is aware of the target in system 1
+the relying party is aware of the target in system 1 
 \begin{coqdoccode}
 \coqdocemptyline
 \coqdocnoindent
@@ -688,7 +728,11 @@ the relying party is aware of the target in system 1
 \coqdockw{Qed}.\coqdoceol
 \coqdocemptyline
 \end{coqdoccode}
-if the relying party was it's own system, it would still be aware of the target 
+if the relying party was it's own system, it would still be aware of
+\section{the target}
+
+
+ 
 \begin{coqdoccode}
 \coqdocemptyline
 \coqdocnoindent
@@ -721,11 +765,23 @@ within the system, we see that the appraiser depends on target
 \coqdockw{Example} \coqdocvar{ex9} : \coqdocvar{dependsOns} \coqdocvar{Appraise} \coqdocvar{example\_sys\_1} \coqdocvar{Target}.\coqdoceol
 \coqdocnoindent
 \coqdockw{Proof}.\coqdoceol
-\coqdocnoindent
-\coqdoctac{unfold} \coqdocvar{dependsOns}. \coqdoctac{simpl}. \coqdoctac{unfold} \coqdocvar{dependsOne}. \coqdoctac{simpl}. \coqdoctac{auto}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{unfold} \coqdocvar{dependsOns}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{simpl}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{unfold} \coqdocvar{dependsOne}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{simpl}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{auto}.\coqdoceol
 \coqdocnoindent
 \coqdockw{Qed}.\coqdoceol
 \coqdocemptyline
+\end{coqdoccode}
+Proof tactic for executability
+ 
+\begin{coqdoccode}
 \coqdocnoindent
 \coqdockw{Ltac} \coqdocvar{prove\_exec'} :=\coqdoceol
 \coqdocindent{2.00em}
@@ -742,7 +798,11 @@ within the system, we see that the appraiser depends on target
 \coqdockw{end}.\coqdoceol
 \coqdocemptyline
 \end{coqdoccode}
-Is asp SIG executable on the on target place in the Targets's enviornement?
+Is asp SIG executable on the on target place in the Targets's
+\section{enviornement?}
+
+
+ 
 \begin{coqdoccode}
 \coqdocemptyline
 \coqdocnoindent
@@ -751,7 +811,8 @@ Is asp SIG executable on the on target place in the Targets's enviornement?
 \coqdockw{Proof}. \coqdocvar{prove\_exec'}. \coqdockw{Qed}.\coqdoceol
 \coqdocemptyline
 \end{coqdoccode}
-copy is not executable on the target in the appraiser's environment 
+copy is not executable on the target in the appraiser's environment
+ 
 \begin{coqdoccode}
 \coqdocemptyline
 \coqdocnoindent
@@ -765,6 +826,7 @@ copy is not executable on the target in the appraiser's environment
 \coqdocemptyline
 \end{coqdoccode}
 two signature operations are executable on the target
+ 
 \begin{coqdoccode}
 \coqdocemptyline
 \coqdocnoindent
@@ -773,7 +835,11 @@ two signature operations are executable on the target
 \coqdockw{Proof}. \coqdocvar{prove\_exec'}. \coqdockw{Qed}.\coqdoceol
 \coqdocemptyline
 \end{coqdoccode}
-the relying party can ask the target to run aspc1 and signature operations within system 1 
+the relying party can ask the target to run aspc1 and signature
+\section{operations within system 1}
+
+
+ 
 \begin{coqdoccode}
 \coqdocemptyline
 \coqdocnoindent
@@ -790,6 +856,208 @@ the relying party can ask the target to run aspc1 and signature operations withi
 \coqdockw{Proof}.\coqdoceol
 \coqdocindent{1.00em}
 \coqdocvar{prove\_exec'}; \coqdoctac{cbv}; \coqdoctac{auto}.\coqdoceol
+\coqdocnoindent
+\coqdockw{Qed}.\coqdoceol
+\coqdocemptyline
+\coqdocnoindent
+\coqdockw{Print} \coqdocvar{relation}.\coqdoceol
+\coqdocemptyline
+\coqdocnoindent
+\coqdockw{Theorem} \coqdocvar{string\_dec}: \coqdockw{\ensuremath{\forall}} (\coqdocvar{s} \coqdocvar{s'}:\coqdocvar{string}), \{\coqdocvar{s}=\coqdocvar{s'}\}+\{\coqdocvar{s}\ensuremath{\not=}\coqdocvar{s'}\}.\coqdoceol
+\coqdocnoindent
+\coqdockw{Proof}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{intros} \coqdocvar{s} \coqdocvar{s'}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{repeat} \coqdocvar{decide} \coqdocvar{equality}.\coqdoceol
+\coqdocnoindent
+\coqdockw{Defined}.\coqdoceol
+\coqdocemptyline
+\coqdocnoindent
+\coqdockw{Theorem} \coqdocvar{plc\_dec}: \coqdockw{\ensuremath{\forall}} (\coqdocvar{p} \coqdocvar{p'}:\coqdocvar{Plc}),\{\coqdocvar{p}=\coqdocvar{p'}\}+\{\coqdocvar{p}\ensuremath{\not=}\coqdocvar{p'}\}.\coqdoceol
+\coqdocnoindent
+\coqdockw{Proof}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{intros} \coqdocvar{p} \coqdocvar{p'}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{apply} \coqdocvar{string\_dec}.\coqdoceol
+\coqdocnoindent
+\coqdockw{Defined}.\coqdoceol
+\coqdocemptyline
+\coqdocnoindent
+\coqdockw{Check} \coqdocvar{ASP\_dec}.\coqdoceol
+\coqdocemptyline
+\end{coqdoccode}
+A proof that \coqdocvar{tar\_Policy} is decidable.  If we can show all policies are
+\section{decidable, life is good.  This is a start.}
+
+
+ 
+\begin{coqdoccode}
+\coqdocemptyline
+\coqdocnoindent
+\coqdockw{Theorem} \coqdocvar{tar\_Policy\_dec}: \coqdockw{\ensuremath{\forall}} (\coqdocvar{asp}:\coqdocvar{ASP})(\coqdocvar{plc}:\coqdocvar{Plc}), \{(\coqdocvar{tar\_Policy} \coqdocvar{asp} \coqdocvar{plc})\}+\{\~{}(\coqdocvar{tar\_Policy} \coqdocvar{asp} \coqdocvar{plc})\}.\coqdoceol
+\coqdocnoindent
+\coqdockw{Proof}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{intros} \coqdocvar{asp}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{intros} \coqdocvar{plc}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{destruct} \coqdocvar{asp}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{right}. \coqdoctac{unfold} \coqdocvar{not}. \coqdoctac{intros} \coqdocvar{Hneg}. \coqdocvar{inverts} \coqdocvar{Hneg}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{right}. \coqdoctac{unfold} \coqdocvar{not}. \coqdoctac{intros} \coqdocvar{Hneg}. \coqdocvar{inverts} \coqdocvar{Hneg}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{assert} (\{(\coqdocvar{ASPC} \coqdocvar{s} \coqdocvar{f} \coqdocvar{a})=\coqdocvar{aspc2}\} + \{(\coqdocvar{ASPC} \coqdocvar{s} \coqdocvar{f} \coqdocvar{a})<>\coqdocvar{aspc2}\}).\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{apply} \coqdocvar{ASP\_dec}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{assert} (\{(\coqdocvar{plc} = "Appraise"\%\coqdocvar{string})\} + \{(\coqdocvar{plc} \ensuremath{\not=} "Appraise"\%\coqdocvar{string})\}).\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{apply} \coqdocvar{plc\_dec}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{destruct} \coqdocvar{H}; \coqdoctac{destruct} \coqdocvar{H0}. \coqdoctac{subst}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{left}. \coqdoctac{rewrite} \coqdocvar{e}. \coqdoctac{apply} \coqdocvar{p\_aspc2}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{right}. \coqdoctac{rewrite} \coqdocvar{e}. \coqdoctac{unfold} \coqdocvar{not} \coqdoctac{in} *. \coqdoctac{intros} \coqdocvar{Hneg}. \coqdoctac{apply} \coqdocvar{n}. \coqdoctac{inversion} \coqdocvar{Hneg}. \coqdoctac{reflexivity}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{right}. \coqdoctac{unfold} \coqdocvar{not} \coqdoctac{in} *. \coqdoctac{intros} \coqdocvar{Hneg}. \coqdoctac{apply} \coqdocvar{n}. \coqdoctac{inversion} \coqdocvar{Hneg}. \coqdoctac{reflexivity}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{right}. \coqdoctac{unfold} \coqdocvar{not} \coqdoctac{in} *. \coqdoctac{intros} \coqdocvar{Hneg}. \coqdoctac{apply} \coqdocvar{n}. \coqdoctac{inversion} \coqdocvar{Hneg}. \coqdoctac{reflexivity}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{left}. \coqdoctac{apply} \coqdocvar{p\_SIG}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{right}. \coqdoctac{unfold} \coqdocvar{not} \coqdoctac{in} *. \coqdoctac{intros} \coqdocvar{Hneg}. \coqdocvar{inverts} \coqdocvar{Hneg}.\coqdoceol
+\coqdocnoindent
+\coqdockw{Qed}.\coqdoceol
+\coqdocemptyline
+\coqdocnoindent
+\coqdockw{Definition} \coqdocvar{checkASPPolicy}(\coqdocvar{p}:\coqdocvar{Plc})(\coqdocvar{e}:\coqdocvar{Environment})(\coqdocvar{a}:\coqdocvar{ASP}):\coqdockw{Prop} :=\coqdoceol
+\coqdocnoindent
+\coqdockw{match} (\coqdocvar{e} \coqdocvar{p}) \coqdockw{with} \coqdoceol
+\coqdocnoindent
+\ensuremath{|} \coqdocvar{None} \ensuremath{\Rightarrow} \coqdocvar{False}\coqdoceol
+\coqdocnoindent
+\ensuremath{|} \coqdocvar{Some} \coqdocvar{m} \ensuremath{\Rightarrow} (\coqdocvar{Policy} \coqdocvar{m} \coqdocvar{a} \coqdocvar{p}) \coqdoceol
+\coqdocnoindent
+\coqdockw{end}.\coqdoceol
+\coqdocemptyline
+\coqdocnoindent
+\coqdockw{Fixpoint} \coqdocvar{checkTermPolicy}(\coqdocvar{t}:\coqdocvar{Term})(\coqdocvar{k}:\coqdocvar{Plc})(\coqdocvar{e}:\coqdocvar{Environment}):\coqdockw{Prop} :=\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{match} \coqdocvar{t} \coqdockw{with}\coqdoceol
+\coqdocindent{1.00em}
+\ensuremath{|} \coqdocvar{asp} \coqdocvar{a}  \ensuremath{\Rightarrow} \coqdocvar{checkASPPolicy} \coqdocvar{k} \coqdocvar{e} \coqdocvar{a}\coqdoceol
+\coqdocindent{1.00em}
+\ensuremath{|} \coqdocvar{att} \coqdocvar{r} \coqdocvar{t0} \ensuremath{\Rightarrow} \coqdocvar{checkTermPolicy} \coqdocvar{t0} \coqdocvar{k} \coqdocvar{e}\coqdoceol
+\coqdocindent{1.00em}
+\ensuremath{|} \coqdocvar{lseq} \coqdocvar{t1} \coqdocvar{t2} \ensuremath{\Rightarrow} \coqdocvar{checkTermPolicy} \coqdocvar{t1} \coqdocvar{k} \coqdocvar{e} \ensuremath{\land} \coqdocvar{checkTermPolicy} \coqdocvar{t2} \coqdocvar{k} \coqdocvar{e}\coqdoceol
+\coqdocindent{1.00em}
+\ensuremath{|} \coqdocvar{bseq} \coqdocvar{\_} \coqdocvar{t1} \coqdocvar{t2} \ensuremath{\Rightarrow} \coqdocvar{checkTermPolicy} \coqdocvar{t1} \coqdocvar{k} \coqdocvar{e} \ensuremath{\land} \coqdocvar{checkTermPolicy} \coqdocvar{t2} \coqdocvar{k} \coqdocvar{e}\coqdoceol
+\coqdocindent{1.00em}
+\ensuremath{|} \coqdocvar{bpar} \coqdocvar{\_} \coqdocvar{t1} \coqdocvar{t2} \ensuremath{\Rightarrow} \coqdocvar{checkTermPolicy} \coqdocvar{t1} \coqdocvar{k} \coqdocvar{e} \ensuremath{\land} \coqdocvar{checkTermPolicy} \coqdocvar{t2} \coqdocvar{k} \coqdocvar{e}\coqdoceol
+\coqdocindent{1.00em}
+\coqdockw{end}.\coqdoceol
+\coqdocemptyline
+\coqdocnoindent
+\coqdockw{Theorem} \coqdocvar{checkTermPolicy\_dec}:\coqdockw{\ensuremath{\forall}} \coqdocvar{t} \coqdocvar{k} \coqdocvar{e},\coqdoceol
+\coqdocindent{2.00em}
+(\coqdockw{\ensuremath{\forall}} \coqdocvar{p0} \coqdocvar{e0} \coqdocvar{a0}, \{(\coqdocvar{checkASPPolicy} \coqdocvar{p0} \coqdocvar{e0} \coqdocvar{a0})\} + \{\~{}(\coqdocvar{checkASPPolicy} \coqdocvar{p0} \coqdocvar{e0} \coqdocvar{a0})\}) \ensuremath{\rightarrow}\coqdoceol
+\coqdocindent{2.00em}
+\{(\coqdocvar{checkTermPolicy} \coqdocvar{t} \coqdocvar{k} \coqdocvar{e})\}+\{\~{}(\coqdocvar{checkTermPolicy} \coqdocvar{t} \coqdocvar{k} \coqdocvar{e})\}.\coqdoceol
+\coqdocnoindent
+\coqdockw{Proof}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{intros} \coqdocvar{t} \coqdocvar{k} \coqdocvar{e}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{intros} \coqdocvar{H}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{induction} \coqdocvar{t}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{simpl}. \coqdoctac{apply} \coqdocvar{H}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{simpl}. \coqdoctac{assumption}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{simpl}; \coqdoctac{destruct} \coqdocvar{IHt1},\coqdocvar{IHt2}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{left}. \coqdoctac{split}; \coqdoctac{assumption}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{right}. \coqdoctac{unfold} \coqdocvar{not}. \coqdoctac{intros} \coqdocvar{Hneg}. \coqdoctac{destruct} \coqdocvar{Hneg}. \coqdocvar{contradiction}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{right}. \coqdoctac{unfold} \coqdocvar{not}. \coqdoctac{intros} \coqdocvar{Hneg}. \coqdoctac{destruct} \coqdocvar{Hneg}. \coqdocvar{contradiction}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{right}. \coqdoctac{unfold} \coqdocvar{not}. \coqdoctac{intros} \coqdocvar{Hneg}. \coqdoctac{destruct} \coqdocvar{Hneg}. \coqdocvar{contradiction}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{simpl}; \coqdoctac{destruct} \coqdocvar{IHt1},\coqdocvar{IHt2}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{left}. \coqdoctac{split}; \coqdoctac{assumption}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{right}. \coqdoctac{unfold} \coqdocvar{not}. \coqdoctac{intros} \coqdocvar{Hneg}. \coqdoctac{destruct} \coqdocvar{Hneg}. \coqdocvar{contradiction}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{right}. \coqdoctac{unfold} \coqdocvar{not}. \coqdoctac{intros} \coqdocvar{Hneg}. \coqdoctac{destruct} \coqdocvar{Hneg}. \coqdocvar{contradiction}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{right}. \coqdoctac{unfold} \coqdocvar{not}. \coqdoctac{intros} \coqdocvar{Hneg}. \coqdoctac{destruct} \coqdocvar{Hneg}. \coqdocvar{contradiction}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{simpl}; \coqdoctac{destruct} \coqdocvar{IHt1},\coqdocvar{IHt2}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{left}. \coqdoctac{split}; \coqdoctac{assumption}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{right}. \coqdoctac{unfold} \coqdocvar{not}. \coqdoctac{intros} \coqdocvar{Hneg}. \coqdoctac{destruct} \coqdocvar{Hneg}. \coqdocvar{contradiction}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{right}. \coqdoctac{unfold} \coqdocvar{not}. \coqdoctac{intros} \coqdocvar{Hneg}. \coqdoctac{destruct} \coqdocvar{Hneg}. \coqdocvar{contradiction}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{right}. \coqdoctac{unfold} \coqdocvar{not}. \coqdoctac{intros} \coqdocvar{Hneg}. \coqdoctac{destruct} \coqdocvar{Hneg}. \coqdocvar{contradiction}.\coqdoceol
+\coqdocnoindent
+\coqdockw{Qed}.\coqdoceol
+\coqdocemptyline
+\end{coqdoccode}
+Soundness is executability and policy adherence 
+\begin{coqdoccode}
+\coqdocemptyline
+\coqdocnoindent
+\coqdockw{Definition} \coqdocvar{sound} (\coqdocvar{t}:\coqdocvar{Term})(\coqdocvar{k}:\coqdocvar{Plc})(\coqdocvar{e}:\coqdocvar{Environment}) :=\coqdoceol
+\coqdocindent{1.00em}
+(\coqdocvar{executable} \coqdocvar{t} \coqdocvar{k} \coqdocvar{e}) \ensuremath{\land} (\coqdocvar{checkTermPolicy} \coqdocvar{t} \coqdocvar{k} \coqdocvar{e}).\coqdoceol
+\coqdocemptyline
+\end{coqdoccode}
+Prove soundness is decidable with the assumption necessary for policy
+\section{adherence decidability.}
+
+
+ 
+\begin{coqdoccode}
+\coqdocemptyline
+\coqdocnoindent
+\coqdockw{Theorem} \coqdocvar{sound\_dec}: \coqdockw{\ensuremath{\forall}} \coqdocvar{t} \coqdocvar{p} \coqdocvar{e},\coqdoceol
+\coqdocindent{2.00em}
+(\coqdockw{\ensuremath{\forall}} \coqdocvar{p0} \coqdocvar{e0} \coqdocvar{a0}, \{(\coqdocvar{checkASPPolicy} \coqdocvar{p0} \coqdocvar{e0} \coqdocvar{a0})\} + \{\~{}(\coqdocvar{checkASPPolicy} \coqdocvar{p0} \coqdocvar{e0} \coqdocvar{a0})\})\coqdoceol
+\coqdocindent{2.00em}
+\ensuremath{\rightarrow} \{\coqdocvar{sound} \coqdocvar{t} \coqdocvar{p} \coqdocvar{e}\}+\{\~{}(\coqdocvar{sound} \coqdocvar{t} \coqdocvar{p} \coqdocvar{e})\}.\coqdoceol
+\coqdocnoindent
+\coqdockw{Proof}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{intros} \coqdocvar{t} \coqdocvar{p} \coqdocvar{e}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{intros} \coqdocvar{H}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{unfold} \coqdocvar{sound}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{assert} (\{\coqdocvar{executable} \coqdocvar{t} \coqdocvar{p} \coqdocvar{e}\}+\{\~{}(\coqdocvar{executable} \coqdocvar{t} \coqdocvar{p} \coqdocvar{e})\}). \coqdoctac{apply} \coqdocvar{executable\_dec}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{assert} (\{\coqdocvar{checkTermPolicy} \coqdocvar{t} \coqdocvar{p} \coqdocvar{e}\}+\{\~{}(\coqdocvar{checkTermPolicy} \coqdocvar{t} \coqdocvar{p} \coqdocvar{e})\}). \coqdoctac{apply} \coqdocvar{checkTermPolicy\_dec}. \coqdoctac{intros}. \coqdoctac{apply} \coqdocvar{H}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{destruct} \coqdocvar{H0},\coqdocvar{H1}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{left}. \coqdoctac{split}; \coqdoctac{assumption}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{right}. \coqdoctac{unfold} \coqdocvar{not}. \coqdoctac{intros}. \coqdoctac{destruct} \coqdocvar{H0}. \coqdocvar{contradiction}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{right}. \coqdoctac{unfold} \coqdocvar{not}. \coqdoctac{intros}. \coqdoctac{destruct} \coqdocvar{H0}. \coqdocvar{contradiction}.\coqdoceol
+\coqdocindent{1.00em}
+\coqdoctac{right}. \coqdoctac{unfold} \coqdocvar{not}. \coqdoctac{intros}. \coqdoctac{destruct} \coqdocvar{H0}. \coqdocvar{contradiction}.\coqdoceol
 \coqdocnoindent
 \coqdockw{Qed}.\coqdoceol
 \coqdocemptyline

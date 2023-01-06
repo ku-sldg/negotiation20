@@ -580,6 +580,4 @@ Module ManifestTerm.
   End ClassExp.
    *)
   
-
-
 End ManifestTerm.
