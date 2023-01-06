@@ -651,9 +651,9 @@ Check sound_dec.
 Theorem sound_system: (forall p0 a0, {(checkASPPolicy p0 e_P2 a0)} + {~(checkASPPolicy p0 e_P2 a0)}).
 Proof.
   intros p a.
-  assert ({(p="P0"%string)}+{(p<>"P0"%string)}). apply string_dec.
-  assert ({(p="P1"%string)}+{(p<>"P1"%string)}). apply string_dec.
-  assert ({(p="P2"%string)}+{(p<>"P2"%string)}). apply string_dec.
+  assert ({(p="P0"%string)}+{(p<>"P0"%string)}). apply plc_dec.
+  assert ({(p="P1"%string)}+{(p<>"P1"%string)}). apply plc_dec.
+  assert ({(p="P2"%string)}+{(p<>"P2"%string)}). apply plc_dec.
   destruct H, H0, H1.
   rewrite e in e1. inversion e1.
   rewrite e in e1. inversion e1.
@@ -668,10 +668,10 @@ Proof.
   rewrite e.
   unfold checkASPPolicy.
   simpl. apply P2_Policy_dec.
-  right. unfold checkASPPolicy.
-  case (e_P2 p). intros m. unfold not.
-  unfold not in *. intros Hneg. apply n.
-
+  right. unfold not. intros Hneg.
+  unfold checkASPPolicy.
+  destruct (checkASPPolicy p e_P2 a).
+  unfold e_P2. unfold e_P1. unfold e_P0. simpl.
 End Manifest.
 
 
