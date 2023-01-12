@@ -591,31 +591,33 @@ Proof.
   right. unfold not. intros Hneg. inverts Hneg.
   right. unfold not. intros Hneg. inverts Hneg.
 Defined.
-  
-Definition checkASPPolicy(p:Plc)(e:Environment)(a:ASP):Prop :=
+
+(* [k] is requesting that [p] run [a] *)
+Definition checkASPPolicy(k:Plc)(p:Plc)(a:ASP)(e:Environment):Prop :=
 match (e p) with (* Look for p in the environment *)
 | None => False
-| Some m => (Policy m a p) (* Policy from m allows p to run a *)
+| Some m => if plc_dec k p then True else (Policy m a k) (* Policy from m allows k to run a *)
 end.
 
-Fixpoint checkTermPolicy(t:Term)(k:Plc)(e:Environment):Prop :=
+(* [k] is requesting that [p] run [t] *)
+Fixpoint checkTermPolicy(k:Plc)(p:Plc)(t:Term)(e:Environment):Prop :=
   match t with
-  | asp a  => checkASPPolicy k e a
-  | att r t0 => checkTermPolicy t0 k e
-  | lseq t1 t2 => checkTermPolicy t1 k e /\ checkTermPolicy t2 k e
-  | bseq _ t1 t2 => checkTermPolicy t1 k e /\ checkTermPolicy t2 k e
-  | bpar _ t1 t2 => checkTermPolicy t1 k e /\ checkTermPolicy t2 k e
+  | asp a  => checkASPPolicy k p a e 
+  | att r t0 => checkTermPolicy p r t0 e
+  | lseq t1 t2 => checkTermPolicy k p t1 e /\ checkTermPolicy k p t2 e
+  | bseq _ t1 t2 => checkTermPolicy k p t1 e /\ checkTermPolicy k p t2 e
+  | bpar _ t1 t2 => checkTermPolicy k p t1 e /\ checkTermPolicy k p t2 e
   end.
 
-Theorem checkTermPolicy_dec:forall t k e,
-    (forall p0 a0, {(checkASPPolicy p0 e a0)} + {~(checkASPPolicy p0 e a0)}) ->
-    {(checkTermPolicy t k e)}+{~(checkTermPolicy t k e)}.
+Theorem checkTermPolicy_dec:forall k p t e,
+    (forall k0 p0 a0, {(checkASPPolicy k0 p0 a0 e)} + {~(checkASPPolicy k0 p0 a0 e)}) ->
+    {(checkTermPolicy k p t e)}+{~(checkTermPolicy k p t e)}.
 Proof.
-  intros t k e.
+  intros k p t e.
   intros H.
   induction t.
   simpl. apply H.
-  simpl. assumption.
+  simpl. assumption. (* Problem here.  Don't know about other policies *)
   simpl; destruct IHt1,IHt2.
   left. split; assumption.
   right. unfold not. intros Hneg. destruct Hneg. contradiction.
