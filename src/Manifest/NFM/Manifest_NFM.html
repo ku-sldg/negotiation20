@@ -1,0 +1,488 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<link href="coqdoc.css" rel="stylesheet" type="text/css" />
+<title>Manifest_NFM</title>
+</head>
+
+<body>
+
+<div id="page">
+
+<div id="header">
+</div>
+
+<div id="main">
+
+<h1 class="libtitle">Library Manifest_NFM</h1>
+
+<div class="code">
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">Lia</span>.<br/>
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">Relations</span>.<br/>
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">Logic.FunctionalExtensionality</span>.<br/>
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">Lists.List</span>.<br/>
+<span class="id" title="keyword">Import</span> <span class="id" title="var">ListNotations</span>.<br/>
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">String</span>.<br/>
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">Cop.Copland</span>.<br/>
+<span class="id" title="keyword">Import</span> <span class="id" title="var">Copland.Term</span>.<br/>
+<span class="id" title="keyword">Require</span> <span class="id" title="keyword">Import</span> <span class="id" title="var">Utils.Utilities</span>.<br/>
+
+<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<span class="inlinecode"><span class="id" title="var">Manifest</span></span> defines a single attestation manger and its interconnections.  
+    Information includes: 
+<a id="lab1"></a><h1 class="section">asps:  a list of ASPs (measurement operations the AM can preform)</h1>
+
+<a id="lab2"></a><h1 class="section">M : can measure relation (other AMs the current AM knows of)</h1>
+
+<a id="lab3"></a><h1 class="section">C : context relation (other AMs the current AM depends on)</h1>
+
+<a id="lab4"></a><h1 class="section">Policy : local policy specific to the current AM.</h1>
+
+<a id="lab5"></a><h1 class="section">Minimally includes privacy policy and may possibly include selection policy</h1>
+
+
+<div class="paragraph"> </div>
+
+<a id="lab6"></a><h1 class="section">Other information not necessary for reasoning includes:</h1>
+
+<a id="lab7"></a><h1 class="section"><span class="inlinecode"><span class="id" title="var">key</span></span> simulates public key</h1>
+
+<a id="lab8"></a><h1 class="section"><span class="inlinecode"><span class="id" title="var">address</span></span> simulates address information and</h1>
+
+<a id="lab9"></a><h1 class="section"><span class="inlinecode"><span class="id" title="var">tpm</span></span> simulates cruft necessary to initialize its TPM</h1>
+
+
+</div>
+<div class="code">
+<span class="id" title="keyword">Record</span> <span class="id" title="var">Manifest</span> := {<br/>
+<br/>
+&nbsp;&nbsp;&nbsp;<span class="id" title="var">asps</span> : <span class="id" title="var">list</span> <span class="id" title="var">ASP</span> ;<br/>
+&nbsp;&nbsp;&nbsp;<span class="id" title="var">M</span> : <span class="id" title="var">list</span> <span class="id" title="var">Plc</span> ; <br/>
+&nbsp;&nbsp;&nbsp;<span class="id" title="var">C</span> : <span class="id" title="var">list</span> <span class="id" title="var">Plc</span> ; <br/>
+&nbsp;&nbsp;&nbsp;<span class="id" title="var">Policy</span> : <span class="id" title="var">ASP</span> -&gt; <span class="id" title="var">Plc</span> -&gt; <span class="id" title="keyword">Prop</span> ;<br/>
+<br/>
+<br/>
+&nbsp;}.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+<span class="inlinecode"><span class="id" title="var">Environment</span></span> is a set of AM's each defined by a <span class="inlinecode"><span class="id" title="var">Manifest</span></span>.
+<a id="lab10"></a><h1 class="section">The domain of an <span class="inlinecode"><span class="id" title="var">Environment</span></span> provides names for each <span class="inlinecode"><span class="id" title="var">Manifest</span></span>.</h1>
+
+<a id="lab11"></a><h1 class="section">Names should be the hash of their public key, but this restriction</h1>
+
+<a id="lab12"></a><h1 class="section">is not enforced here.</h1>
+
+
+</div>
+<div class="code">
+
+<br/>
+<span class="id" title="keyword">Definition</span> <span class="id" title="var">Environment</span> : <span class="id" title="keyword">Type</span> :=  <span class="id" title="var">Plc</span> -&gt; (<span class="id" title="var">option</span> <span class="id" title="var">Manifest</span>).<br/>
+
+<br/>
+<span class="id" title="keyword">Definition</span> <span class="id" title="var">e_empty</span> : <span class="id" title="var">Environment</span> := (<span class="id" title="keyword">fun</span> <span class="id" title="var">_</span> =&gt; <span class="id" title="var">None</span>).<br/>
+
+<br/>
+<span class="id" title="keyword">Definition</span> <span class="id" title="var">e_update</span> (<span class="id" title="var">m</span> : <span class="id" title="var">Environment</span>) (<span class="id" title="var">x</span> : <span class="id" title="var">Plc</span>) (<span class="id" title="var">v</span> : (<span class="id" title="var">option</span> <span class="id" title="var">Manifest</span>)) :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">fun</span> <span class="id" title="var">x'</span> =&gt; <span class="id" title="keyword">if</span> <span class="id" title="var">plc_dec</span> <span class="id" title="var">x</span> <span class="id" title="var">x'</span> <span class="id" title="keyword">then</span> <span class="id" title="var">v</span> <span class="id" title="keyword">else</span> <span class="id" title="var">m</span> <span class="id" title="var">x'</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Definition</span> <span class="id" title="var">System</span> := <span class="id" title="var">list</span> <span class="id" title="var">Environment</span>.<br/>
+
+<br/>
+
+<br/>
+<span class="id" title="keyword">Definition</span> <span class="id" title="var">hasASPe</span>(<span class="id" title="var">k</span>:<span class="id" title="var">Plc</span>)(<span class="id" title="var">e</span>:<span class="id" title="var">Environment</span>)(<span class="id" title="var">a</span>:<span class="id" title="var">ASP</span>):<span class="id" title="keyword">Prop</span> :=<br/>
+<span class="id" title="keyword">match</span> (<span class="id" title="var">e</span> <span class="id" title="var">k</span>) <span class="id" title="keyword">with</span><br/>
+| <span class="id" title="var">None</span> =&gt; <span class="id" title="var">False</span><br/>
+| <span class="id" title="var">Some</span> <span class="id" title="var">m</span> =&gt; <span class="id" title="var">In</span> <span class="id" title="var">a</span> <span class="id" title="var">m</span>.(<span class="id" title="var">asps</span>)<br/>
+<span class="id" title="keyword">end</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Fixpoint</span> <span class="id" title="var">hasASPs</span>(<span class="id" title="var">k</span>:<span class="id" title="var">Plc</span>)(<span class="id" title="var">s</span>:<span class="id" title="var">System</span>)(<span class="id" title="var">a</span>:<span class="id" title="var">ASP</span>):<span class="id" title="keyword">Prop</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">match</span> <span class="id" title="var">s</span> <span class="id" title="keyword">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| [] =&gt; <span class="id" title="var">False</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;| <span class="id" title="var">s1</span> :: <span class="id" title="var">s2</span> =&gt; (<span class="id" title="var">hasASPe</span> <span class="id" title="var">k</span> <span class="id" title="var">s1</span> <span class="id" title="var">a</span>) \/ (<span class="id" title="var">hasASPs</span> <span class="id" title="var">k</span> <span class="id" title="var">s2</span> <span class="id" title="var">a</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">end</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Theorem</span> <span class="id" title="var">hasASPe_dec</span>: <span class="id" title="keyword">forall</span> <span class="id" title="var">k</span> <span class="id" title="var">e</span> <span class="id" title="var">a</span>, {<span class="id" title="var">hasASPe</span> <span class="id" title="var">k</span> <span class="id" title="var">e</span> <span class="id" title="var">a</span>}+{~<span class="id" title="var">hasASPe</span> <span class="id" title="var">k</span> <span class="id" title="var">e</span> <span class="id" title="var">a</span>}.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">intros</span> <span class="id" title="var">k</span> <span class="id" title="var">e</span> <span class="id" title="var">a</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">unfold</span> <span class="id" title="var">hasASPe</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">destruct</span> (<span class="id" title="var">e</span> <span class="id" title="var">k</span>).<br/>
+&nbsp;&nbsp;+ <span class="id" title="tactic">induction</span> (<span class="id" title="var">asps</span> <span class="id" title="var">m</span>).<br/>
+&nbsp;&nbsp;++ <span class="id" title="tactic">auto</span>.<br/>
+&nbsp;&nbsp;++ <span class="id" title="var">inverts</span> <span class="id" title="var">IHl</span>.<br/>
+&nbsp;&nbsp;+++ <span class="id" title="tactic">simpl</span>. <span class="id" title="tactic">left</span>. <span class="id" title="tactic">right</span>. <span class="id" title="tactic">apply</span> <span class="id" title="var">H</span>.<br/>
+&nbsp;&nbsp;+++ <span class="id" title="tactic">simpl</span>. <span class="id" title="tactic">assert</span> (<span class="id" title="var">asp_dec</span> : {<span class="id" title="var">a</span> = <span class="id" title="var">a0</span>} + {<span class="id" title="var">a</span>&lt;&gt;<span class="id" title="var">a0</span>}).<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{ <span class="id" title="tactic">repeat</span> <span class="id" title="var">decide</span> <span class="id" title="var">equality</span>. }    <br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">inverts</span> <span class="id" title="var">asp_dec</span>.<br/>
+&nbsp;&nbsp;++++ <span class="id" title="tactic">left</span>. <span class="id" title="tactic">auto</span>.<br/>
+&nbsp;&nbsp;++++ <span class="id" title="tactic">right</span>. <span class="id" title="tactic">unfold</span> <span class="id" title="var">not</span>. <span class="id" title="tactic">intros</span>. <span class="id" title="var">inverts</span> <span class="id" title="var">H1</span>; <span class="id" title="tactic">auto</span>.<br/>
+&nbsp;&nbsp;+ <span class="id" title="tactic">auto</span>.<br/>
+<span class="id" title="keyword">Defined</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Theorem</span> <span class="id" title="var">hasASPs_dec</span>: <span class="id" title="keyword">forall</span> <span class="id" title="var">k</span> <span class="id" title="var">e</span> <span class="id" title="var">a</span>, {<span class="id" title="var">hasASPs</span> <span class="id" title="var">k</span> <span class="id" title="var">e</span> <span class="id" title="var">a</span>}+{~<span class="id" title="var">hasASPs</span> <span class="id" title="var">k</span> <span class="id" title="var">e</span> <span class="id" title="var">a</span>}.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">intros</span> <span class="id" title="var">k</span> <span class="id" title="var">e</span> <span class="id" title="var">a</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">induction</span> <span class="id" title="var">e</span>.<br/>
+&nbsp;&nbsp;+ <span class="id" title="tactic">simpl</span> <span class="id" title="tactic">in</span> *. <span class="id" title="tactic">right</span>. <span class="id" title="tactic">unfold</span> <span class="id" title="var">not</span>. <span class="id" title="tactic">intros</span>. <span class="id" title="tactic">apply</span> <span class="id" title="var">H</span>.<br/>
+&nbsp;&nbsp;+ <span class="id" title="tactic">simpl</span> <span class="id" title="tactic">in</span> *. <span class="id" title="tactic">pose</span> <span class="id" title="var">proof</span> <span class="id" title="var">hasASPe_dec</span> <span class="id" title="var">k</span> <span class="id" title="var">a0</span> <span class="id" title="var">a</span>. <span class="id" title="var">inverts</span> <span class="id" title="var">H</span>.<br/>
+&nbsp;&nbsp;++ <span class="id" title="tactic">left</span>. <span class="id" title="tactic">left</span>. <span class="id" title="tactic">apply</span> <span class="id" title="var">H0</span>.<br/>
+&nbsp;&nbsp;++ <span class="id" title="var">inverts</span> <span class="id" title="var">IHe</span>.<br/>
+&nbsp;&nbsp;+++ <span class="id" title="tactic">left</span>. <span class="id" title="tactic">right</span>. <span class="id" title="tactic">apply</span> <span class="id" title="var">H</span>.<br/>
+&nbsp;&nbsp;+++ <span class="id" title="tactic">right</span>. <span class="id" title="tactic">unfold</span> <span class="id" title="var">not</span>. <span class="id" title="tactic">intros</span>. <span class="id" title="var">inverts</span> <span class="id" title="var">H1</span>; <span class="id" title="tactic">auto</span>.<br/>
+<span class="id" title="keyword">Defined</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Definition</span> <span class="id" title="var">knowsOfe</span>(<span class="id" title="var">k</span>:<span class="id" title="var">Plc</span>)(<span class="id" title="var">e</span>:<span class="id" title="var">Environment</span>)(<span class="id" title="var">p</span>:<span class="id" title="var">Plc</span>):<span class="id" title="keyword">Prop</span> :=<br/>
+<span class="id" title="keyword">match</span> (<span class="id" title="var">e</span> <span class="id" title="var">k</span>) <span class="id" title="keyword">with</span><br/>
+| <span class="id" title="var">None</span> =&gt; <span class="id" title="var">False</span><br/>
+| <span class="id" title="var">Some</span> <span class="id" title="var">m</span> =&gt; <span class="id" title="var">In</span> <span class="id" title="var">p</span> <span class="id" title="var">m</span>.(<span class="id" title="var">M</span>)<br/>
+<span class="id" title="keyword">end</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Print</span> <span class="id" title="var">System</span>.<br/>
+<span class="id" title="keyword">Print</span> <span class="id" title="var">Environment</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+Determine if place <span class="inlinecode"><span class="id" title="var">k</span></span> within the system <span class="inlinecode"><span class="id" title="var">s</span></span> knows of <span class="inlinecode"><span class="id" title="var">p</span></span>
+
+</div>
+<div class="code">
+<span class="id" title="keyword">Fixpoint</span> <span class="id" title="var">knowsOfs</span>(<span class="id" title="var">k</span>:<span class="id" title="var">Plc</span>)(<span class="id" title="var">s</span>:<span class="id" title="var">System</span>)(<span class="id" title="var">p</span>:<span class="id" title="var">Plc</span>):<span class="id" title="keyword">Prop</span> :=<br/>
+<span class="id" title="keyword">match</span> <span class="id" title="var">s</span> <span class="id" title="keyword">with</span><br/>
+| [] =&gt; <span class="id" title="var">False</span><br/>
+| <span class="id" title="var">s1</span> :: <span class="id" title="var">ss</span> =&gt; (<span class="id" title="var">knowsOfe</span> <span class="id" title="var">k</span> <span class="id" title="var">s1</span> <span class="id" title="var">p</span>) \/ (<span class="id" title="var">knowsOfs</span> <span class="id" title="var">k</span> <span class="id" title="var">ss</span> <span class="id" title="var">p</span>)<br/>
+<span class="id" title="keyword">end</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Theorem</span> <span class="id" title="var">knowsOfe_dec</span>:<span class="id" title="keyword">forall</span> <span class="id" title="var">k</span> <span class="id" title="var">e</span> <span class="id" title="var">p</span>, {(<span class="id" title="var">knowsOfe</span> <span class="id" title="var">k</span> <span class="id" title="var">e</span> <span class="id" title="var">p</span>)}+{~(<span class="id" title="var">knowsOfe</span> <span class="id" title="var">k</span> <span class="id" title="var">e</span> <span class="id" title="var">p</span>)}.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">intros</span> <span class="id" title="var">k</span> <span class="id" title="var">e</span> <span class="id" title="var">p</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">unfold</span> <span class="id" title="var">knowsOfe</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">destruct</span> (<span class="id" title="var">e</span> <span class="id" title="var">k</span>); <span class="id" title="tactic">auto</span>.<br/>
+&nbsp;&nbsp;+ <span class="id" title="tactic">induction</span> (<span class="id" title="var">M</span> <span class="id" title="var">m</span>).<br/>
+&nbsp;&nbsp;++ <span class="id" title="tactic">auto</span>.<br/>
+&nbsp;&nbsp;++ <span class="id" title="tactic">assert</span> (<span class="id" title="var">H</span>: {<span class="id" title="var">p</span> = <span class="id" title="var">a</span>} + {<span class="id" title="var">p</span> &lt;&gt; <span class="id" title="var">a</span>}). {<span class="id" title="tactic">repeat</span> <span class="id" title="var">decide</span> <span class="id" title="var">equality</span>. }<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="tactic">inversion</span> <span class="id" title="var">H</span>.<br/>
+&nbsp;&nbsp;+++ <span class="id" title="tactic">simpl</span>. <span class="id" title="tactic">left</span>. <span class="id" title="tactic">auto</span>.<br/>
+&nbsp;&nbsp;+++ <span class="id" title="tactic">simpl</span>. <span class="id" title="var">inverts</span> <span class="id" title="var">IHl</span>; <span class="id" title="tactic">auto</span>. <span class="id" title="tactic">right</span>. <span class="id" title="tactic">unfold</span> <span class="id" title="var">not</span>. <span class="id" title="tactic">intros</span>. <span class="id" title="var">inverts</span> <span class="id" title="var">H2</span>; <span class="id" title="tactic">auto</span>.<br/>
+<span class="id" title="keyword">Defined</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Theorem</span> <span class="id" title="var">knowsOfs_dec</span>:<span class="id" title="keyword">forall</span> <span class="id" title="var">k</span> <span class="id" title="var">s</span> <span class="id" title="var">p</span>, {(<span class="id" title="var">knowsOfs</span> <span class="id" title="var">k</span> <span class="id" title="var">s</span> <span class="id" title="var">p</span>)}+{~(<span class="id" title="var">knowsOfs</span> <span class="id" title="var">k</span> <span class="id" title="var">s</span> <span class="id" title="var">p</span>)}.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="tactic">intros</span> <span class="id" title="var">k</span> <span class="id" title="var">s</span> <span class="id" title="var">p</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="tactic">induction</span> <span class="id" title="var">s</span>; <span class="id" title="tactic">simpl</span> <span class="id" title="tactic">in</span> *.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id" title="tactic">right</span>. <span class="id" title="tactic">unfold</span> <span class="id" title="var">not</span>. <span class="id" title="tactic">intros</span>. <span class="id" title="tactic">inversion</span> <span class="id" title="var">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+ <span class="id" title="tactic">pose</span> <span class="id" title="var">proof</span> <span class="id" title="var">knowsOfe_dec</span> <span class="id" title="var">k</span> <span class="id" title="var">a</span> <span class="id" title="var">p</span>. <span class="id" title="var">inverts</span> <span class="id" title="var">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;++ <span class="id" title="tactic">left</span>. <span class="id" title="tactic">left</span>. <span class="id" title="tactic">apply</span> <span class="id" title="var">H0</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;++ <span class="id" title="var">inverts</span> <span class="id" title="var">IHs</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+++ <span class="id" title="tactic">left</span>. <span class="id" title="tactic">right</span>. <span class="id" title="tactic">apply</span> <span class="id" title="var">H</span>.<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;+++ <span class="id" title="tactic">right</span>. <span class="id" title="tactic">unfold</span> <span class="id" title="var">not</span>. <span class="id" title="tactic">intros</span>. <span class="id" title="tactic">inversion</span> <span class="id" title="var">H1</span>; <span class="id" title="tactic">auto</span>.<br/>
+<span class="id" title="keyword">Defined</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+Determine if place <span class="inlinecode"><span class="id" title="var">k</span></span> within the environment <span class="inlinecode"><span class="id" title="var">e</span></span>  
+    depends on place <span class="inlinecode"><span class="id" title="var">p</span></span> (the context relation) 
+</div>
+<div class="code">
+<span class="id" title="keyword">Definition</span> <span class="id" title="var">dependsOne</span> (<span class="id" title="var">k</span>:<span class="id" title="var">Plc</span>)(<span class="id" title="var">e</span>:<span class="id" title="var">Environment</span>)(<span class="id" title="var">p</span>:<span class="id" title="var">Plc</span>):<span class="id" title="keyword">Prop</span> :=<br/>
+<span class="id" title="keyword">match</span> (<span class="id" title="var">e</span> <span class="id" title="var">k</span>) <span class="id" title="keyword">with</span><br/>
+| <span class="id" title="var">None</span> =&gt; <span class="id" title="var">False</span><br/>
+| <span class="id" title="var">Some</span> <span class="id" title="var">m</span> =&gt; <span class="id" title="var">In</span> <span class="id" title="var">p</span> <span class="id" title="var">m</span>.(<span class="id" title="var">C</span>)<br/>
+<span class="id" title="keyword">end</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+Determine if place <span class="inlinecode"><span class="id" title="var">k</span></span> within the system <span class="inlinecode"><span class="id" title="var">s</span></span>  
+<a id="lab13"></a><h1 class="section">depends on place <span class="inlinecode"><span class="id" title="var">p</span></span> (the context relation)</h1>
+
+
+</div>
+<div class="code">
+<span class="id" title="keyword">Fixpoint</span> <span class="id" title="var">dependsOns</span> (<span class="id" title="var">k</span>:<span class="id" title="var">Plc</span>)(<span class="id" title="var">s</span>:<span class="id" title="var">System</span>)(<span class="id" title="var">p</span>:<span class="id" title="var">Plc</span>):<span class="id" title="keyword">Prop</span> :=<br/>
+<span class="id" title="keyword">match</span> <span class="id" title="var">s</span> <span class="id" title="keyword">with</span><br/>
+| [] =&gt; <span class="id" title="var">False</span><br/>
+| <span class="id" title="var">s1</span> :: <span class="id" title="var">ss</span> =&gt; (<span class="id" title="var">dependsOne</span> <span class="id" title="var">k</span> <span class="id" title="var">s1</span> <span class="id" title="var">p</span>) \/ (<span class="id" title="var">dependsOns</span> <span class="id" title="var">k</span> <span class="id" title="var">ss</span> <span class="id" title="var">p</span>)<br/>
+<span class="id" title="keyword">end</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Theorem</span> <span class="id" title="var">dependsOne_dec</span> : <span class="id" title="keyword">forall</span> <span class="id" title="var">k</span> <span class="id" title="var">e</span> <span class="id" title="var">p</span>, {(<span class="id" title="var">dependsOne</span> <span class="id" title="var">k</span> <span class="id" title="var">e</span> <span class="id" title="var">p</span>)}+{~(<span class="id" title="var">dependsOne</span> <span class="id" title="var">k</span> <span class="id" title="var">e</span> <span class="id" title="var">p</span>)}.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">intros</span> <span class="id" title="var">k</span> <span class="id" title="var">e</span> <span class="id" title="var">p</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">unfold</span> <span class="id" title="var">dependsOne</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">destruct</span> (<span class="id" title="var">e</span> <span class="id" title="var">k</span>).<br/>
+&nbsp;&nbsp;+  <span class="id" title="tactic">induction</span> (<span class="id" title="var">C</span> <span class="id" title="var">m</span>).<br/>
+&nbsp;&nbsp;++ <span class="id" title="tactic">auto</span>.<br/>
+&nbsp;&nbsp;++ <span class="id" title="tactic">simpl</span>. <span class="id" title="tactic">inversion</span> <span class="id" title="var">IHl</span>.<br/>
+&nbsp;&nbsp;+++  <span class="id" title="tactic">auto</span>.<br/>
+&nbsp;&nbsp;+++ <span class="id" title="tactic">assert</span> (<span class="id" title="var">H'</span>: {<span class="id" title="var">a</span> = <span class="id" title="var">p</span> } + { <span class="id" title="var">a</span> &lt;&gt; <span class="id" title="var">p</span>}). {<span class="id" title="tactic">repeat</span> <span class="id" title="var">decide</span> <span class="id" title="var">equality</span>. } <span class="id" title="tactic">inversion</span> <span class="id" title="var">H'</span>.<br/>
+&nbsp;&nbsp;++++ <span class="id" title="tactic">left</span>. <span class="id" title="tactic">left</span>. <span class="id" title="tactic">apply</span> <span class="id" title="var">H0</span>.<br/>
+&nbsp;&nbsp;++++ <span class="id" title="tactic">right</span>. <span class="id" title="tactic">unfold</span> <span class="id" title="var">not</span>. <span class="id" title="tactic">intros</span>. <span class="id" title="tactic">inversion</span> <span class="id" title="var">H1</span>; <span class="id" title="tactic">auto</span>.<br/>
+&nbsp;&nbsp;+ <span class="id" title="tactic">auto</span>.<br/>
+<span class="id" title="keyword">Defined</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Theorem</span> <span class="id" title="var">dependsOns_dec</span> : <span class="id" title="keyword">forall</span> <span class="id" title="var">k</span> <span class="id" title="var">s</span> <span class="id" title="var">p</span>, {<span class="id" title="var">dependsOns</span> <span class="id" title="var">k</span> <span class="id" title="var">s</span> <span class="id" title="var">p</span>} + {~ <span class="id" title="var">dependsOns</span> <span class="id" title="var">k</span> <span class="id" title="var">s</span> <span class="id" title="var">p</span>}.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">intros</span>. <span class="id" title="tactic">induction</span> <span class="id" title="var">s</span>.<br/>
+&nbsp;&nbsp;+ <span class="id" title="tactic">simpl</span>. <span class="id" title="tactic">auto</span>.<br/>
+&nbsp;&nbsp;+ <span class="id" title="tactic">simpl</span>. <span class="id" title="tactic">pose</span> <span class="id" title="var">proof</span> <span class="id" title="var">dependsOne_dec</span> <span class="id" title="var">k</span> <span class="id" title="var">a</span> <span class="id" title="var">p</span>. <span class="id" title="tactic">inversion</span> <span class="id" title="var">IHs</span>.<br/>
+&nbsp;&nbsp;++ <span class="id" title="tactic">left</span>. <span class="id" title="tactic">right</span>. <span class="id" title="tactic">apply</span> <span class="id" title="var">H0</span>.<br/>
+&nbsp;&nbsp;++ <span class="id" title="tactic">inversion</span> <span class="id" title="var">H</span>.<br/>
+&nbsp;&nbsp;+++ <span class="id" title="tactic">left</span>. <span class="id" title="tactic">left</span>. <span class="id" title="tactic">apply</span> <span class="id" title="var">H1</span>.<br/>
+&nbsp;&nbsp;+++ <span class="id" title="tactic">right</span>. <span class="id" title="tactic">unfold</span> <span class="id" title="var">not</span>. <span class="id" title="tactic">intros</span>. <span class="id" title="tactic">inversion</span> <span class="id" title="var">H2</span>; <span class="id" title="tactic">auto</span>.<br/>
+<span class="id" title="keyword">Defined</span>.<br/>
+
+<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+Is term <span class="inlinecode"><span class="id" title="var">t</span></span> exectuable on the attestation manager named <span class="inlinecode"><span class="id" title="var">k</span></span> in 
+    environment <span class="inlinecode"><span class="id" title="var">e</span></span>?  Are ASPs available at the right attesation managers
+    and are necessary communications allowed?
+
+</div>
+<div class="code">
+<span class="id" title="keyword">Fixpoint</span> <span class="id" title="var">executable</span>(<span class="id" title="var">t</span>:<span class="id" title="var">Term</span>)(<span class="id" title="var">k</span>:<span class="id" title="var">Plc</span>)(<span class="id" title="var">e</span>:<span class="id" title="var">Environment</span>):<span class="id" title="keyword">Prop</span> :=<br/>
+<span class="id" title="keyword">match</span> <span class="id" title="var">t</span> <span class="id" title="keyword">with</span><br/>
+| <span class="id" title="var">asp</span> <span class="id" title="var">a</span>  =&gt; <span class="id" title="var">hasASPe</span> <span class="id" title="var">k</span> <span class="id" title="var">e</span> <span class="id" title="var">a</span><br/>
+| <span class="id" title="var">att</span> <span class="id" title="var">p</span> <span class="id" title="var">t</span> =&gt; <span class="id" title="var">knowsOfe</span> <span class="id" title="var">k</span> <span class="id" title="var">e</span> <span class="id" title="var">p</span> -&gt; <span class="id" title="var">executable</span> <span class="id" title="var">t</span> <span class="id" title="var">p</span> <span class="id" title="var">e</span><br/>
+| <span class="id" title="var">lseq</span> <span class="id" title="var">t1</span> <span class="id" title="var">t2</span> =&gt; <span class="id" title="var">executable</span> <span class="id" title="var">t1</span> <span class="id" title="var">k</span> <span class="id" title="var">e</span> /\ <span class="id" title="var">executable</span> <span class="id" title="var">t2</span> <span class="id" title="var">k</span> <span class="id" title="var">e</span><br/>
+| <span class="id" title="var">bseq</span> <span class="id" title="var">_</span> <span class="id" title="var">t1</span> <span class="id" title="var">t2</span> =&gt; <span class="id" title="var">executable</span> <span class="id" title="var">t1</span> <span class="id" title="var">k</span> <span class="id" title="var">e</span> /\ <span class="id" title="var">executable</span> <span class="id" title="var">t2</span> <span class="id" title="var">k</span> <span class="id" title="var">e</span><br/>
+| <span class="id" title="var">bpar</span> <span class="id" title="var">_</span> <span class="id" title="var">t1</span> <span class="id" title="var">t2</span> =&gt; <span class="id" title="var">executable</span> <span class="id" title="var">t1</span> <span class="id" title="var">k</span> <span class="id" title="var">e</span> /\ <span class="id" title="var">executable</span> <span class="id" title="var">t2</span> <span class="id" title="var">k</span> <span class="id" title="var">e</span><br/>
+<span class="id" title="keyword">end</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Ltac</span> <span class="id" title="var">right_dest_contr</span> <span class="id" title="var">H</span> := <span class="id" title="tactic">right</span>; <span class="id" title="tactic">unfold</span> <span class="id" title="var">not</span>; <span class="id" title="tactic">intros</span> <span class="id" title="var">H</span>; <span class="id" title="tactic">destruct</span> <span class="id" title="var">H</span>; <span class="id" title="var">contradiction</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Theorem</span> <span class="id" title="var">executable_dec</span>:<span class="id" title="keyword">forall</span> <span class="id" title="var">t</span> <span class="id" title="var">k</span> <span class="id" title="var">e</span>,{(<span class="id" title="var">executable</span> <span class="id" title="var">t</span> <span class="id" title="var">k</span> <span class="id" title="var">e</span>)}+{~(<span class="id" title="var">executable</span> <span class="id" title="var">t</span> <span class="id" title="var">k</span> <span class="id" title="var">e</span>)}.<br/>
+<span class="id" title="tactic">intros</span>. <span class="id" title="tactic">generalize</span> <span class="id" title="var">k</span>. <span class="id" title="tactic">induction</span> <span class="id" title="var">t</span>; <span class="id" title="tactic">intros</span>.<br/>
++ <span class="id" title="tactic">unfold</span> <span class="id" title="var">executable</span>. <span class="id" title="tactic">apply</span> <span class="id" title="var">hasASPe_dec</span>.<br/>
++ <span class="id" title="tactic">simpl</span>. <span class="id" title="tactic">pose</span> <span class="id" title="var">proof</span> <span class="id" title="var">knowsOfe_dec</span> <span class="id" title="var">k0</span> <span class="id" title="var">e</span> <span class="id" title="var">p</span>. <span class="id" title="tactic">destruct</span> <span class="id" title="var">H</span>.<br/>
+++ <span class="id" title="tactic">destruct</span> (<span class="id" title="var">IHt</span> <span class="id" title="var">p</span>).<br/>
++++ <span class="id" title="tactic">left</span>; <span class="id" title="tactic">auto</span>.<br/>
++++ <span class="id" title="tactic">right</span>. <span class="id" title="tactic">unfold</span> <span class="id" title="var">not</span>. <span class="id" title="tactic">intros</span>; <span class="id" title="tactic">auto</span>.<br/>
+++ <span class="id" title="tactic">destruct</span> (<span class="id" title="var">IHt</span> <span class="id" title="var">p</span>).<br/>
++++ <span class="id" title="tactic">left</span>; <span class="id" title="tactic">auto</span>.<br/>
++++ <span class="id" title="tactic">left</span>. <span class="id" title="tactic">intros</span>. <span class="id" title="tactic">congruence</span>.<br/>
++ <span class="id" title="tactic">simpl</span>. <span class="id" title="tactic">specialize</span> <span class="id" title="var">IHt1</span> <span class="id" title="keyword">with</span> <span class="id" title="var">k0</span>. <span class="id" title="tactic">specialize</span> <span class="id" title="var">IHt2</span> <span class="id" title="keyword">with</span> <span class="id" title="var">k0</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">destruct</span> <span class="id" title="var">IHt1</span>,<span class="id" title="var">IHt2</span>; <span class="id" title="tactic">try</span> <span class="id" title="var">right_dest_contr</span> <span class="id" title="var">H</span>.<br/>
+++ <span class="id" title="tactic">left</span>. <span class="id" title="tactic">split</span> ; <span class="id" title="tactic">assumption</span>.<br/>
++ <span class="id" title="tactic">simpl</span>. <span class="id" title="tactic">specialize</span> <span class="id" title="var">IHt1</span> <span class="id" title="keyword">with</span> <span class="id" title="var">k0</span>. <span class="id" title="tactic">specialize</span> <span class="id" title="var">IHt2</span> <span class="id" title="keyword">with</span> <span class="id" title="var">k0</span>. <span class="id" title="tactic">destruct</span> <span class="id" title="var">IHt1</span>,<span class="id" title="var">IHt2</span>; <span class="id" title="tactic">try</span> <span class="id" title="var">right_dest_contr</span> <span class="id" title="var">H</span>.<br/>
+++ <span class="id" title="tactic">left</span>. <span class="id" title="tactic">split</span> ; <span class="id" title="tactic">assumption</span>.<br/>
++ <span class="id" title="tactic">simpl</span>. <span class="id" title="tactic">specialize</span> <span class="id" title="var">IHt1</span> <span class="id" title="keyword">with</span> <span class="id" title="var">k0</span>. <span class="id" title="tactic">specialize</span> <span class="id" title="var">IHt2</span> <span class="id" title="keyword">with</span> <span class="id" title="var">k0</span>. <span class="id" title="tactic">destruct</span> <span class="id" title="var">IHt1</span>,<span class="id" title="var">IHt2</span>; <span class="id" title="tactic">try</span> <span class="id" title="var">right_dest_contr</span> <span class="id" title="var">H</span>.<br/>
+++  <span class="id" title="tactic">left</span>. <span class="id" title="tactic">split</span> ; <span class="id" title="tactic">assumption</span>.<br/>
+<span class="id" title="keyword">Defined</span>.<br/>
+
+<br/>
+</div>
+
+<div class="doc">
+Is term <span class="inlinecode"><span class="id" title="var">t</span></span> executable on the attestation mnanager named <span class="inlinecode"><span class="id" title="var">k</span></span> in
+<a id="lab14"></a><h1 class="section">system <span class="inlinecode"><span class="id" title="var">s</span></span>?  Are ASPs available at the right attestation managers</h1>
+
+<a id="lab15"></a><h1 class="section">and are necessary communications allowed?</h1>
+
+
+</div>
+<div class="code">
+<span class="id" title="keyword">Fixpoint</span> <span class="id" title="var">executables</span>(<span class="id" title="var">t</span>:<span class="id" title="var">Term</span>)(<span class="id" title="var">k</span>:<span class="id" title="var">Plc</span>)(<span class="id" title="var">s</span>:<span class="id" title="var">System</span>):<span class="id" title="keyword">Prop</span> :=<br/>
+<span class="id" title="keyword">match</span> <span class="id" title="var">t</span> <span class="id" title="keyword">with</span><br/>
+| <span class="id" title="var">asp</span> <span class="id" title="var">a</span>  =&gt; <span class="id" title="var">hasASPs</span> <span class="id" title="var">k</span> <span class="id" title="var">s</span> <span class="id" title="var">a</span><br/>
+| <span class="id" title="var">att</span> <span class="id" title="var">p</span> <span class="id" title="var">t</span> =&gt; <span class="id" title="var">knowsOfs</span> <span class="id" title="var">k</span> <span class="id" title="var">s</span> <span class="id" title="var">p</span> -&gt; <span class="id" title="var">executables</span> <span class="id" title="var">t</span> <span class="id" title="var">p</span> <span class="id" title="var">s</span><br/>
+| <span class="id" title="var">lseq</span> <span class="id" title="var">t1</span> <span class="id" title="var">t2</span> =&gt; <span class="id" title="var">executables</span> <span class="id" title="var">t1</span> <span class="id" title="var">k</span> <span class="id" title="var">s</span> /\ <span class="id" title="var">executables</span> <span class="id" title="var">t2</span> <span class="id" title="var">k</span> <span class="id" title="var">s</span><br/>
+| <span class="id" title="var">bseq</span> <span class="id" title="var">_</span> <span class="id" title="var">t1</span> <span class="id" title="var">t2</span> =&gt; <span class="id" title="var">executables</span> <span class="id" title="var">t1</span> <span class="id" title="var">k</span> <span class="id" title="var">s</span> /\ <span class="id" title="var">executables</span> <span class="id" title="var">t2</span> <span class="id" title="var">k</span> <span class="id" title="var">s</span><br/>
+| <span class="id" title="var">bpar</span> <span class="id" title="var">_</span> <span class="id" title="var">t1</span> <span class="id" title="var">t2</span> =&gt; <span class="id" title="var">executables</span> <span class="id" title="var">t1</span> <span class="id" title="var">k</span> <span class="id" title="var">s</span> /\ <span class="id" title="var">executables</span> <span class="id" title="var">t2</span> <span class="id" title="var">k</span> <span class="id" title="var">s</span><br/>
+<span class="id" title="keyword">end</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Theorem</span> <span class="id" title="var">executables_dec</span> : <span class="id" title="keyword">forall</span> <span class="id" title="var">t</span> <span class="id" title="var">k</span> <span class="id" title="var">s</span>, {<span class="id" title="var">executables</span> <span class="id" title="var">t</span> <span class="id" title="var">k</span> <span class="id" title="var">s</span>} + {~<span class="id" title="var">executables</span> <span class="id" title="var">t</span> <span class="id" title="var">k</span> <span class="id" title="var">s</span>}.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+<span class="id" title="tactic">intros</span>. <span class="id" title="tactic">generalize</span> <span class="id" title="var">k</span> <span class="id" title="var">s</span>. <span class="id" title="tactic">induction</span> <span class="id" title="var">t</span>; <span class="id" title="tactic">intros</span>.<br/>
++ <span class="id" title="tactic">unfold</span> <span class="id" title="var">executables</span>. <span class="id" title="tactic">apply</span> <span class="id" title="var">hasASPs_dec</span>.<br/>
++ <span class="id" title="tactic">simpl</span>. <span class="id" title="tactic">pose</span> <span class="id" title="var">proof</span> <span class="id" title="var">knowsOfs_dec</span> <span class="id" title="var">k0</span> <span class="id" title="var">s0</span> <span class="id" title="var">p</span>. <span class="id" title="tactic">destruct</span> (<span class="id" title="var">IHt</span> <span class="id" title="var">p</span> <span class="id" title="var">s0</span>).<br/>
+++ <span class="id" title="tactic">left</span>. <span class="id" title="tactic">intros</span>. <span class="id" title="tactic">assumption</span>.<br/>
+++ <span class="id" title="tactic">destruct</span> <span class="id" title="var">H</span>.<br/>
++++ <span class="id" title="tactic">right</span>. <span class="id" title="tactic">unfold</span> <span class="id" title="var">not</span>. <span class="id" title="tactic">intros</span>. <span class="id" title="tactic">apply</span> <span class="id" title="var">n</span>. <span class="id" title="tactic">apply</span> <span class="id" title="var">H</span>. <span class="id" title="tactic">assumption</span>.<br/>
++++ <span class="id" title="tactic">left</span>. <span class="id" title="tactic">intros</span>. <span class="id" title="tactic">congruence</span>.<br/>
++ <span class="id" title="tactic">simpl</span>. <span class="id" title="tactic">specialize</span> <span class="id" title="var">IHt1</span> <span class="id" title="keyword">with</span> <span class="id" title="var">k0</span> <span class="id" title="var">s0</span>. <span class="id" title="tactic">specialize</span> <span class="id" title="var">IHt2</span> <span class="id" title="keyword">with</span> <span class="id" title="var">k0</span> <span class="id" title="var">s0</span>. <span class="id" title="tactic">destruct</span> <span class="id" title="var">IHt1</span>,<span class="id" title="var">IHt2</span>; <span class="id" title="tactic">try</span> <span class="id" title="var">right_dest_contr</span> <span class="id" title="var">H</span>.<br/>
+++ <span class="id" title="tactic">left</span>. <span class="id" title="tactic">split</span> ; <span class="id" title="tactic">assumption</span>.<br/>
++ <span class="id" title="tactic">simpl</span>. <span class="id" title="tactic">specialize</span> <span class="id" title="var">IHt1</span> <span class="id" title="keyword">with</span> <span class="id" title="var">k0</span> <span class="id" title="var">s1</span>. <span class="id" title="tactic">specialize</span> <span class="id" title="var">IHt2</span> <span class="id" title="keyword">with</span> <span class="id" title="var">k0</span> <span class="id" title="var">s1</span>. <span class="id" title="tactic">destruct</span> <span class="id" title="var">IHt1</span>,<span class="id" title="var">IHt2</span>; <span class="id" title="tactic">try</span> <span class="id" title="var">right_dest_contr</span> <span class="id" title="var">H</span>.<br/>
+++ <span class="id" title="tactic">left</span>. <span class="id" title="tactic">split</span> ; <span class="id" title="tactic">assumption</span>.<br/>
++ <span class="id" title="tactic">simpl</span>. <span class="id" title="tactic">specialize</span> <span class="id" title="var">IHt1</span> <span class="id" title="keyword">with</span> <span class="id" title="var">k0</span> <span class="id" title="var">s1</span>. <span class="id" title="tactic">specialize</span> <span class="id" title="var">IHt2</span> <span class="id" title="keyword">with</span> <span class="id" title="var">k0</span> <span class="id" title="var">s1</span>. <span class="id" title="tactic">destruct</span> <span class="id" title="var">IHt1</span>,<span class="id" title="var">IHt2</span>; <span class="id" title="tactic">try</span> <span class="id" title="var">right_dest_contr</span> <span class="id" title="var">H</span>.<br/>
+++ <span class="id" title="tactic">left</span>. <span class="id" title="tactic">split</span> ; <span class="id" title="tactic">assumption</span>.<br/>
+<span class="id" title="keyword">Defined</span>.<br/>
+
+<br/>
+
+<br/>
+
+<br/>
+<span class="id" title="keyword">Notation</span> <span class="id" title="var">Rely</span> := "Rely"%<span class="id" title="var">string</span>.<br/>
+<span class="id" title="keyword">Notation</span> <span class="id" title="var">Target</span> := "Target"%<span class="id" title="var">string</span>.<br/>
+<span class="id" title="keyword">Notation</span> <span class="id" title="var">Appraise</span> := "Appraise"%<span class="id" title="var">string</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Notation</span> <span class="id" title="var">aspc1</span> :=<br/>
+&nbsp;&nbsp;(<span class="id" title="var">ASPC</span> <span class="id" title="var">ALL</span> <span class="id" title="var">EXTD</span> (<span class="id" title="var">asp_paramsC</span> "asp1"%<span class="id" title="var">string</span> ["x"%<span class="id" title="var">string</span>;"y"%<span class="id" title="var">string</span>] <span class="id" title="var">Target</span> <span class="id" title="var">Target</span>)).<br/>
+<span class="id" title="keyword">Notation</span> <span class="id" title="var">aspc2</span> :=<br/>
+&nbsp;&nbsp;(<span class="id" title="var">ASPC</span> <span class="id" title="var">ALL</span> <span class="id" title="var">EXTD</span> (<span class="id" title="var">asp_paramsC</span> "asp2"%<span class="id" title="var">string</span> ["x"%<span class="id" title="var">string</span>] <span class="id" title="var">Target</span> <span class="id" title="var">Target</span>)).<br/>
+
+<br/>
+
+<br/>
+<span class="id" title="keyword">Inductive</span> <span class="id" title="var">rely_Policy</span> : <span class="id" title="var">ASP</span> -&gt; <span class="id" title="var">Plc</span> -&gt; <span class="id" title="keyword">Prop</span> := <br/>
+| <span class="id" title="var">p_aspc1</span> : <span class="id" title="keyword">forall</span> <span class="id" title="var">p</span>, <span class="id" title="var">rely_Policy</span> <span class="id" title="var">aspc1</span> <span class="id" title="var">p</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Inductive</span> <span class="id" title="var">tar_Policy</span> : <span class="id" title="var">ASP</span> -&gt; <span class="id" title="var">Plc</span> -&gt; <span class="id" title="keyword">Prop</span> := <br/>
+| <span class="id" title="var">p_aspc2</span> : <span class="id" title="var">tar_Policy</span> <span class="id" title="var">aspc2</span> <span class="id" title="var">Appraise</span> <br/>
+| <span class="id" title="var">p_SIG</span> : <span class="id" title="keyword">forall</span> <span class="id" title="var">p</span>, <span class="id" title="var">tar_Policy</span> <span class="id" title="var">SIG</span> <span class="id" title="var">p</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Inductive</span> <span class="id" title="var">app_Policy</span> : <span class="id" title="var">ASP</span> -&gt; <span class="id" title="var">Plc</span> -&gt; <span class="id" title="keyword">Prop</span> := <br/>
+| <span class="id" title="var">p_HSH</span> : <span class="id" title="keyword">forall</span> <span class="id" title="var">p</span>, <span class="id" title="var">app_Policy</span> <span class="id" title="var">HSH</span> <span class="id" title="var">p</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Definition</span> <span class="id" title="var">e0</span> := <span class="id" title="var">e_empty</span>.<br/>
+<span class="id" title="keyword">Definition</span> <span class="id" title="var">e_Rely</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">e_update</span> <span class="id" title="var">e_empty</span> <span class="id" title="var">Rely</span> (<span class="id" title="var">Some</span> {| <span class="id" title="var">asps</span> := [<span class="id" title="var">aspc1</span>]; <span class="id" title="var">M</span>:= [<span class="id" title="var">Target</span>] ; <span class="id" title="var">C</span> := [] ; <span class="id" title="var">Policy</span> := <span class="id" title="var">rely_Policy</span> |}).<br/>
+<span class="id" title="keyword">Definition</span> <span class="id" title="var">e_Targ</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">e_update</span> <span class="id" title="var">e_empty</span> <span class="id" title="var">Target</span> (<span class="id" title="var">Some</span> {| <span class="id" title="var">asps</span> := [<span class="id" title="var">SIG</span>;  <span class="id" title="var">aspc2</span>]; <span class="id" title="var">M</span>:= [<span class="id" title="var">Appraise</span>] ; <span class="id" title="var">C</span> := [] ; <span class="id" title="var">Policy</span> := <span class="id" title="var">tar_Policy</span>|}).<br/>
+<span class="id" title="keyword">Definition</span> <span class="id" title="var">e_App</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">e_update</span> <span class="id" title="var">e_empty</span> <span class="id" title="var">Appraise</span> (<span class="id" title="var">Some</span> {| <span class="id" title="var">asps</span> := [<span class="id" title="var">HSH</span>] ; <span class="id" title="var">M</span>:= [] ; <span class="id" title="var">C</span> := [<span class="id" title="var">Target</span>] ; <span class="id" title="var">Policy</span> := <span class="id" title="var">app_Policy</span> |}).<br/>
+
+<br/>
+<span class="id" title="keyword">Definition</span> <span class="id" title="var">example_sys_1</span> := [<span class="id" title="var">e_Rely</span>; <span class="id" title="var">e_Targ</span>; <span class="id" title="var">e_App</span>].<br/>
+
+<br/>
+
+<br/>
+<span class="id" title="keyword">Example</span> <span class="id" title="var">ex1</span>: <span class="id" title="var">hasASPe</span> <span class="id" title="var">Rely</span> <span class="id" title="var">e_Rely</span> <span class="id" title="var">aspc1</span>.<br/>
+<span class="id" title="keyword">Proof</span>. <span class="id" title="tactic">unfold</span> <span class="id" title="var">hasASPe</span>. <span class="id" title="tactic">simpl</span>. <span class="id" title="tactic">left</span>. <span class="id" title="tactic">reflexivity</span>. <span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Example</span> <span class="id" title="var">ex2</span>: <span class="id" title="var">hasASPe</span> <span class="id" title="var">Rely</span> <span class="id" title="var">e_Rely</span> <span class="id" title="var">CPY</span> -&gt; <span class="id" title="var">False</span>.<br/>
+<span class="id" title="keyword">Proof</span>. <span class="id" title="tactic">unfold</span> <span class="id" title="var">hasASPe</span>. <span class="id" title="tactic">simpl</span>. <span class="id" title="tactic">intros</span>. <span class="id" title="var">inverts</span> <span class="id" title="var">H</span>. <span class="id" title="var">inverts</span> <span class="id" title="var">H0</span>. <span class="id" title="tactic">auto</span>. <span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Example</span> <span class="id" title="var">ex3</span>: <span class="id" title="var">hasASPs</span> <span class="id" title="var">Rely</span> (<span class="id" title="var">example_sys_1</span>) <span class="id" title="var">aspc1</span>.<br/>
+<span class="id" title="keyword">Proof</span>. <span class="id" title="tactic">unfold</span> <span class="id" title="var">hasASPs</span>. <span class="id" title="tactic">unfold</span> <span class="id" title="var">hasASPe</span>. <span class="id" title="tactic">simpl</span>. <span class="id" title="tactic">left</span>. <span class="id" title="tactic">left</span>. <span class="id" title="tactic">reflexivity</span>. <span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Example</span> <span class="id" title="var">ex4</span>: <span class="id" title="var">knowsOfs</span> <span class="id" title="var">Rely</span> <span class="id" title="var">example_sys_1</span> <span class="id" title="var">Target</span>.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+<span class="id" title="tactic">unfold</span> <span class="id" title="var">knowsOfs</span>. <span class="id" title="tactic">simpl</span>. <span class="id" title="tactic">left</span>. <span class="id" title="tactic">unfold</span> <span class="id" title="var">knowsOfe</span>. <span class="id" title="tactic">simpl</span>. <span class="id" title="tactic">auto</span>.<br/>
+<span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Example</span> <span class="id" title="var">ex5</span>: <span class="id" title="var">knowsOfe</span> <span class="id" title="var">Rely</span> <span class="id" title="var">e_App</span> <span class="id" title="var">Appraise</span> -&gt; <span class="id" title="var">False</span>.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+<span class="id" title="tactic">unfold</span> <span class="id" title="var">knowsOfe</span>. <span class="id" title="tactic">simpl</span>. <span class="id" title="tactic">intros</span>. <span class="id" title="tactic">destruct</span> <span class="id" title="var">H</span>.<br/>
+<span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Example</span> <span class="id" title="var">ex5'</span>: <span class="id" title="var">knowsOfs</span> <span class="id" title="var">Rely</span> <span class="id" title="var">example_sys_1</span> <span class="id" title="var">Appraise</span> -&gt; <span class="id" title="var">False</span>.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+<span class="id" title="tactic">unfold</span> <span class="id" title="var">knowsOfs</span>. <span class="id" title="tactic">simpl</span>. <span class="id" title="tactic">unfold</span> <span class="id" title="var">knowsOfe</span>. <span class="id" title="tactic">simpl</span>. <span class="id" title="tactic">intros</span>. <span class="id" title="var">inverts</span> <span class="id" title="var">H</span>. <span class="id" title="var">inverts</span> <span class="id" title="var">H0</span>. <span class="id" title="var">inverts</span> <span class="id" title="var">H</span>. <span class="id" title="tactic">apply</span> <span class="id" title="var">H</span>. <span class="id" title="var">inverts</span> <span class="id" title="var">H0</span>. <span class="id" title="tactic">apply</span> <span class="id" title="var">H</span>. <span class="id" title="var">inverts</span> <span class="id" title="var">H</span>. <span class="id" title="tactic">apply</span> <span class="id" title="var">H0</span>. <span class="id" title="tactic">apply</span> <span class="id" title="var">H0</span>.<br/>
+<span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Example</span> <span class="id" title="var">ex6</span>: <span class="id" title="var">knowsOfs</span> <span class="id" title="var">Rely</span> <span class="id" title="var">example_sys_1</span> <span class="id" title="var">Target</span>.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+<span class="id" title="tactic">unfold</span> <span class="id" title="var">knowsOfs</span>,<span class="id" title="var">knowsOfe</span>. <span class="id" title="tactic">simpl</span>. <span class="id" title="tactic">auto</span>.<br/>
+<span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Example</span> <span class="id" title="var">ex7</span>: <span class="id" title="var">knowsOfs</span> <span class="id" title="var">Rely</span> [<span class="id" title="var">e_Rely</span>] <span class="id" title="var">Target</span>.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+<span class="id" title="tactic">unfold</span> <span class="id" title="var">knowsOfs</span>,<span class="id" title="var">knowsOfe</span>. <span class="id" title="tactic">simpl</span>. <span class="id" title="tactic">auto</span>.<br/>
+<span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Example</span> <span class="id" title="var">ex8</span> : <span class="id" title="var">dependsOne</span> <span class="id" title="var">Appraise</span> <span class="id" title="var">e_App</span> <span class="id" title="var">Target</span>.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+<span class="id" title="tactic">unfold</span> <span class="id" title="var">dependsOne</span>. <span class="id" title="tactic">simpl</span>. <span class="id" title="tactic">auto</span>.<br/>
+<span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Example</span> <span class="id" title="var">ex9</span> : <span class="id" title="var">dependsOns</span> <span class="id" title="var">Appraise</span> <span class="id" title="var">example_sys_1</span> <span class="id" title="var">Target</span>.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+<span class="id" title="tactic">unfold</span> <span class="id" title="var">dependsOns</span>. <span class="id" title="tactic">simpl</span>. <span class="id" title="tactic">unfold</span> <span class="id" title="var">dependsOne</span>. <span class="id" title="tactic">simpl</span>. <span class="id" title="tactic">auto</span>.<br/>
+<span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Ltac</span> <span class="id" title="var">prove_exec</span> :=<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="tactic">simpl</span>; <span class="id" title="tactic">auto</span>; <span class="id" title="keyword">match</span> <span class="id" title="keyword">goal</span> <span class="id" title="keyword">with</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| |- <span class="id" title="var">hasASPe</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> =&gt; <span class="id" title="tactic">cbv</span>; <span class="id" title="tactic">left</span>; <span class="id" title="tactic">reflexivity</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| |- <span class="id" title="var">knowsOfe</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> <span class="id" title="var">_</span> =&gt; <span class="id" title="tactic">unfold</span> <span class="id" title="var">knowsOfe</span>; <span class="id" title="tactic">simpl</span>; <span class="id" title="tactic">left</span>; <span class="id" title="tactic">reflexivity</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| |- <span class="id" title="var">_</span> /\ <span class="id" title="var">_</span> =&gt; <span class="id" title="tactic">split</span>; <span class="id" title="var">prove_exec</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;| |- ?<span class="id" title="var">A</span> =&gt; <span class="id" title="tactic">idtac</span> <span class="id" title="var">A</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="keyword">end</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Example</span> <span class="id" title="var">ex10</span>: (<span class="id" title="var">executable</span> (<span class="id" title="var">asp</span> <span class="id" title="var">SIG</span>) <span class="id" title="var">Target</span> <span class="id" title="var">e_Targ</span>).<br/>
+<span class="id" title="keyword">Proof</span>. <span class="id" title="var">prove_exec</span>. <span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Example</span> <span class="id" title="var">ex11</span>: (<span class="id" title="var">executable</span> (<span class="id" title="var">asp</span> <span class="id" title="var">CPY</span>) <span class="id" title="var">Target</span> <span class="id" title="var">e_App</span>) -&gt; <span class="id" title="var">False</span>.<br/>
+<span class="id" title="keyword">Proof</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">intros</span> <span class="id" title="var">Hcontra</span>.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">simpl</span> <span class="id" title="tactic">in</span> *.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">cbv</span> <span class="id" title="tactic">in</span> *.<br/>
+&nbsp;&nbsp;<span class="id" title="tactic">destruct</span> <span class="id" title="var">Hcontra</span>.<br/>
+<span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Example</span> <span class="id" title="var">ex12</span>: (<span class="id" title="var">executable</span> (<span class="id" title="var">lseq</span> (<span class="id" title="var">asp</span> <span class="id" title="var">SIG</span>) (<span class="id" title="var">asp</span> <span class="id" title="var">SIG</span>)) <span class="id" title="var">Target</span> <span class="id" title="var">e_Targ</span>).<br/>
+<span class="id" title="keyword">Proof</span>. <span class="id" title="var">prove_exec</span>. <span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+<span class="id" title="keyword">Example</span> <span class="id" title="var">ex13</span>: (<span class="id" title="var">executables</span> (<span class="id" title="var">lseq</span> (<span class="id" title="var">asp</span> <span class="id" title="var">aspc1</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">att</span> <span class="id" title="var">Target</span><br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">lseq</span> (<span class="id" title="var">asp</span> <span class="id" title="var">SIG</span>)<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(<span class="id" title="var">asp</span> <span class="id" title="var">SIG</span>))))<br/>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="id" title="var">Rely</span> <span class="id" title="var">example_sys_1</span>).<br/>
+<span class="id" title="keyword">Proof</span>. <span class="id" title="var">prove_exec</span>. <span class="id" title="tactic">intros</span>. <span class="id" title="tactic">simpl</span>. <span class="id" title="tactic">unfold</span> <span class="id" title="var">hasASPe</span>. <span class="id" title="tactic">simpl</span>.<br/>
+<span class="id" title="tactic">left</span>. <span class="id" title="tactic">left</span>. <span class="id" title="tactic">reflexivity</span>.<br/>
+<span class="id" title="tactic">cbv</span> <span class="id" title="tactic">in</span> *. <span class="id" title="tactic">split</span>. <span class="id" title="tactic">right</span>. <span class="id" title="tactic">left</span>. <span class="id" title="tactic">left</span>. <span class="id" title="tactic">reflexivity</span>.<br/>
+<span class="id" title="tactic">cbv</span> <span class="id" title="tactic">in</span> *. <span class="id" title="tactic">right</span>. <span class="id" title="tactic">left</span>. <span class="id" title="tactic">left</span>. <span class="id" title="tactic">reflexivity</span>. <span class="id" title="keyword">Qed</span>.<br/>
+
+<br/>
+</div>
+</div>
+
+<div id="footer">
+<hr/><a href="index.html">Index</a><hr/>This page has been generated by <a href="http://coq.inria.fr/">coqdoc</a>
+</div>
+
+</div>
+
+</body>
+</html>
