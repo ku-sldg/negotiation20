@@ -273,5 +273,73 @@ Theorem executables_dec : forall t k s, {executables t k s} + {~executables t k 
   + simpl. specialize IHt1 with k0 s1. specialize IHt2 with k0 s1. destruct IHt1,IHt2; try right_dest_contr H.
   ++  left. split ; assumption.
   Defined.
+
+  (******************************
+*        POLICY
+*******************************)
+
+(** Check environment [e] and see if place [p] has some policy 
+ *  where the Policy allows p to run a. *)
+Definition checkASPPolicy(p:Plc)(e:Environment)(a:ASP):Prop :=
+  match (e p) with (* Look for p in the environment *)
+  | None => False
+  | Some m => (Policy m a p) (* Policy from m allows p to run a *)
+  end.
+  
+(** Recursive policy check. *)
+Fixpoint checkTermPolicy(t:Term)(k:Plc)(e:Environment):Prop :=
+  match t with
+  | asp a  => checkASPPolicy k e a
+  | att r t0 => checkTermPolicy t0 k e
+  | lseq t1 t2 => checkTermPolicy t1 k e /\ checkTermPolicy t2 k e
+  | bseq _ t1 t2 => checkTermPolicy t1 k e /\ checkTermPolicy t2 k e
+  | bpar _ t1 t2 => checkTermPolicy t1 k e /\ checkTermPolicy t2 k e
+  end.
+
+(** Proving policy check is decidable. 
+  * This is true if ASP policy is decidable. *)
+Theorem checkTermPolicy_dec:forall t k e,
+    (forall p0 a0, {(checkASPPolicy p0 e a0)} + {~(checkASPPolicy p0 e a0)}) ->
+    {(checkTermPolicy t k e)}+{~(checkTermPolicy t k e)}.
+Proof.
+  intros t k e.
+  intros H.
+  induction t; simpl.
+  + apply H.
+  + assumption.
+  + destruct IHt1,IHt2; try right_dest_contr H'. 
+  ++ left. split; assumption.
+  + destruct IHt1,IHt2 ; try right_dest_contr H'.
+  ++ left. split; assumption.
+  + destruct IHt1,IHt2; try right_dest_contr H'.
+  ++ left. split; assumption.
+Defined.
+
+(***********
+ * SOUND
+ ***********)
+
+(** Soundness is executability and policy adherence *)
+
+Definition sound (t:Term)(k:Plc)(e:Environment) :=
+(executable t k e) /\ (checkTermPolicy t k e).
+
+(** Prove soundness is decidable with the assumption necessary for policy
+ * adherence decidability.
+ *)
+
+Theorem sound_dec: forall t p e,
+(forall p0 a0, {(checkASPPolicy p0 e a0)} + {~(checkASPPolicy p0 e a0)})
+-> {sound t p e}+{~(sound t p e)}.
+Proof.
+intros t p e. intros H. unfold sound. pose proof executable_dec t p e.
+assert ({checkTermPolicy t p e}+{~(checkTermPolicy t p e)}). { apply checkTermPolicy_dec. intros. apply H. }
+destruct H0,H1.
++ left. split; assumption.
++ right_dest_contr H'.
++ right_dest_contr H'.
++ right_dest_contr H'.
+Defined.
+
   
 End Manifest.
