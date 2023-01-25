@@ -40,3 +40,4 @@ Ltac dep_induct E :=
 
 Ltac right_dest_contr H := right; unfold not; intros H; destruct H; contradiction.
 Ltac right_intro_inverts := right; unfold not; intros H'; inverts H'.
+Ltac right_dest_inverts := right; unfold not; intros H; inverts H.
