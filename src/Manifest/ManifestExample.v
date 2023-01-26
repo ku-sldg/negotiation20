@@ -10,8 +10,11 @@ Import ListNotations.
 Require Import Cop.Copland.
 Import Copland.Term.
 Import Copland.Evidence.
+
 Require Import Manifest. 
-Import Manifest.Manifest. 
+Import Manifest.Manifest.
+Import Manifest.ManifestProperties. 
+
 Require Import Utils.Utilities.
 Require Import String.
 
