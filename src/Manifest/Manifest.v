@@ -8,12 +8,6 @@ Require Import Cop.Copland.
 Import Copland.Term.
 Require Import Utils.Utilities.
 
-(** TO Do:
- * - Model finder migration from Chlipala
- * - Selection policy in manifest? 
- * - Properties of privacy policy? 
- *)
-
 Module Manifest.
 
   (** [Manifest] defines a single attestation manger and its interconnections.  
@@ -59,6 +53,11 @@ Module Manifest.
   
   (* A System is all attestation managers in the enviornement *)
   Definition System := list Environment.
+
+End Manifest. 
+
+Module ManifestProperties.
+Import Manifest.  
 
 (********************
   *   HAS APS PROOFS 
@@ -341,5 +340,4 @@ destruct H0,H1.
 + right_dest_contr H'.
 Defined.
 
-  
-End Manifest.
+End ManifestProperties.
