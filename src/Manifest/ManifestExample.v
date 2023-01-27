@@ -43,8 +43,6 @@ Require Import String.
                   | |- ?A => idtac A
                   end.
 
-Module Example1. 
-
   (* Motivated by the Flexible Mechanisms for Remote Attestation, 
      we have three present parties in this attestation scheme. 
      These are used for example purposes. *)
@@ -177,5 +175,3 @@ Module Example1.
     left. left. reflexivity.   
     cbv in *. split. right.  left. left.  reflexivity. 
     cbv in *. right. left.  left. reflexivity.   Qed.
-
-End Example1. 
