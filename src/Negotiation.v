@@ -5,8 +5,9 @@
 ************************************)
 
 Require Import String.
-Require Import myTerm. 
-Require Import Manifest. 
+
+Definition Term : Set := string.
+Definition Manifest : Set := string. 
 
 (* 1. ISAKMP/StrongSwan SA 
 
@@ -33,8 +34,7 @@ Definition Request: Set := (Term * SA).
 
 ************************************)
 
-Definition Refinement (r: Request) (m:gMan) : list Term := 
-    match r gm with 
+Definition Refinement (r: Request) (m: Manifest) : list Term. Admitted. 
      
 
 
