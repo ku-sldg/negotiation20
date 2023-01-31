@@ -11,6 +11,3 @@ The `doc` folder includes all musing and papers related to negotiation. This inc
 
 The `src` folder includes all formal models surrounding negotiation. 
 
-## Questions
-
-For any thoughts or questions related to negotiation, feel free to contact Anna (a987f052@ku.edu)
