@@ -20,4 +20,8 @@ TODO: instantiate lattice and prove properties
 
 ## `DeptTypes` 
 
-All code from "A Type Dependent Policy Language". This include a dependently typed privacy policy and selection policy for the target. This is information relative to Fritz thesis (2019). 
+All code from "A Type Dependent Policy Language". This include a dependently typed privacy policy and selection policy for the target. This is information relative to Fritz thesis (2019). Such code is no longer used but kept for reference if needed. 
+
+## Negotiation.v 
+
+This file will ultimately include the entire running negotiation procedure. Currently (1.31.23), it is nothing to look at. 
