@@ -1,7 +1,17 @@
-All code relating to negotiation exists here. 
+# All code relating to negotiation exists here. 
 
-In `DeptTypes` folder, all code from "A Type Dependent Policy Language" is placed. This include a dependently typed privacy policy and selection policy for the target. 
+## `ISAKMP`
 
-In `Manfiest` folder, we formalize the idea of the global and local manifest. 
+Information pertaining to ISAKMP security association. 
 
-In `myCopland` we copy the Copland language so the reader can easily find the syntax if needed. 
+## `Refinement` 
+
+Information regarding refinement. Includes manfiests, executability, and protocol generation. 
+
+## `Selection` 
+
+Information surrounding the relying party's selection procedure. Formal models of interest describe protocol orderings. 
+
+## `DeptTypes` 
+
+All code from "A Type Dependent Policy Language" is placed. This include a dependently typed privacy policy and selection policy for the target. This is information relative to Fritz thesis (2019). 
