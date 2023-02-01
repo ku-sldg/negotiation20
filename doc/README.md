@@ -2,7 +2,7 @@
 
 ## Copland Summit 
 
-Copland summit was a meeting between KU, NSA, MITRE, and JHAPL. We discussed the Copland language and the status of each team's work. This document realizes some of that discussion. 
+Copland summit was a meeting (July 2022) between KU, NSA, MITRE, and JHAPL. We discussed the Copland language and the status of each team's work. This document realizes some of that discussion. 
 
 ## NFM 2023
 
