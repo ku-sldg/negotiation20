@@ -5,9 +5,9 @@ During `Negotiation`, communicating peers (target and relying party) can mutuall
 
 ## doc
 
-The `doc` folder includes all musing and papers related to negotiation. This includes our latest publication attempt at NFM2023. 
+The `doc` folder houses all musing and papers related to negotiation. This includes a pdf of our latest publication attempt at NFM2023. 
 
 ## src 
 
-The `src` folder includes all formal models surrounding negotiation. 
+The `src` folder is comprised of all formal models surrounding negotiation. 
 
