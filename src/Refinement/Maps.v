@@ -3,14 +3,19 @@
 
   Code taken and manipulated from Software Foundations volume 1
   https://softwarefoundations.cis.upenn.edu/lf-current/toc.html
+
+  and Petz https://github.com/ku-sldg/copland-avm/blob/master/src/Maps.v
   
   By: Anna Fritz 
   2.1.23
 *)
+Require Import Lists.List.
+Import ListNotations.
 
 (* List Based Maps which operate over natural numbers. *)
 Module NatListBasedMaps.
 
+  (* First need some equality function *)
   Fixpoint eqb (n m : nat) : bool :=
     match n with
     | O => match m with
@@ -25,17 +30,19 @@ Module NatListBasedMaps.
 
   Notation "x =? y" := (eqb x y) (at level 70) : nat_scope.
 
+  (* a type for identifiers *)
   Inductive id : Type :=
     | Id (n : nat).
 
+  (* The ids are equal if the natural number are equal *)  
   Definition eqb_id (x1 x2 : id) :=
     match x1, x2 with
     | Id n1, Id n2 => n1 =? n2
     end.
     
-  (* Actual map structure. It has two constructors. 
-       *Empty* for the empty partial map and 
-       *record* to update the map with some id and value *)
+  (* Actual lMap structure. It has two constructors. 
+       *Empty* for the empty partial lMap and 
+       *record* to update the lMap with some id and value *)
   Inductive partial_map : Type :=
   | empty
   | record (i : id) (v : nat) (m : partial_map).
@@ -62,44 +69,129 @@ Module ListBasedMaps.
     { eqb : A -> A -> bool ;
       eqb_leibniz : forall x y, eqb x y = true -> x = y }.
 
-    Definition eqbPair{A B:Type}`{H:EqClass A}`{H':EqClass B} (p1:A*B) (p2:A*B) : bool :=
-      match (p1,p2) with
-      | ((a1,b1), (a2,b2)) => andb (eqb a1 a2) (eqb b1 b2)
-      end.
+  Definition lMap (A:Type) (B:Type) `{H : EqClass A} := list (A * B).
 
-  Inductive partial_map {A B:Type}`{H:EqClass A} : Type :=
-  | empty
-  | record (i : A) (v : B) (m : partial_map).
+  Definition lEmpty{A B:Type} `{H : EqClass A} : lMap A B := [].
 
-  Definition update {A B:Type}`{H:EqClass A} (d : partial_map)
-                  (x : A) (value : B)
-                  : partial_map :=
-  record x value d.
+  Fixpoint lGet{A B:Type} `{H : EqClass A} (m : lMap A B ) x : option B :=
+  match m with
+  | [] => None
+  | (k, v) :: m' => if eqb x k then Some v else lGet m' x
+  end.
 
-  Fixpoint find {A B:Type}`{H:EqClass A} (x : A) (d : partial_map) : option B :=
-  match d with
-  | empty => None
-  | record y v d' => if eqb x y
-                    then Some v
-                    else find x d'
+(** To [set] the binding of an identifier, we just need to [cons] 
+    it at the front of the list. *) 
+
+Definition lSet{A B:Type} `{H : EqClass A} (m:lMap A B) (x:A) (v:B) : lMap A B := (x, v) :: m.
+
+Fixpoint lVals{A B:Type} `{H : EqClass A} (m : lMap A B ) : list B :=
+  match m with
+  | [] => []
+  | (k', v) :: m' => v :: lVals m'
   end.
 
 End ListBasedMaps. 
 
-
+(* Maps again but this time constructed functionally. 
+   Code motivated by Pierce: https://softwarefoundations.cis.upenn.edu/lf-current/Maps.html *)
 Module FunctionalMaps. 
 
   Class EqClass (A : Type) :=
   { eqb : A -> A -> bool ;
     eqb_leibniz : forall x y, eqb x y = true -> x = y }.
 
-  Definition total_map (A B : Type) := A -> B.
+  Definition fMap (A B : Type)`{H:EqClass A} := A -> option B.
 
-  Definition t_empty {A B : Type}`{H:EqClass A} (v : B) : total_map A B :=
-  (fun _ => v).
+  Definition fEmpty {A B : Type}`{H:EqClass A} : fMap A B :=
+  (fun _ => None).
 
-  Definition t_update {A B : Type}`{H:EqClass A} (m : total_map A B)
+  Definition fUpdate {A B : Type}`{H:EqClass A} (m : fMap A B)
                       (x : A) (v : B) :=
-  fun x' => if eqb x x' then v else m x'.
+  fun x' => if eqb x x' then Some v else m x'.
 
 End FunctionalMaps. 
+
+(**********************************
+  EXAMPLE OF ACTUALLY USING MAPS 
+  *********************************)
+
+Module ListBasedMapsEx. 
+
+  Import Maps.ListBasedMaps.
+
+  Require Import Coq.Arith.EqNat.
+
+  (* here is some type mynums *)
+  Inductive mynums := 
+  | one : mynums 
+  | two : mynums 
+  | three : mynums.
+
+  (* here is decidability of that type *)
+  Theorem mynums_dec : forall x y : mynums, {x =y} + {x<>y}.
+    repeat decide equality.
+  Defined.
+
+  (* type of primary colors *)
+  Inductive primary := 
+  | red : primary 
+  | yellow : primary 
+  | blue : primary.
+
+  (* now, make a lMap of it... where one maps to red. two maps to yellow. three maps to blue.  *)
+  Print lMap. 
+  Print EqClass. 
+
+  Print nat. 
+
+  #[global]
+  Instance nat_EqClass : EqClass nat :=
+    { eqb:= PeanoNat.Nat.eqb;
+      eqb_leibniz := beq_nat_true }.
+
+  Definition map1 : lMap nat mynums := lEmpty.
+
+  Print map1. 
+
+  Print lSet. 
+
+  Definition map2 := lSet map1 1 one.
+
+  Definition map3 : lMap nat mynums := [(1, one) ; (2 , two); (3 , three) ].
+  (* Here is the issue.... the fact that we can define this feels wrong. What if you wanted 1 to lMap to three and someone else had already said 1 maps to one. *)
+  Definition map3' : lMap nat mynums := [(1, one) ; (2 , two); (1 , three) ].
+  
+End ListBasedMapsEx.
+
+Module FunctionalMapsEx. 
+
+  Import FunctionalMaps. 
+  Require Import Coq.Arith.EqNat.
+
+  #[global]
+  Instance nat_EqClass : EqClass nat :=
+  { eqb:= PeanoNat.Nat.eqb;
+    eqb_leibniz := beq_nat_true }.
+
+  (* here is some type mynums *)
+  Inductive mynums := 
+  | one : mynums 
+  | two : mynums 
+  | three : mynums.
+
+  Print fMap. 
+
+  Definition map1 : fMap nat mynums := fEmpty.
+  Definition map2 := fUpdate map1 1 one.
+
+  Notation "x '!->' v ';' m" := (fUpdate m x v)
+                              (at level 100, v at next level, right associativity).
+
+  Definition map3 : fMap nat mynums := ( 1 !-> one ; 2 !-> two ; 3 !-> three;  fEmpty). 
+
+  (* AGAIN... same problem Here is the issue.... the fact that we can define this feels wrong. What if you wanted 1 to map to three and someone else had already said 1 maps to one. *)
+  Definition map3' : fMap nat mynums := ( 1 !-> one ; 2 !-> two ; 1 !-> three;  fEmpty). 
+
+  Definition map3'' : fMap nat mynums := (1 !-> three; map3).
+  
+End FunctionalMapsEx.
