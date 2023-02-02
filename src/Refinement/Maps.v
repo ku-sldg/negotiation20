@@ -11,6 +11,7 @@
 *)
 Require Import Lists.List.
 Import ListNotations.
+Require Import Coq.Arith.EqNat.
 
 (* List Based Maps which operate over natural numbers. *)
 Module NatListBasedMaps.
@@ -119,8 +120,6 @@ Module ListBasedMapsEx.
 
   Import Maps.ListBasedMaps.
 
-  Require Import Coq.Arith.EqNat.
-
   (* here is some type mynums *)
   Inductive mynums := 
   | one : mynums 
@@ -166,7 +165,6 @@ End ListBasedMapsEx.
 Module FunctionalMapsEx. 
 
   Import FunctionalMaps. 
-  Require Import Coq.Arith.EqNat.
 
   #[global]
   Instance nat_EqClass : EqClass nat :=
