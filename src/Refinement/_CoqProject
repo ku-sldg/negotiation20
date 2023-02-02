@@ -3,5 +3,6 @@
 -R ./Utilities Utils
 Utilities/Utilities.v
 Copland/Copland.v
+Maps.v
 Manifest.v
 ManifestExample.v
