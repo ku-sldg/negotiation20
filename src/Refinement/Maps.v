@@ -13,7 +13,9 @@ Require Import Lists.List.
 Import ListNotations.
 Require Import Coq.Arith.EqNat.
 
-(* List Based Maps which operate over natural numbers. *)
+(*********************************
+       LIST BASED NAT MAPS 
+**********************************)
 Module NatListBasedMaps.
 
   (* First need some equality function *)
@@ -63,7 +65,9 @@ Module NatListBasedMaps.
 
 End NatListBasedMaps.
 
-(* These maps have *)
+(*********************************
+       LIST BASED MAPS 
+**********************************)
 Module ListBasedMaps.
 
   Class EqClass (A : Type) :=
@@ -93,6 +97,10 @@ Fixpoint lVals{A B:Type} `{H : EqClass A} (m : lMap A B ) : list B :=
 
 End ListBasedMaps. 
 
+(*********************************
+       FUNCTIONAL MAPS
+**********************************)
+
 (* Maps again but this time constructed functionally. 
    Code motivated by Pierce: https://softwarefoundations.cis.upenn.edu/lf-current/Maps.html *)
 Module FunctionalMaps. 
@@ -114,6 +122,11 @@ End FunctionalMaps.
 
 (**********************************
   EXAMPLE OF ACTUALLY USING MAPS 
+  *********************************)
+
+
+(**********************************
+         LIST BASED EXAMPLE
   *********************************)
 
 Module ListBasedMapsEx. 
@@ -162,6 +175,9 @@ Module ListBasedMapsEx.
   
 End ListBasedMapsEx.
 
+(*********************************
+       FUNCTIONAL MAPS EXAMPLE
+**********************************)
 Module FunctionalMapsEx. 
 
   Import FunctionalMaps. 
