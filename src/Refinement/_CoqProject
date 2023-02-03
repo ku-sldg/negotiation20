@@ -4,5 +4,6 @@
 Utilities/Utilities.v
 Copland/Copland.v
 Maps.v
+EqClass.v
 Manifest.v
 ManifestExample.v
