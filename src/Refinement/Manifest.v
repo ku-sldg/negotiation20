@@ -8,13 +8,18 @@ Require Import Cop.Copland.
 Import Copland.Term.
 Require Import Utils.Utilities.
 
+Require Import Maps.
+Import Maps.FunctionalMaps.  
+
+Require Import EqClass. 
+
 Module Manifest.
 
   (** [Manifest] defines a single attestation manger and its interconnections.  
       Information includes: 
    * asps:  a list of ASPs (measurement operations the AM can preform)
    * M : measures relation (other AMs the current AM knows of)  
-   * C : context relation (other AMs the current AM depends on)
+   * C : context relation (describes what measurement targets depend on)
    * Policy : local policy specific to the current AM. Minimally includes privacy policy and may possibly include selection policy   
    
    * Other information not necessary for reasoning includes: 
@@ -26,7 +31,7 @@ Module Manifest.
 
       asps : list ASP ;
       M : list Plc ; 
-      C : list Plc ; 
+      C : list (TARG_ID * TARG_ID); 
       Policy : ASP -> Plc -> Prop ;
 
 (*
@@ -158,49 +163,56 @@ Qed.
 *  DEPENDS ON PROOFS 
 ********************)
 
-(** Determine if place [k] within the environment [e]  
-  * depends on place [p] (the context relation)
+(* function *)
+Fixpoint dependsOnM (t1 : TARG_ID) (t2 : TARG_ID) (l: list (TARG_ID * TARG_ID)) : Prop :=
+  match l with 
+  | [] => False 
+  | h :: t  =>if andb (eqb (fst h) t1) (eqb (snd h) t2) then True else dependsOnM t1 t2 t
+  end.  
+
+
+(** Determine if target [t1] within the environment [e]  
+  * depends on target [t2] (the context relation)
   *)
-Definition dependsOne (k:Plc)(e:Environment)(p:Plc):Prop :=
+Definition dependsOne (t1:TARG_ID)(t2:TARG_ID)(k:Plc)(e:Environment):Prop :=
   match (e k) with
   | None => False
-  | Some m => In p m.(C)
+  | Some m => dependsOnM t1 t2 m.(C)
   end.
 
 (** Determine if place [k] within the system [s]  
   * depends on place [p] (the context relation)
   *)
-Fixpoint dependsOns (k:Plc)(s:System)(p:Plc):Prop :=
+Fixpoint dependsOns (t1:TARG_ID)(t2:TARG_ID)(k:Plc)(s:System) : Prop :=
   match s with
   | [] => False
-  | s1 :: ss => (dependsOne k s1 p) \/ (dependsOns k ss p)
+  | s1 :: ss => (dependsOne t1 t2 k s1) \/ (dependsOns t1 t2 k ss)
   end.
-Check plc_dec.
+
+Theorem dependsOnM_dec : forall t1 t2 l, {(dependsOnM t1 t2 l)}+{~(dependsOnM t1 t2 l)}.
+Proof with auto.
+  intros. induction l.
+  + auto.
+  + simpl. inversion IHl.
+  ++ destruct andb... 
+  ++ destruct andb...
+Qed.                
 
 (* depends on (context relation) is decidable *)
-Theorem dependsOne_dec : forall k e p, {(dependsOne k e p)}+{~(dependsOne k e p)}.
+Theorem dependsOne_dec : forall t1 t2 k e, {(dependsOne t1 t2 k e)}+{~(dependsOne t1 t2 k e)}.
 Proof with auto.
-  intros k e p.
-  unfold dependsOne.
-  destruct (e k) ...
-  + induction (C m).
-  ++ auto.
-  ++ simpl. inversion IHl.
-  +++ auto.
-  +++ pose proof plc_dec a p. inversion H0.
-  ++++ left ...
-  ++++ right_intro_inverts ...
+  intros t1 t2 k e. unfold dependsOne. destruct (e k)... 
+  destruct (C m)... pose proof dependsOnM_dec t1 t2 (p :: l). inversion H.
+  + left. apply H0. 
+  + right. apply H0.     
 Defined.        
 
-Theorem dependsOns_dec : forall k s p, {dependsOns k s p} + {~ dependsOns k s p}.
+Theorem dependsOns_dec : forall t1 t2 k s, {dependsOns t1 t2 k s} + {~ dependsOns t1 t2 k s}.
 Proof with auto.
-  intros. induction s. 
-  + simpl...
-  + simpl. pose proof dependsOne_dec k a p. inversion IHs.
-  ++ left. right. apply H0. 
-  ++ inversion H.
-  +++ left. left. apply H1.
-  +++ right_intro_inverts... 
+  intros. induction s... 
+  simpl. inversion IHs...
+  pose proof dependsOne_dec t1 t2 k a. inversion H0...
+  right. unfold not. intros. inversion H2...       
 Defined.            
     
 (********************
