@@ -1,0 +1,35 @@
+\begin{tikzpicture}
+  
+      \node[rectangle,
+            draw,
+            fill = yellow!30,
+            minimum width = 6cm, 
+            minimum height = 6cm] (r) at (0,0) {};
+      \node[anchor=south] at (r.south) {Host};
+      
+      \node[rectangle,
+            draw,
+            fill = orange!30,
+            minimum width = 4cm, 
+            minimum height = 4cm] (AM) at (r.center) {};
+      \node[anchor=south] at (AM.south) {AM}; 
+
+      \node[rectangle,
+            draw,
+            fill = white,
+            minimum width = 1cm, 
+            minimum height = 1cm] (ASP) at (-1,0) {};
+      \node at (ASP.center) {ASP};
+
+      \node[rectangle,
+            draw,
+            fill = white,
+            minimum width = 1cm, 
+            minimum height = 1cm] (T1) at (1,0) {};
+      \node at (T1.center) {T1};
+      
+      
+
+      
+  
+  \end{tikzpicture}
