@@ -1,9 +1,18 @@
 \documentclass[12pt, letterpaper]{article}
 
+\setlength {\marginparwidth }{2cm}
+
 \usepackage{tikz}
 \usetikzlibrary{shapes,arrows}
 \tikzstyle{line}=[draw]
+\usepackage{amsthm}
+\usepackage{amsmath}
+\usepackage[textsize=tiny]{todonotes}
 
+%\newtheorem{thm}{Theorem}
+%\newtheorem{defn}[thm]{Definition}
+
+\input{prelude}
 
 \newcommand{\squash}{\itemsep=0pt\parskip=0pt}
 
@@ -17,13 +26,82 @@
 
 \section{Context Defined}
 
-\begin{figure}[hbtp]
-    \centering \input{systemOverview.tex}
-    \caption[Attestation architecture]{.}
-    \label{fig:architecture-fig}
-  \end{figure}
+First, in order to do any real reasoning about a system's context, we must formally define it. 
+
+\begin{defn}[Context]
+  A system's \emph{context} is a relationship represented within a Manifest that describes the dependencies within the system. 
+\end{defn}
+
+Some questions and interesting points arise when attempting to grasp this definition and realize the following example. Below are some words I think we need to define as we work towards the ordering problem. 
+
+\begin{defn}[Dependency] 
+  One component \emph{depends} on another when... 
+\end{defn}
+
+\begin{defn}[Similar] 
+  One protocol is \emph{similar} to another when... They measure the same targets? The measurement chain reaches the same depth? The measurement chain reaches the same range? 
+\end{defn}
+
+\begin{defn}[Better] 
+  One protocol is \emph{better} than another when... 
+\end{defn}
+
+\section{Example System}
+
+Consider the example presented in Figure \ref{fig:Host1} where a request is sent to a target $Host1$. We know a request is a list of protocols as Copland phrases. Let's assume that $R$ = [ $\at{Host1}{} $ (ASP Host2 t2) ] which says some relying party would like the target system to preform a measurement of the target $T2$ located on $Host2$. 
+
+The arrow between ASP and T2 reveals that ASP can measure T2. This results in the following Copland phrase: 
+
+\begin{center}
+  $ \at{Host1} (ASP\:\: Host2\:\: T2)$
+\end{center}
+
+\begin{figure}[]
+  \centering \input{Host1.tex}
+  \caption{Example Target System.}
+  \label{fig:Host1}
+\end{figure}
+
+For examples sake, say that ASP no longer has direct access to the measurement target T2 yet the goal of the attestation was to measure T2. This means we will have to realize a measurement of T2 is a different way. To start, we can expand Host2 to get a view of its attestation capabilities. This is represented with Figure \ref{fig:Host2}. We see Host2 has some ASP, $ASP2$ which can preform a measurement of $T2$. The integrity of the measurer $ASP2$ depends on the integrity of the following components: the operating system (OS), the device driver (DR), and some cryptographic operations $ \{ \}_{K}$. Then, these components all depend on the integrity of the root of trust measurement (RoTM). These dependencies are represented within Host2's manifest. 
+
+In an abstract-ish version of Copland, the measurement chain for HOST2 could look like: 
+
+\begin{center}
+  $ \at{Host2}{(ROTM \linseqe ( OS \brapare{} DR \brapare{} \{ \}_{K} ) \linseqe (ASP2\:\: Host2\:\: T2))}$
+  \todo{I have no idea how to use parathesis and Copland...}
+\end{center}
+
+where $\linseqe$ represents sequenced measurement and $\brapare{}$ represents parallel measurement. In other words, this phrase says, measure the root of trust, then measure OS, DR, and $\{ \}_{K}$ in parallel, then finally use ASP2 to take a measurement of T2. 
+
+\todo{To be technically correct, how do you phrase the relationship between OS, DR, and SIG and the ROTM?}
+
+\begin{figure}[]
+  \centering \input{Host2.tex}
+  \caption{Example Host2 System.}
+  \label{fig:Host2}
+\end{figure}
+
+For examples sake, say that ASP no longer has access to the measurement of T2 directly yet the goal of the attestation is to measure T2. Combining Host1 and Host2 and representing this new fact, we have the following system in Figure \ref{fig:System1}. If the request remains \\  $R$ = [ (ASP Host2 T2) ] we must consider what would be a ``similar'' measurement? This idea captures the concept of ordering measurements using the \emph{measures} and \emph{context} relations. 
+
+\todo{define similar?}
+
+\pagebreak
+Say we have the following protocol, as would be represented in Figure \ref{fig:Host1} and Figure \ref{fig:Host2}.
+
+\begin{eqnarray*}
+  P1 &=& \at{Host1} (ASP\:\: Host2\:\: T2) \\
+  P2 &=& \at{Host2}{(ROTM \linseqe ( OS \brapare{} DR \brapare{} \{ \}_{K} ) \linseqe (ASP2\:\: Host2\:\: T2))}
+\end{eqnarray*}
+
+Is it correct to say that P1 $=$ P2? Both protocols satisfy the goal of measuring T2. It feels wrong to say they are equivalent. Maybe the relationship between protocols is best represented by an ordering operator. We could say that P2 $\leq$ P1. The certainly feels like a step in the right direction of the lattice. However, we need to explicitly define how P1 is ``better''. Is it better because it more directly measures T2 and therefore requires fewer resources. Or maybe I have this ordering wrong and P2 is better because it reveals more about the integrity of the measurer ASP2. 
+
+\todo{Maybe now time to formally define better?}
 
 
-
+\begin{figure}[]
+  \centering \input{systemOverview.tex}
+  \caption{Total system.}
+  \label{fig:System1}
+\end{figure}
 
 \end{document}
