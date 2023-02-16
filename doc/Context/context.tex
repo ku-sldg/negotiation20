@@ -8,6 +8,8 @@
 \usepackage{amsthm}
 \usepackage{amsmath}
 \usepackage[textsize=tiny]{todonotes}
+\usepackage{array}
+\newcolumntype{L}{>$l<$}
 
 %\newtheorem{thm}{Theorem}
 %\newtheorem{defn}[thm]{Definition}
@@ -43,8 +45,24 @@ Some questions and interesting points arise when attempting to grasp this defini
 \end{defn}
 
 \begin{defn}[Better] 
-  One protocol is \emph{better} than another when... 
+  One protocol is \emph{better} than another when... consider better as the top of the lattice or the "highest" protocol in the preorder. 
 \end{defn}
+
+\section{Mathematics}
+
+\begin{defn}[(Labeled) Transition System]
+  A \emph{transition system} is a triple $<S,S_0, \linseqe>$, with a set of states S, a set of initial states $S_0 \subseteq S$, and a transition relation $\linseqe \subseteq S \times S$ \cite{FRAP}
+\end{defn}
+
+Related to a transition system, we could define \emph{reachable}, an \emph{invariant}, and possibly some \emph{correctness} condition. Recall from class, an invariant is a property that is true in all states. A state is reachable if there is some starting state from which we can transition to the reachable state. 
+
+We may want to reason about protocol behavior to say that if two protocols produce the same evidence, then they are behaviorally equivalent. To do this, we may need to use a weak bisimulation. 
+
+\begin{defn}[Weak Bisimulation]
+A weak bisimulation is a relation \textbf{R} such that P \textbf{R} Q $\implies$ $\forall \mu, P, P' (P \xrightarrow[]{\mu} P' \implies \forall Q'. Q \overset{\mu}\Rightarrow Q'$ and P' \textbf{R} Q' ) \cite{Milner} 
+\end{defn}
+
+This says if we have some relation that relates P and Q and we can take some step from P to P' through $\mu$ and some potentially different steps from Q to Q' but again through $\mu$ then P' is related to Q'.  \todo{this doesn't seem right?}
 
 \section{Example System}
 
@@ -56,7 +74,7 @@ The arrow between ASP and T2 reveals that ASP can measure T2. This results in th
   $ \at{Host1} (ASP\:\: Host2\:\: T2)$
 \end{center}
 
-\begin{figure}[]
+\begin{figure}[hbtp]
   \centering \input{Host1.tex}
   \caption{Example Target System.}
   \label{fig:Host1}
@@ -103,5 +121,28 @@ Is it correct to say that P1 $=$ P2? Both protocols satisfy the goal of measurin
   \caption{Total system.}
   \label{fig:System1}
 \end{figure}
+
+\section{Protocols as Transition System}
+
+Perry's thought is to define a weak bisimulation over Copland terms but, in order to do this, we must have The Copland grammar is presented abstractly by \cite{Rowe::Ordering} as follows: 
+
+%\begin{figure}[hbtp]
+\[ \begin{array}{rclL@{\quad}}
+  C & :: & A(V) &  Actions with arguments \\
+    & | & C \linseqe C & Linear sequence \\
+    & | & C \linseq C & Sequential branching \\
+    & | & C \linpar C & Parallel branching \\
+    & | & \at{P}{[C]} & At place \\
+    & | & ( C ) & Grouping \\
+    
+\end{array} \]
+%  \caption{Abstract Copland Phrase Grammar}
+%  \label{fig:term-grammar}
+%\end{figure}
+
+This implies Copland is parameterized over the set of atomic actions. 
+
+\bibliographystyle{acm}
+\bibliography{citations.bib}
 
 \end{document}
