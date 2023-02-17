@@ -184,6 +184,19 @@ Realizing this system, we can derive a bottom up measurement scheme which, taken
 
 So, now we have the set of \textbf{states} which are measurement events. The initial state is either some \textbf{rtm} (root of trust measurement) or some \textbf{att-start} event. THE TRANSITION RELATION THEN IS THE MEASUREMENT RELATION. 
 
+Now, back to the example system presented in Figure \ref{fig:Host2}. We can represent this in a dependency like structure below similar to teh structure used by \cite{Rowe::Bundling}. 
+
+\begin{figure}[hbtp]
+  \centering
+  \input{Host2Block.tex}
+  \caption{Host2 presented as one system.}
+  \label{host2-block}
+\end{figure}
+
+We can then easily see how to create a transition system using the measures relation. 
+
+\pagebreak
+
 \bibliographystyle{acm}
 \bibliography{citations.bib}
 
