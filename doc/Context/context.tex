@@ -36,23 +36,37 @@ First, in order to do any real reasoning about a system's context, we must forma
 
 Some questions and interesting points arise when attempting to grasp this definition and realize the following example. Below are some words I think we need to define as we work towards the ordering problem. 
 
+Correctly defining a dependency is critical as we need to capture the intricacies of a layered system. We want to take bottom up measurements for many reasons, one being to confine an adversary \cite{Rowe::Bundling}.
+
 \begin{defn}[Dependency] 
   One component \emph{depends} on another when... 
 \end{defn}
 
+\begin{defn}[Separation] 
+  \emph{Separation} between components within the system is realized when... (this definition is motivated by \cite{Ramsdell::Orchestrating} )
+\end{defn}
+
 \begin{defn}[Similar] 
-  One protocol is \emph{similar} to another when... They measure the same targets? The measurement chain reaches the same depth? The measurement chain reaches the same range? 
+  One protocol is \emph{similar} to another when... They measure the same targets? The measurement chain reaches the same depth? The measurement chain reaches the same range? .. consider defining "similar" as a weak bisimulation
 \end{defn}
 
 \begin{defn}[Better] 
   One protocol is \emph{better} than another when... consider better as the top of the lattice or the "highest" protocol in the preorder. 
 \end{defn}
 
+\begin{defn}[Trust Chain]
+  A emph{trust chain} is a measurement chain that begins at the root of trust and proceeds by taking measurements of the next closest layer until the top layer is measured thereby producing a layered attestation. 
+\end{defn}
+
 \section{Mathematics}
+
+Here are some interesting mathematically defined structures that could be useful. 
 
 \begin{defn}[(Labeled) Transition System]
   A \emph{transition system} is a triple $<S,S_0, \linseqe>$, with a set of states S, a set of initial states $S_0 \subseteq S$, and a transition relation $\linseqe \subseteq S \times S$ \cite{FRAP}
 \end{defn}
+
+I believe this definition raises many questions. What is the initial state? What are the set of state? What is the transition relation? A state could be some atomic action and a transition relation could be any control flow action. Another thought is only the $\at{}{}$ operator is a transition relation as it transfers the data and control from one plate to another. These questions are all answered below in the Transition System section. 
 
 Related to a transition system, we could define \emph{reachable}, an \emph{invariant}, and possibly some \emph{correctness} condition. Recall from class, an invariant is a property that is true in all states. A state is reachable if there is some starting state from which we can transition to the reachable state. 
 
@@ -63,6 +77,14 @@ A weak bisimulation is a relation \textbf{R} such that P \textbf{R} Q $\implies$
 \end{defn}
 
 This says if we have some relation that relates P and Q and we can take some step from P to P' through $\mu$ and some potentially different steps from Q to Q' but again through $\mu$ then P' is related to Q'.  \todo{this doesn't seem right?}
+
+\begin{defn}[Partially Ordered Set]
+  A partially ordered set $(E, \preceq)$ is defined by it's underlying set E and it's ordering relation $\preceq$
+\end{defn}
+
+Consider \emph{upper bound} and emph{lower bound} of the poset for possible interesting properties. 
+
+\todo{define our ordering relation. Maybe its ordered by dependencies?}
 
 \section{Example System}
 
@@ -124,7 +146,7 @@ Is it correct to say that P1 $=$ P2? Both protocols satisfy the goal of measurin
 
 \section{Protocols as Transition System}
 
-Perry's thought is to define a weak bisimulation over Copland terms but, in order to do this, we must have The Copland grammar is presented abstractly by \cite{Rowe::Ordering} as follows: 
+Perry's thought is to define a weak bisimulation over Copland terms but, in order to do this, we must have a transition system for protocols. To do this, we start with the Copland grammar as presented abstractly by \cite{Rowe::Ordering} below: 
 
 %\begin{figure}[hbtp]
 \[ \begin{array}{rclL@{\quad}}
@@ -140,7 +162,27 @@ Perry's thought is to define a weak bisimulation over Copland terms but, in orde
 %  \label{fig:term-grammar}
 %\end{figure}
 
-This implies Copland is parameterized over the set of atomic actions. 
+The grammar is parameterized over atomic actions. The atomic actions are placed together by nonterminal actions such as: linear sequencing, sequential branching, parallel branching, at operations, and grouping. Because of this structure and other works on layered attestation, I believe the set of states are the set of measurement operations \cite{Rowe::Bundling,Ramsdell::Orchestrating}.
+
+To encourage this idea, consider the architecture presented by Rowe in Figure \ref{att-system-rowe}. Here, the UserVM has three measurement components \emph{sys}, \emph{vc}, \emph{kernel}. The UserVM has a sibling VM which hosts two measurement components \emph{A1} and \emph{A2}. Both these VMs are managed by a Hypervisor which runs on top of some Hardware contain a TPM. This hardware includes the root of trust for measurement.  
+
+\begin{figure}[hbtp]
+  \centering
+  \includegraphics[scale=.5]{AttSystemRowe.png}
+  \caption{An example attestation system defined by \cite{Rowe::Bundling}.}
+  \label{att-system-rowe}
+\end{figure}
+
+Realizing this system, we can derive a bottom up measurement scheme which, taken from \cite{Rowe::Bundling}, can be visualized below. In this diagram, we propose that time begins at the top with the measurement of  the \emph{rtm}. This implies time flows downwards. In this notation, we consider a measurement event $ms_{ker}(vc,sys)$ imples the event of \emph{vc} measuring \emph{sys} in the context of \emph{ker}. Another example is $ms(rtm,A_1)$ where the measurement of $A_1$ is performed in the context of $rtm$. \todo{With this notation, I think contextual dependencies are represented as pairs}
+
+\begin{figure}[hbtp]
+  \centering
+  \includegraphics[scale=.5]{MeasOrdRowe.png}
+  \caption{An example of measurement ordering from the previous system as defined by \cite{Rowe::Bundling}.}
+  \label{meas-ord-rowe}
+\end{figure}
+
+So, now we have the set of \textbf{states} which are measurement events. The initial state is either some \textbf{rtm} (root of trust measurement) or some \textbf{att-start} event. THE TRANSITION RELATION THEN IS THE MEASUREMENT RELATION. 
 
 \bibliographystyle{acm}
 \bibliography{citations.bib}
