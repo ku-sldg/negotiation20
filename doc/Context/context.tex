@@ -10,6 +10,7 @@
 \usepackage[textsize=tiny]{todonotes}
 \usepackage{array}
 \newcolumntype{L}{>$l<$}
+\usepackage{alltt}
 
 %\newtheorem{thm}{Theorem}
 %\newtheorem{defn}[thm]{Definition}
@@ -25,6 +26,18 @@
 \begin{document}
 
 \maketitle
+
+GOAL: The goal of this document is to: 
+\begin{enumerate}
+  \squash
+  \item Reason about the context relation so that the target is able to better realize the dependencies within their system
+  \item Define an example system to realize necessary properties
+  \item Define weak bisimulation of measurement. In order to do this, we must have a (labeled?) transition system so we need to define a transition system and all supporting details. 
+\end{enumerate}
+
+After writing these goals... I realize I need to come up with a research question to clearly define what I am attempting to solve. 
+
+\tableofcontents
 
 \section{Context Defined}
 
@@ -55,7 +68,7 @@ Correctly defining a dependency is critical as we need to capture the intricacie
 \end{defn}
 
 \begin{defn}[Trust Chain]
-  A emph{trust chain} is a measurement chain that begins at the root of trust and proceeds by taking measurements of the next closest layer until the top layer is measured thereby producing a layered attestation. 
+  A \emph{trust chain} is a measurement chain that begins at the root of trust and proceeds by taking measurements of the next closest layer until the top layer is measured thereby producing a layered attestation. 
 \end{defn}
 
 \section{Mathematics}
@@ -88,12 +101,14 @@ Consider \emph{upper bound} and emph{lower bound} of the poset for possible inte
 
 \section{Example System}
 
-Consider the example presented in Figure \ref{fig:Host1} where a request is sent to a target $Host1$. We know a request is a list of protocols as Copland phrases. Let's assume that $R$ = [ $\at{Host1}{} $ (ASP Host2 t2) ] which says some relying party would like the target system to preform a measurement of the target $T2$ located on $Host2$. 
+A key facet of attestation system design is the idea of \emph{means of isolation} which protects attestation components from potentially untrusted measurement targets \cite{Petz::DesignandFormal::2021}. In essence, we assume an attestion component (ie measurer) is good because of its formal guarentees rather than stating it is good because of the result of measurement. As we present the following example, we assume all attestation components uphold a means of seperation and are thus individually trusted. 
+
+Consider the example presented in Figure \ref{fig:Host1} where a request is sent to a target $Host1$. We know a request is a list of protocols as Copland phrases. Let's assume that $R$ = [ $\at{Host1}{} $ ($attest$ Host2 t2) ] which says some relying party would like the target system to preform an $attest$ measurement of the target $T2$ located on $Host2$. 
 
 The arrow between ASP and T2 reveals that ASP can measure T2. This results in the following Copland phrase: 
 
 \begin{center}
-  $ \at{Host1} (ASP\:\: Host2\:\: T2)$
+  $ \at{Host1} (attest\:\: Host2\:\: T2)$
 \end{center}
 
 \begin{figure}[hbtp]
@@ -104,14 +119,37 @@ The arrow between ASP and T2 reveals that ASP can measure T2. This results in th
 
 For examples sake, say that ASP no longer has direct access to the measurement target T2 yet the goal of the attestation was to measure T2. This means we will have to realize a measurement of T2 is a different way. To start, we can expand Host2 to get a view of its attestation capabilities. This is represented with Figure \ref{fig:Host2}. We see Host2 has some ASP, $ASP2$ which can preform a measurement of $T2$. The integrity of the measurer $ASP2$ depends on the integrity of the following components: the operating system (OS), the device driver (DR), and some cryptographic operations $ \{ \}_{K}$. Then, these components all depend on the integrity of the root of trust measurement (RoTM). These dependencies are represented within Host2's manifest. 
 
-In an abstract-ish version of Copland, the measurement chain for HOST2 could look like: 
+In Copland, Host2 may have the following measurements: 
 
-\begin{center}
-  $ \at{Host2}{(ROTM \linseqe ( OS \brapare{} DR \brapare{} \{ \}_{K} ) \linseqe (ASP2\:\: Host2\:\: T2))}$
-  \todo{I have no idea how to use parathesis and Copland...}
-\end{center}
+\begin{itemize}
+  \squash
+  \item ROTM -- (query\_img bootMem RoTM) \cite{Petz::DesignandFormal::2021}
+  \item OS -- (kim Host2 OS)
+  \item DR -- (kim Host2 DR)
+  \item $ \{ \}_{K}$  -- (kim Host2 crypto)
+  \item $attest$ Host2 T2
+\end{itemize}
 
-where $\linseqe$ represents sequenced measurement and $\brapare{}$ represents parallel measurement. In other words, this phrase says, measure the root of trust, then measure OS, DR, and $\{ \}_{K}$ in parallel, then finally use ASP2 to take a measurement of T2. 
+Combining these measurements together may produce the following Copland phrase:
+
+%@{Host2}{}$ 
+%[(query\_img bootMem RoTM)
+%  $\linseqe$  
+%    ( (kim Host2 OS) $\brapare{}$ (kim Host2 DR) $\brapare{}$ (kim Host2 $ \{ \}_{K}$)) 
+%  $\linseqe$ 
+%    (ASP2 Host2 T2)]
+
+\medskip
+\begin{alltt}
+  @ Host2 [  
+    (query\_img bootMem RoTM) ->  
+    ((kim Host2 OS) ~ (kim Host2 DR) ~ (kim Host2 crypto)) -> 
+    (ASP2 Host2 T2)]
+\end{alltt}
+\medskip
+\todo{I have no idea how to use parathesis and Copland...}
+
+where $\linseqe$ represents sequenced measurement and $\brapare{}$ represents parallel measurement. In other words, this phrase says, measure the root of trust, then measure OS, DR, and $\{ \}_{K}$ in parallel, then finally use the attest ASP to take a measurement of T2. 
 
 \todo{To be technically correct, how do you phrase the relationship between OS, DR, and SIG and the ROTM?}
 
@@ -123,9 +161,14 @@ where $\linseqe$ represents sequenced measurement and $\brapare{}$ represents pa
 
 For examples sake, say that ASP no longer has access to the measurement of T2 directly yet the goal of the attestation is to measure T2. Combining Host1 and Host2 and representing this new fact, we have the following system in Figure \ref{fig:System1}. If the request remains \\  $R$ = [ (ASP Host2 T2) ] we must consider what would be a ``similar'' measurement? This idea captures the concept of ordering measurements using the \emph{measures} and \emph{context} relations. 
 
+\begin{figure}[htbp]
+  \centering \input{systemOverview.tex}
+  \caption{Total system.}
+  \label{fig:System1}
+\end{figure}
+
 \todo{define similar?}
 
-\pagebreak
 Say we have the following protocol, as would be represented in Figure \ref{fig:Host1} and Figure \ref{fig:Host2}.
 
 \begin{eqnarray*}
@@ -136,13 +179,6 @@ Say we have the following protocol, as would be represented in Figure \ref{fig:H
 Is it correct to say that P1 $=$ P2? Both protocols satisfy the goal of measuring T2. It feels wrong to say they are equivalent. Maybe the relationship between protocols is best represented by an ordering operator. We could say that P2 $\leq$ P1. The certainly feels like a step in the right direction of the lattice. However, we need to explicitly define how P1 is ``better''. Is it better because it more directly measures T2 and therefore requires fewer resources. Or maybe I have this ordering wrong and P2 is better because it reveals more about the integrity of the measurer ASP2. 
 
 \todo{Maybe now time to formally define better?}
-
-
-\begin{figure}[]
-  \centering \input{systemOverview.tex}
-  \caption{Total system.}
-  \label{fig:System1}
-\end{figure}
 
 \section{Protocols as Transition System}
 
@@ -182,9 +218,9 @@ Realizing this system, we can derive a bottom up measurement scheme which, taken
   \label{meas-ord-rowe}
 \end{figure}
 
-So, now we have the set of \textbf{states} which are measurement events. The initial state is either some \textbf{rtm} (root of trust measurement) or some \textbf{att-start} event. THE TRANSITION RELATION THEN IS THE MEASUREMENT RELATION. 
+So, now we have the set of \textbf{states} which are measurement events. The initial state is either some \textbf{rtm} (root of trust measurement) or some \textbf{att-start} event. \textbf{The transition relation is then the measurement relation.} 
 
-Now, back to the example system presented in Figure \ref{fig:Host2}. We can represent this in a dependency like structure below similar to teh structure used by \cite{Rowe::Bundling}. 
+Now, back to the example system presented in Figure \ref{fig:Host2}. We can represent this in a dependency like structure below similar to the structure used by \cite{Rowe::Bundling}. 
 
 \begin{figure}[hbtp]
   \centering
@@ -193,7 +229,16 @@ Now, back to the example system presented in Figure \ref{fig:Host2}. We can repr
   \label{host2-block}
 \end{figure}
 
-We can then easily see how to create a transition system using the measures relation. 
+We can then maybe(?) see how to create a transition system using the measures relation. 
+
+\begin{figure}[hbtp]
+  \centering
+  \input{MeasOrdHost2.tex}
+  \caption{Host2 measuring order.}
+  \label{host2-measord}
+\end{figure}
+
+I'm starting to get confused at the purpose of this. 
 
 \pagebreak
 

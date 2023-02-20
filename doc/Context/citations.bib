@@ -43,6 +43,7 @@ isbn="978-3-030-17138-4"
     title = {Formal Reasoning About Programs},
     author = {Adam Chlipala},
     year = {2021},
+    publisher= {Online},
     howpublished = {\url{http://adam.chlipala.net/frap/frap_book.pdf}},  
 }
 
@@ -67,6 +68,24 @@ address="Cham",
 pages="119--139",
 abstract="Systems designed with measurement and attestation in mind are often layered, with the lower layers measuring the layers above them. Attestations of such systems, which we call layered attestations, must bundle together the results of a diverse set of application-specific measurements of various parts of the system. Some methods of layered attestation are more trustworthy than others especially in the presence of an adversary that can dynamically corrupt system components. It is therefore important for system designers to understand the trust consequences of different designs. This paper presents a formal framework for reasoning about layered attestations. We identify inference principles based on the causal effects of dynamic corruption, and we propose a method for bundling evidence that is robust to such corruptions.",
 isbn="978-3-319-45572-3"
+}
+
+@inproceedings{Petz::DesignandFormal::2021,
+author = {Petz, Adam and Jurgensen, Grant and Alexander, Perry},
+title = {Design and Formal Verification of a Copland-Based Attestation Protocol},
+year = {2021},
+isbn = {9781450391276},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3487212.3487340},
+doi = {10.1145/3487212.3487340},
+abstract = {We present the design and formal analysis of a remote attestation protocol and accompanying security architecture that generate evidence of trustworthy execution for legacy software. For formal guarantees of measurement ordering and cryptographic evidence strength, we leverage the Copland language and Copland Virtual Machine execution semantics. For isolation of attestation mechanisms we design a layered attestation architecture that leverages the seL4 microkernel. The formal properties of the protocol and architecture together serve to discharge assumptions made by an existing higher-level model-finding tool to characterize all ways an active adversary can corrupt a target and go undetected. As a proof of concept, we instantiate this analysis framework with a specific Copland protocol and security architecture to measure a legacy flight planning application. By leveraging components that are amenable to formal analysis, we demonstrate a principled way to design an attestation protocol and argue for its end-to-end correctness.},
+booktitle = {Proceedings of the 19th ACM-IEEE International Conference on Formal Methods and Models for System Design},
+pages = {111–117},
+numpages = {7},
+keywords = {formal methods, remote attestation, verification},
+location = {Virtual Event, China},
+series = {MEMOCODE '21}
 }
 
 
