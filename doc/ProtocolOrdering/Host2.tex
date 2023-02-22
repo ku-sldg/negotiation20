@@ -1,0 +1,62 @@
+\begin{tikzpicture}[->,>=stealth']
+
+    \node[rectangle,
+          draw,
+          fill = blue!30,
+          minimum width = 4cm, 
+          minimum height = 4cm] (Host2) at (0,0) {};
+    \node[anchor=north] at (Host2.north) {Host2}; 
+
+    \node[rectangle,
+          draw,
+          fill = white,
+          minimum width = 1cm, 
+          minimum height = 1cm] (T2) at (0,.5) {};
+    \node at (T2.center) {T2};
+
+    \node[rectangle,
+        draw,
+        fill = white,
+        minimum width = 1.3cm, 
+        minimum height = 1cm] (ASP2) at (0,-1) {};
+    \node at (ASP2.center) {ASP2};
+
+    \node[rectangle,
+        draw,
+        fill = white,
+        minimum width = 1cm, 
+        minimum height = 1cm] (OS) at (-2,-3) {};
+    \node at (OS.center) {OS};
+
+    \node[rectangle,
+        draw,
+        fill = white,
+        minimum width = 1cm, 
+        minimum height = 1cm] (DR) at (0,-3) {};
+    \node at (DR.center) {DR};
+
+    \node[rectangle,
+        draw,
+        fill = white,
+        minimum width = 1cm, 
+        minimum height = 1cm] (SIG) at (2,-3) {};
+    \node at (SIG.center) {$ \{ \}_{K}$};
+
+    \node[rectangle,
+        draw,
+        fill = green!30,
+        minimum width = 2cm, 
+        minimum height = 1cm] (RoTM) at (0,-5) {};
+    \node at (RoTM.center) {ROTM};
+    
+
+    \path[every node/.style={font=\sffamily\small}]
+    (ASP2.north) edge node [left] {} (T2.south)
+    (OS.north) edge [dotted] node {} (ASP2.south)
+    (DR.north) edge [dotted] node {} (ASP2.south)
+    (SIG.north) edge [dotted] node {} (ASP2.south)
+    (RoTM.north) edge node {} (OS.south)
+    (RoTM.north) edge node {} (DR.south)
+    (RoTM.north) edge node {} (SIG.south);
+
+\end{tikzpicture}
