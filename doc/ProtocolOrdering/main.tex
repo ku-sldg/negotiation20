@@ -4,6 +4,7 @@
 
 \usepackage{tikz}
 \usetikzlibrary{shapes,arrows}
+\usetikzlibrary{automata, positioning}
 \tikzstyle{line}=[draw]
 \usepackage{amsthm}
 \usepackage{amsmath}
@@ -11,6 +12,7 @@
 \usepackage{array}
 \newcolumntype{L}{>$l<$}
 \usepackage{alltt}
+\usepackage{amsfonts}
 
 %\newtheorem{thm}{Theorem}
 %\newtheorem{defn}[thm]{Definition}
@@ -19,7 +21,7 @@
 
 \newcommand{\squash}{\itemsep=0pt\parskip=0pt}
 
-\title{Context Relation Musings}
+\title{Protocol Ordering Musings}
 \author{Anna Fritz}
 \date{\today}
 
@@ -35,11 +37,13 @@ GOAL: The goal of this document is to:
   \item Define weak bisimulation of measurement. In order to do this, we must have a (labeled?) transition system so we need to define a transition system and all supporting details. 
 \end{enumerate}
 
-After writing these goals... I realize I need to come up with a research question to clearly define what I am attempting to solve. 
+We aim to solve the following research questions: Can we define a weak bisimulation over measurements such that one measurement is better than another? 
 
 \tableofcontents
 
-\section{Context Defined}
+\pagebreak
+
+\section{Context Relation Defined}
 
 First, in order to do any real reasoning about a system's context, we must formally define it. 
 
@@ -47,7 +51,7 @@ First, in order to do any real reasoning about a system's context, we must forma
   A system's \emph{context} is a relationship represented within a Manifest that describes the dependencies within the system. 
 \end{defn}
 
-Some questions and interesting points arise when attempting to grasp this definition and realize the following example. Below are some words I think we need to define as we work towards the ordering problem. 
+Some questions and interesting points arise when attempting to grasp this definition. Below are some words, related to context, I think we need to define as we work towards the ordering problem. 
 
 Correctly defining a dependency is critical as we need to capture the intricacies of a layered system. We want to take bottom up measurements for many reasons, one being to confine an adversary \cite{Rowe::Bundling}.
 
@@ -71,6 +75,14 @@ Correctly defining a dependency is critical as we need to capture the intricacie
   A \emph{trust chain} is a measurement chain that begins at the root of trust and proceeds by taking measurements of the next closest layer until the top layer is measured thereby producing a layered attestation. 
 \end{defn}
 
+\section{Measures Relation Defined}
+
+\begin{defn}[Measures]
+  One attestation manager can measure another when the location of the measurement target is known and the resulting evidence produced by the target does not violate a policy. 
+\end{defn}
+
+While context describes dependencies within the system, measures defines additional attestation component the current system is aware of. Both relations are important for building a trust chain. 
+
 \section{Mathematics}
 
 Here are some interesting mathematically defined structures that could be useful. 
@@ -79,7 +91,7 @@ Here are some interesting mathematically defined structures that could be useful
   A \emph{transition system} is a triple $<S,S_0, \linseqe>$, with a set of states S, a set of initial states $S_0 \subseteq S$, and a transition relation $\linseqe \subseteq S \times S$ \cite{FRAP}
 \end{defn}
 
-I believe this definition raises many questions. What is the initial state? What are the set of state? What is the transition relation? A state could be some atomic action and a transition relation could be any control flow action. Another thought is only the $\at{}{}$ operator is a transition relation as it transfers the data and control from one plate to another. These questions are all answered below in the Transition System section. 
+% I believe this definition raises many questions. What is the initial state? What are the set of state? What is the transition relation? A state could be some atomic action and a transition relation could be any control flow action. Another thought is only the $\at{}{}$ operator is a transition relation as it transfers the data and control from one plate to another. These questions are all answered below in the Transition System section. 
 
 Related to a transition system, we could define \emph{reachable}, an \emph{invariant}, and possibly some \emph{correctness} condition. Recall from class, an invariant is a property that is true in all states. A state is reachable if there is some starting state from which we can transition to the reachable state. 
 
@@ -95,7 +107,7 @@ This says if we have some relation that relates P and Q and we can take some ste
   A partially ordered set $(E, \preceq)$ is defined by it's underlying set E and it's ordering relation $\preceq$
 \end{defn}
 
-Consider \emph{upper bound} and emph{lower bound} of the poset for possible interesting properties. 
+Consider \emph{upper bound} and \emph{lower bound} of the poset for possible interesting properties. 
 
 \todo{define our ordering relation. Maybe its ordered by dependencies?}
 
@@ -182,7 +194,7 @@ Is it correct to say that P1 $=$ P2? Both protocols satisfy the goal of measurin
 
 \section{Protocols as Transition System}
 
-Perry's thought is to define a weak bisimulation over Copland terms but, in order to do this, we must have a transition system for protocols. To do this, we start with the Copland grammar as presented abstractly by \cite{Rowe::Ordering} below: 
+One thought is to define a weak bisimulation over Copland terms but, in order to do this, we must have a transition system for protocols. To do this, we start with the Copland grammar as presented abstractly by \cite{Rowe::Ordering} below: 
 
 %\begin{figure}[hbtp]
 \[ \begin{array}{rclL@{\quad}}
@@ -198,18 +210,18 @@ Perry's thought is to define a weak bisimulation over Copland terms but, in orde
 %  \label{fig:term-grammar}
 %\end{figure}
 
-The grammar is parameterized over atomic actions. The atomic actions are placed together by nonterminal actions such as: linear sequencing, sequential branching, parallel branching, at operations, and grouping. Because of this structure and other works on layered attestation, I believe the set of states are the set of measurement operations \cite{Rowe::Bundling,Ramsdell::Orchestrating}.
+The grammar is parameterized over atomic actions. The atomic actions are placed together by nonterminal actions such as: linear sequencing, sequential branching, parallel branching, at operations, and grouping. Because of this structure and other works on layered attestation, I believe the set of states are the set of measurement operations \cite{Rowe::Bundling,Ramsdell::Orchestrating}. This thought has been confirmed after looking at LTS.v semantics. 
 
 To encourage this idea, consider the architecture presented by Rowe in Figure \ref{att-system-rowe}. Here, the UserVM has three measurement components \emph{sys}, \emph{vc}, \emph{kernel}. The UserVM has a sibling VM which hosts two measurement components \emph{A1} and \emph{A2}. Both these VMs are managed by a Hypervisor which runs on top of some Hardware contain a TPM. This hardware includes the root of trust for measurement.  
 
-\begin{figure}[hbtp]
+\begin{figure}[]
   \centering
-  \includegraphics[scale=.5]{AttSystemRowe.png}
+  \includegraphics[scale=.45]{AttSystemRowe.png}
   \caption{An example attestation system defined by \cite{Rowe::Bundling}.}
   \label{att-system-rowe}
 \end{figure}
 
-Realizing this system, we can derive a bottom up measurement scheme which, taken from \cite{Rowe::Bundling}, can be visualized below. In this diagram, we propose that time begins at the top with the measurement of  the \emph{rtm}. This implies time flows downwards. In this notation, we consider a measurement event $ms_{ker}(vc,sys)$ imples the event of \emph{vc} measuring \emph{sys} in the context of \emph{ker}. Another example is $ms(rtm,A_1)$ where the measurement of $A_1$ is performed in the context of $rtm$. \todo{With this notation, I think contextual dependencies are represented as pairs}
+Realizing this system, we can derive a bottom up measurement scheme which, taken from \cite{Rowe::Bundling}, can be visualized below. In this diagram, we propose that time begins at the top with the measurement of  the \emph{rtm}. This implies time flows downwards. In this notation, we consider a measurement event $ms_{ker}(vc,sys)$ imples the event of \emph{vc} measuring \emph{sys} in the context of \emph{ker}. Another example is $ms(rtm,A_1)$ where the measurement of $A_1$ is performed in the context of a sound measurement of $rtm$. This clearly captures system dependencies. \todo{With this notation, I think contextual dependencies are represented as pairs}
 
 \begin{figure}[hbtp]
   \centering
@@ -218,7 +230,7 @@ Realizing this system, we can derive a bottom up measurement scheme which, taken
   \label{meas-ord-rowe}
 \end{figure}
 
-So, now we have the set of \textbf{states} which are measurement events. The initial state is either some \textbf{rtm} (root of trust measurement) or some \textbf{att-start} event. \textbf{The transition relation is then the measurement relation.} 
+So, now we have the set of \textbf{states} which are measurement events. The initial state is either some \textbf{rtm} (root of trust measurement) or some \textbf{att-start} event. \textbf{The transition relation is then the measurement relation.} \todo{What should the labels of the transition be??}
 
 Now, back to the example system presented in Figure \ref{fig:Host2}. We can represent this in a dependency like structure below similar to the structure used by \cite{Rowe::Bundling}. 
 
@@ -229,7 +241,7 @@ Now, back to the example system presented in Figure \ref{fig:Host2}. We can repr
   \label{host2-block}
 \end{figure}
 
-We can then maybe(?) see how to create a transition system using the measures relation. 
+We can then maybe(?) see how to create a transition system using the measures and context relation. Assume each component within the architecture runs their own attestation manager: one for the hardware, one for the VMM, and one for the M\&A VM. Both the Hardware and VMM attestation managers take static measurements during the boot sequence while the M\&A VM takes dynamic measurements during runtime. This distinction is noted but could be insignificant for this discussion. 
 
 \begin{figure}[hbtp]
   \centering
@@ -238,7 +250,41 @@ We can then maybe(?) see how to create a transition system using the measures re
   \label{host2-measord}
 \end{figure}
 
-I'm starting to get confused at the purpose of this. 
+\begin{figure}[hbtp]
+  \centering
+  \input{transitionSystem.tex}
+  \caption{Protocols as transition system.}
+  \label{transSys}
+\end{figure}
+
+
+
+\section{Small-Step Semantics}
+
+Small step semantics breaks a program's execution down into small sequential steps \cite{FRAP}. This idea differs from the idea of big-step semantics which reasons about a program's start state and final state, disregarding intermediate operations that may occur. Since we care about the intermediate steps of a protocol, we will move forward with defining a small-step semantics of protocol evaluation (?). 
+
+Within small-step semantics, one can define single step relations which transform the program from one state to the next by taking one execution step. For example, $c \to c'$ says start at state $c$ then take a step to the resulting state $c'$. In Orchestrating paper \cite{Ramsdell::Orchestrating}, authors define small-step semantics for Copland protocols. In this grammar, we define states $S$ where P is place, E is evidence, and T is annotated terms. 
+
+\[ \begin{array}{rclL@{\quad}}
+  S & \gets & \mathcal{C}(T, P, E) &  configuration state \\
+    & | & \mathcal{D} (P,E) & stop state (place p with evidence t) \\
+    & | & \mathcal{A} (\mathbb{N}, P , S) & state resulting from @ term \\
+    & | & \mathcal{LS} (S, T ) & state used when evaluating linear sequence \\
+    & | & \mathcal{BS}^{l} (\mathbb{N}, S , T , P , E) & evaluating left subterm\\
+    & | & \mathcal{BS}^{r} (\mathbb{N}, E, S)  & evaluating right subterm \\
+    & | & \mathcal{BP} (\mathbb{N}, S, S)  & parallel evaluation \\
+\end{array} \]
+
+Authors proved these semantics exhibit correctness, progress, and termination. 
+
+\begin{itemize}
+  \item \textbf{Correctness} says that the operational semantics are proven equivalent to the denotational semantics or that if you have some configuration state $C(t,p,e)$ and you can take one or many transitions to a done state $D (p,e')$ then that relation maps to the evidence semantics of $\bar{\mathcal{E}}(t,p,e) = e'$. 
+  \item  \textbf{Progress} says that either the phrase is in the done state $\mathcal{D} (p,e)$ or it it in some state such that it can be evaluated further. 
+  \item \textbf{Termination} says that for some number of transitions n, the configuration state can be transformed to the done state. 
+\end{itemize}
+
+In these semantics \textbf{measurement order} is preserved. This means that each step of the transition system is labeled with a natural number to introduce order. I thought I could start at the Orchestrating paper and utilize their semantics to prove a weak bisimulation between protocols. But labeling with only the natural number isn't enough. 
+
 
 \pagebreak
 

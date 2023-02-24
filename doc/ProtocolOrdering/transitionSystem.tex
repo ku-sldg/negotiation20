@@ -1,0 +1,20 @@
+\begin{tikzpicture}[->,>=stealth']
+    \node[state] at (-4,0) (s) {config};
+    \node[state] at (-2,0) (rotm) {rotm};
+    \node[state] at (1,-4) (os) {OS};
+    \node[state] at (1,0) (dr) {DR};
+    \node[state] at (1,-2) (cr) {CR};
+    \node[state] at (3,0) (t) {T2};
+    \node[state] at (5,0) (d) {done};
+
+    \draw (s) edge[above] node{s} (rotm)
+          (s) edge[above, bend left=45] node{h} (t)
+          (rotm) edge[above] node{a} (os)
+          (rotm) edge[above] node{b} (dr)
+          (rotm) edge[above] node{c} (cr)
+          (os) edge[above] node{e} (t)
+          (dr) edge[above] node{f} (t)
+          (cr) edge[above] node{g} (t)
+          (t) edge[above] node{d} (d);
+
+\end{tikzpicture}
