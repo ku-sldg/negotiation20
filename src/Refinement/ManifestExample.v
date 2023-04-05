@@ -152,7 +152,13 @@ Qed.
 (* Proofs about privacy policy . *)
 Check checkASPPolicy. 
 
-(* The target should be able to share a measurement of attest with the apprasier. *)
+(* The target should be able to share a measurement of attest with the apprasier. 
+   Here's the issue: we pass in the target and the target's environment 
+                     as well as the ASP in question... but we need to 
+                     specify WHO we are sharing this measurement with.... 
+                     we currently aren't doing that. 
+
+*)
 Example privPol1 : checkASPPolicy Target e_Targ attest.
 Proof.
   unfold checkASPPolicy. simpl. apply tar_pol.  
