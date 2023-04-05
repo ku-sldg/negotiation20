@@ -204,7 +204,7 @@ Proof with auto.
 Defined.            
     
 (********************
-  *   EXECUTABLE PROOFS 
+  *   EXECUTABLE 
   ********************)
 
 (** Is term [t] exectuable on the attestation manager named [k] in
@@ -279,7 +279,7 @@ Theorem executables_dec : forall t k s, {executables t k s} + {~executables t k 
 
 (** Check environment [e] and see if place [p] has some policy 
  *  where the Policy allows p to run a. *)
-Definition checkASPPolicy(p:Plc)(e:Environment)(a:ASP):Prop :=
+Definition checkASPPolicy (p:Plc) (e:Environment) (a:ASP) :Prop :=
   match (e p) with (* Look for p in the environment *)
   | None => False
   | Some m => (Policy m a p) (* Policy from m allows p to run a *)
