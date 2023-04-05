@@ -152,13 +152,28 @@ Qed.
 (* Proofs about privacy policy . *)
 Check checkASPPolicy. 
 
-(* The target should be able to share a measurement of attest with the apprasier. 
-   Here's the issue: we pass in the target and the target's environment 
-                     as well as the ASP in question... but we need to 
-                     specify WHO we are sharing this measurement with.... 
-                     we currently aren't doing that. 
 
-*)
+(*  The target should be able to share a measurement of attest with the apprasier. 
+    Here's the issue: we pass in the target and the target's environment 
+                      as well as the ASP in question... but we need to 
+                      specify WHO we are sharing this measurement with.... 
+                      we currently aren't doing that. *)
+
 Example privPol1 : checkASPPolicy Target e_Targ attest.
 Proof.
-  unfold checkASPPolicy. simpl. apply tar_pol.  
+  unfold checkASPPolicy. simpl.  
+Abort. 
+
+(** Check environment [e] and see if place [p] has some policy 
+*  where the Policy allows p to run a. *)
+Definition checkASPPolicy' (rp:Plc) (p:Plc) (e:Environment) (a:ASP) :Prop :=
+  match (e p) with (* Look for p in the environment *)
+  | None => False
+  | Some m => (Policy m a rp) (* Policy from m allows rp to have measurement of a *)
+  end.
+
+(* Now proof finishes *)
+Example privPol1 : checkASPPolicy' Appraise Target e_Targ attest.
+Proof.
+  unfold checkASPPolicy'. simpl. apply tar_pol.  
+Qed.  
