@@ -10,7 +10,6 @@ Require Import Cop.Copland.
 Import Copland.Term.
 
 (* TO DO: define situation *)
-Definition sit : Type. Admitted. 
 
 Record SA := {
     (* identity of the requestor *)
@@ -18,7 +17,7 @@ Record SA := {
     (* identity of the target... maybe this solves the "who answers the door"  *)
     target : Plc;
     (* situation field. TBD. *)
-    situation : sit ; 
+    situation : Type ; 
     (* lifetime of SA *)
     lifetime : nat ;
 }. 
