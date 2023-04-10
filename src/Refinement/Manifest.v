@@ -7,6 +7,7 @@ Require Import String.
 Require Import Cop.Copland.
 Import Copland.Term.
 Require Import Utils.Utilities.
+Require Import SA. 
 
 Module Manifest.
 
@@ -279,29 +280,45 @@ Theorem executables_dec : forall t k s, {executables t k s} + {~executables t k 
 
 (** Check environment [e] and see if place [p] has some policy 
  *  where the Policy allows p to run a. *)
-Definition checkASPPolicy (p:Plc) (e:Environment) (a:ASP) :Prop :=
+Definition checkASPPolicy (sa : SA) (p:Plc) (e:Environment) (a:ASP) :Prop :=
   match (e p) with (* Look for p in the environment *)
   | None => False
-  | Some m => (Policy m a p) (* Policy from m allows p to run a *)
+  | Some m => (Policy m a sa.(requestor)) (* Policy from m allows p to run a *)
   end.
   
 (** Recursive policy check. *)
-Fixpoint checkTermPolicy(t:Term)(k:Plc)(e:Environment):Prop :=
+Fixpoint checkTermPolicy (sa : SA) (t:Term)(k:Plc)(e:Environment):Prop :=
   match t with
-  | asp a  => checkASPPolicy k e a
-  | att r t0 => checkTermPolicy t0 k e
-  | lseq t1 t2 => checkTermPolicy t1 k e /\ checkTermPolicy t2 k e
-  | bseq _ t1 t2 => checkTermPolicy t1 k e /\ checkTermPolicy t2 k e
-  | bpar _ t1 t2 => checkTermPolicy t1 k e /\ checkTermPolicy t2 k e
+  | asp a  => checkASPPolicy sa k e a
+  | att r t0 => checkTermPolicy sa t0 k e
+  | lseq t1 t2 => checkTermPolicy sa t1 k e /\ checkTermPolicy sa t2 k e
+  | bseq _ t1 t2 => checkTermPolicy sa t1 k e /\ checkTermPolicy sa t2 k e
+  | bpar _ t1 t2 => checkTermPolicy sa t1 k e /\ checkTermPolicy sa t2 k e
   end.
+
+Theorem policy_dec : forall a (sa:SA) m, {Policy m a sa.(requestor)} + {~Policy m a sa.(requestor)} .
+Proof.
+  intros. induction a; destruct (requestor sa); simpl.
+  + destruct m. simpl.
+  (* How do I get Policy0 to be a specific instance of policy? 
+     Is there a better way to define it so that its decidable? *) 
+Abort. 
+
+Theorem checkASPPolicy_dec : forall sa p e a, {checkASPPolicy sa p e a} + {~checkASPPolicy sa p e a}.
+Proof.
+  intros.
+  unfold checkASPPolicy.
+  destruct (e p); try auto.
+  unfold Policy. destruct m. 
+Abort.
 
 (** Proving policy check is decidable. 
   * This is true if ASP policy is decidable. *)
-Theorem checkTermPolicy_dec:forall t k e,
-    (forall p0 a0, {(checkASPPolicy p0 e a0)} + {~(checkASPPolicy p0 e a0)}) ->
-    {(checkTermPolicy t k e)}+{~(checkTermPolicy t k e)}.
+Theorem checkTermPolicy_dec:forall t k e sa,
+    (forall p0 a0, {(checkASPPolicy sa p0 e a0)} + {~(checkASPPolicy sa p0 e a0)}) ->
+    {(checkTermPolicy sa t k e)}+{~(checkTermPolicy sa t k e)}.
 Proof.
-  intros t k e.
+  intros t k e sa.
   intros H.
   induction t; simpl.
   + apply H.
@@ -320,19 +337,19 @@ Defined.
 
 (** Soundness is executability and policy adherence *)
 
-Definition sound (t:Term)(k:Plc)(e:Environment) :=
-(executable t k e) /\ (checkTermPolicy t k e).
+Definition sound (sa:SA)(t:Term)(k:Plc)(e:Environment) :=
+(executable t k e) /\ (checkTermPolicy sa t k e).
 
 (** Prove soundness is decidable with the assumption necessary for policy
  * adherence decidability.
  *)
 
-Theorem sound_dec: forall t p e,
-(forall p0 a0, {(checkASPPolicy p0 e a0)} + {~(checkASPPolicy p0 e a0)})
--> {sound t p e}+{~(sound t p e)}.
+Theorem sound_dec: forall t p e sa,
+(forall p0 a0, {(checkASPPolicy sa p0 e a0)} + {~(checkASPPolicy sa p0 e a0)})
+-> {sound sa t p e}+{~(sound sa t p e)}.
 Proof.
-intros t p e. intros H. unfold sound. pose proof executable_dec t p e.
-assert ({checkTermPolicy t p e}+{~(checkTermPolicy t p e)}). { apply checkTermPolicy_dec. intros. apply H. }
+intros t p e sa. intros H. unfold sound. pose proof executable_dec t p e.
+assert ({checkTermPolicy sa t p e}+{~(checkTermPolicy sa t p e)}). { apply checkTermPolicy_dec. intros. apply H. }
 destruct H0,H1.
 + left. split; assumption.
 + right_dest_contr H'.
