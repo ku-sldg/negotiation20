@@ -283,23 +283,23 @@ Theorem executables_dec : forall t k s, {executables t k s} + {~executables t k 
 Definition checkASPPolicy (sa : SA) (p:Plc) (e:Environment) (a:ASP) :Prop :=
   match (e p) with (* Look for p in the environment *)
   | None => False
-  | Some m => (Policy m a sa.(requestor)) (* Policy from m allows p to run a *)
+  | Some m => (Policy m a sa.(src)) (* Policy from m allows p to run a *)
   end.
   
 (** Recursive policy check. *)
-Fixpoint checkTermPolicy (sa : SA) (t:Term)(k:Plc)(e:Environment):Prop :=
+Fixpoint checkTermPolicy (sa : SA)(t:Term)(k:Plc)(e:Environment):Prop :=
   match t with
   | asp a  => checkASPPolicy sa k e a
-  | att r t0 => checkTermPolicy sa t0 k e
+  | att r t0 => checkTermPolicy sa t0 r e
   | lseq t1 t2 => checkTermPolicy sa t1 k e /\ checkTermPolicy sa t2 k e
   | bseq _ t1 t2 => checkTermPolicy sa t1 k e /\ checkTermPolicy sa t2 k e
   | bpar _ t1 t2 => checkTermPolicy sa t1 k e /\ checkTermPolicy sa t2 k e
   end.
 
-Theorem policy_dec : forall a (sa:SA) m, {Policy m a sa.(requestor)} + {~Policy m a sa.(requestor)} .
+Theorem policy_dec : forall a (sa:SA) m, {Policy m a sa.(dest)} + {~Policy m a sa.(dest)} .
 Proof.
-  intros. induction a; destruct (requestor sa); simpl.
-  + destruct m. simpl.
+  intros. generalize m sa. induction a; destruct (dest sa); simpl.
+  + destruct m. simpl. intros. 
   (* How do I get Policy0 to be a specific instance of policy? 
      Is there a better way to define it so that its decidable? *) 
 Abort. 
@@ -315,19 +315,19 @@ Abort.
 (** Proving policy check is decidable. 
   * This is true if ASP policy is decidable. *)
 Theorem checkTermPolicy_dec:forall t k e sa,
-    (forall p0 a0, {(checkASPPolicy sa p0 e a0)} + {~(checkASPPolicy sa p0 e a0)}) ->
+    (forall p0 a0 sa0, {(checkASPPolicy sa0 p0 e a0)} + {~(checkASPPolicy sa0 p0 e a0)}) ->
     {(checkTermPolicy sa t k e)}+{~(checkTermPolicy sa t k e)}.
 Proof.
   intros t k e sa.
-  intros H.
-  induction t; simpl.
-  + apply H.
-  + assumption.
-  + destruct IHt1,IHt2; try right_dest_contr H'. 
+  intros H. generalize dependent k.  
+  induction t; simpl; intros. 
+  + specialize H with k a sa.  apply H.
+  + specialize IHt with p. assumption.  
+  + specialize IHt1 with k; specialize IHt2 with k.  destruct IHt1,IHt2; try right_dest_contr H'. 
   ++ left. split; assumption.
-  + destruct IHt1,IHt2 ; try right_dest_contr H'.
+  + specialize IHt1 with k; specialize IHt2 with k. destruct IHt1,IHt2 ; try right_dest_contr H'.
   ++ left. split; assumption.
-  + destruct IHt1,IHt2; try right_dest_contr H'.
+  + specialize IHt1 with k; specialize IHt2 with k. destruct IHt1,IHt2; try right_dest_contr H'.
   ++ left. split; assumption.
 Defined.
 
@@ -345,10 +345,12 @@ Definition sound (sa:SA)(t:Term)(k:Plc)(e:Environment) :=
  *)
 
 Theorem sound_dec: forall t p e sa,
-(forall p0 a0, {(checkASPPolicy sa p0 e a0)} + {~(checkASPPolicy sa p0 e a0)})
+(forall p0 a0 sa0, {(checkASPPolicy sa0 p0 e a0)} + {~(checkASPPolicy sa0 p0 e a0)})
 -> {sound sa t p e}+{~(sound sa t p e)}.
 Proof.
-intros t p e sa. intros H. unfold sound. pose proof executable_dec t p e.
+intros t p e sa. intros H. 
+unfold sound. 
+pose proof executable_dec t p e.
 assert ({checkTermPolicy sa t p e}+{~(checkTermPolicy sa t p e)}). { apply checkTermPolicy_dec. intros. apply H. }
 destruct H0,H1.
 + left. split; assumption.

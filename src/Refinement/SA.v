@@ -12,10 +12,10 @@ Import Copland.Term.
 (* TO DO: define situation *)
 
 Record SA := {
-    (* identity of the requestor *)
-    requestor : Plc ;
-    (* identity of the target... maybe this solves the "who answers the door"  *)
-    target : Plc;
+    (* person who sends message *)
+    src : Plc ;
+    (* person who recieves message  *)
+    dest : Plc;
     (* situation field. TBD. *)
     situation : Type ; 
     (* lifetime of SA *)
