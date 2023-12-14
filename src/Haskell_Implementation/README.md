@@ -9,9 +9,9 @@ Extraction of NFM code from Coq to Haskell
 
 Simply add the following code the the bottom of the file you wish to extract. 
 
-Require Import ExtrHaskellBasic. 
-Extraction Language Haskell.
-Extraction "fileName.hs" functionToExport. 
+    Require Import ExtrHaskellBasic. 
+    Extraction Language Haskell.
+    Extraction "fileName.hs" functionToExport. 
 
 where fileName is where the output code with be and functionToExport is the name of the function which you want extracted. Extraction will also output all the function's dependencies. 
 
