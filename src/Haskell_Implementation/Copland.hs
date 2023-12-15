@@ -2,27 +2,15 @@ module Copland where
 
 import qualified Prelude
 
-data Nat =
-   O
- | S Nat
+type Plc = Prelude.Int
 
-data Ascii0 =
-   Ascii Prelude.Bool Prelude.Bool Prelude.Bool Prelude.Bool Prelude.Bool 
- Prelude.Bool Prelude.Bool Prelude.Bool
+type N_ID = Prelude.Int
 
-data String =
-   EmptyString
- | String0 Ascii0 String
+type ASP_ID = Prelude.String
 
-type Plc = String
+type TARG_ID = Prelude.String
 
-type N_ID = Nat
-
-type ASP_ID = String
-
-type TARG_ID = String
-
-type Arg = String
+type Arg = Prelude.String
 
 data ASP_PARAMS =
    Asp_paramsC ASP_ID (([]) Arg) Plc TARG_ID
