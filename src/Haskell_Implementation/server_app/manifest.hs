@@ -4,7 +4,7 @@ import Prelude
 import Copland
 
 -- Manifest includes list of ASPs and the KnowsOf Relation
-data Manifest = Build_Manifest [ASP] [Plc] 
+data Manifest = Build_Manifest [ASP] [Plc]
 
 instance Show Manifest where
     show (Build_Manifest asps plcs) =
