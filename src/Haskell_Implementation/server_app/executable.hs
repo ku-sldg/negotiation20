@@ -9,13 +9,13 @@ knowsOfe :: Plc -> Plc -> Environment -> Bool
 knowsOfe p k e =
   case lookup k e of
     Nothing -> False
-    Just (Build_Manifest _ places)  -> p `elem` places
+    Just (Build_Manifest _ places _)  -> p `elem` places
 
 hasASPe :: Int -> ASP -> Environment -> Bool
 hasASPe k a e =
   case lookup k e of
     Nothing -> False
-    Just (Build_Manifest asps _)  -> a `elem` asps -- checks to see that a is in the asps
+    Just (Build_Manifest asps _ _)  -> a `elem` asps -- checks to see that a is in the asps
 
 executable :: Term -> Plc -> Environment -> Bool
 executable (Coq_asp a) k e = hasASPe k a e

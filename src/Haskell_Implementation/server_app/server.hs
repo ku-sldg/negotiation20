@@ -4,15 +4,15 @@ import Copland
 import Manifest
 import Executable
 
---  Build_Manifest (([]) ASP) (([]) Plc)
+--  Build_Manifest [ASP] [Plc] [(ASP,Plc)]
 e_P0 :: Manifest
-e_P0 = Build_Manifest ([]) ([1])
+e_P0 = Build_Manifest ([]) ([1]) ([])
 
 e_P1 :: Manifest
-e_P1 = Build_Manifest ([(ASPC ("vc")), HSH]) ([2])
+e_P1 = Build_Manifest ([(ASPC ("vc")), HSH]) ([2]) ([])
 
 e_P2 :: Manifest
-e_P2 = Build_Manifest ([(ASPC ("SFS"))]) ([1])
+e_P2 = Build_Manifest ([(ASPC ("SFS"))]) ([1]) ([])
 
 -- Print the result based on the Boolean value
 printResult :: Bool -> Term -> IO ()

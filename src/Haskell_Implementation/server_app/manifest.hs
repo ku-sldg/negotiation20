@@ -3,12 +3,11 @@ module Manifest where
 import Prelude
 import Copland
 
--- Manifest includes list of ASPs and the KnowsOf Relation
-data Manifest = Build_Manifest [ASP] [Plc]
-
-instance Show Manifest where
-    show (Build_Manifest asps plcs) =
-        "Build_Manifest " ++ show asps ++ " " ++ show plcs
+-- Manifest includes 
+---- list of ASPs 
+---- the KnowsOf Relation
+---- Policy (can share ASP with Plc)
+data Manifest = Build_Manifest [ASP] [Plc] [(ASP,Plc)] deriving (Show)
 
 type Environment = [(Int, Manifest)]
 
