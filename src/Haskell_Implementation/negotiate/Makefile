@@ -1,14 +1,14 @@
-# Makefile for compiling and running server.hs
+# Makefile for compiling and running negotiate.hs
 
 # Compiler and compiler flags
 GHC = ghc
 GHCFLAGS = -O2
 
 # Target executable
-TARGET = server
+TARGET = negotiate
 
 # Source files
-SOURCES = server.hs
+SOURCES = negotiate.hs
 
 # Build rule
 $(TARGET): $(SOURCES)
