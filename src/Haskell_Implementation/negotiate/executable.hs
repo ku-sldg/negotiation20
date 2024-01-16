@@ -17,6 +17,7 @@ hasASPe k a e =
     Nothing -> False
     Just (Build_Manifest asps _ _)  -> a `elem` asps -- checks to see that a is in the asps
 
+-- is term t executable on place p in environment e
 executable :: Term -> Plc -> Environment -> Bool
 executable (Coq_asp a) k e = hasASPe k a e
 executable (Coq_att p t) k e = knowsOfe p k e && executable t p e
