@@ -1,8 +1,14 @@
 module Policy where
 
-import qualified Prelude
+import Prelude
+import Copland
+import Manifest
 
-
+checkASPPolicy :: Plc -> ASP -> Environment -> Bool
+checkASPPolicy k a e =
+  case lookup k e of
+    Nothing -> False
+    Just (Build_Manifest _ _ policies)  -> True
 
 checkPolicy :: Term -> Plc -> Environment -> Bool
 checkPolicy (Coq_asp a) k e = checkASPPolicy k a e
