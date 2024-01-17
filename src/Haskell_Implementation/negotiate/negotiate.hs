@@ -29,6 +29,18 @@ main = do
     printExecResult isExec term1
     printPolicyResult isPol term1
 
-    -- let updatedDict = insertManifest 4 "ManifestD" myDict
-    -- putStrLn "Updated Dictionary:"
-    -- print updatedDict
+    let term2 = (Coq_att 2 (Coq_asp aSFS))
+
+    -- check that sfs is executable in place 2
+    let isExec = (executable term2 1 targ_env)
+    let isPol = (checkPolicy term2 1 2 targ_env)
+    printExecResult isExec term2
+    printPolicyResult isPol term2
+
+    let term3 = Coq_lseq term1 term2
+
+    -- check that sfs is executable in place 2
+    let isExec = (executable term3 0 targ_env)
+    let isPol = (checkPolicy term3 0 1 targ_env)
+    printExecResult isExec term3
+    printPolicyResult isPol term3
