@@ -1,0 +1,35 @@
+\begin{tikzpicture}
+  
+  %%[->,>=stealth',shorten >=1pt,auto,node distance=1.2cm,
+  %%  thick, main node/.style={rectangle}]
+    
+    %%fill=blue!20,draw,font=\sffamily,minimum height=2mm,minimum width=2mm}]
+      
+    \node (Number) {};  
+    \node(Initiator) [right of=Number] {Initiator};
+    \node(Direction) [node distance=2.5cm, right of=Initiator] {};
+    \node(Responder) [node distance=2.5cm, right of=Direction] {Responder};
+    
+    \node (ONE) [below of=Number] {1};
+    \node (TWO) [below of=ONE] {2};
+    \node (THREE) [below of=TWO] {3};
+    \node (FOUR) [below of=THREE] {4};
+
+
+    \node (A1) [below of=Direction] {$=>$}; S
+    \node (A2) [below of=A1] {$<=$}; 
+    \node (A3) [below of=A2] {$=>$}; 
+    \node (A4) [below of=A3] {$<=$}; 
+      
+    \node (I1) [node distance=1.5cm,right of=ONE] {HDR; SA};    
+    \node (I1b) [node distance=0.5cm, below of=I1] {NONCE};   
+    
+    \node (R2) [node distance=6cm, right of=TWO] {HDR; SA; NONCE};
+    
+    \node (I3) [node distance=1.5cm,right of=THREE] {HDR; KE}; 
+    \node (I3b) [node distance=0.5cm, below of=I3] {IDii; AUTH};
+    
+    \node (R4) [node distance=6cm,right of=FOUR] {HDR; KE}; 
+    \node (R4b) [node distance=0.5cm, below of=R4] {IDii; AUTH};
+
+  \end{tikzpicture}

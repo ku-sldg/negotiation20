@@ -1,0 +1,28 @@
+\begin{tikzpicture}
+  
+  %%fill=blue!20,draw,font=\sffamily,minimum height=2mm,minimum width=2mm}]
+    
+  \node (Number) {};  
+  \node (Initiator) [right of=Number] {Initiator};
+  \node (Direction) [node distance=2.5cm, right of=Initiator] {};
+  \node (Responder) [node distance=2.5cm, right of=Direction] {Responder};
+  
+  \node (ONE) [below of=Number] {1};
+  \node (TWO) [below of=ONE] {2};
+  \node (THREE) [below of=TWO] {3};
+  
+  \node (A1) [below of=Direction] {$=>$}; S
+  \node (A2) [below of=A1] {$<=$}; 
+  \node (A3) [below of=A2] {$=>$}; 
+    
+  \node (I1) [node distance=1.5cm, right of=ONE] {HDR; SA; KE};    
+  \node (I1b) [node distance=0.5cm, below of=I1] {NONCE;IDii};   
+  
+  \node (R2) [node distance=5.5cm, right of=TWO] {HDR; SA; KE};
+  \node (R2b) [node distance=0.5cm, below of=R2] {NONCE; IDir; AUTH}; 
+  
+  \node (I3) [node distance=1.5cm,right of=THREE] {HDR*; AUTH}; 
+  
+  
+  
+\end{tikzpicture}

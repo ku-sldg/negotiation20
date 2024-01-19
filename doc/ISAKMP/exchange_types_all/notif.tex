@@ -1,0 +1,21 @@
+\begin{tikzpicture}
+  
+    %%[->,>=stealth',shorten >=1pt,auto,node distance=1.2cm,
+    %%  thick, main node/.style={rectangle}]
+      
+      %%fill=blue!20,draw,font=\sffamily,minimum height=2mm,minimum width=2mm}]
+        
+      \node (Number) {};  
+      \node(Initiator) [right of=Number] {Initiator};
+      \node(Direction) [node distance=2.5cm, right of=Initiator] {};
+      \node(Responder) [node distance=2.5cm, right of=Direction] {Responder};
+      
+      \node (ONE) [below of=Number] {1};
+
+      \node (A1) [below of=Direction] {$=>$}; S
+     
+        
+      \node (I1) [right of=ONE] {HDR*;};    
+      \node (I1b) [node distance=0.5cm, below of=I1] {N/D};   
+  
+    \end{tikzpicture}

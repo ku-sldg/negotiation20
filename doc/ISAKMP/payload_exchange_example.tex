@@ -1,0 +1,34 @@
+\begin{bytefield}[bitwidth=1.1em]{32}
+    \bitheader{0-31} \\
+    \begin{rightwordgroup}{SA \\  Pay}
+        \bitbox{8}{NP = Nonce} & \bitbox{8}{Reserved} & \bitbox{16}{Payload Length} \\
+        \bitbox{32}{Domain of Interpretation (DOI)} \\
+        \bitbox{32}{Situation}
+    \end{rightwordgroup} \\
+    \begin{rightwordgroup} {Prop 1 \\ Prot 1}
+        \bitbox{8}{NP = Proposal} & \bitbox{8}{Reserved} & \bitbox{16}{Payload Length} \\
+        \bitbox{8}{Proposal \# = 1} & \bitbox{8}{Protocol-Id} & \bitbox{8}{SPI Size} &\bitbox{8}{\# of Trans. = 2} \\
+        \bitbox{32}{SPI (Variable)}
+    \end{rightwordgroup} \\
+    \begin{rightwordgroup} {Tran 1}
+        \bitbox{8}{NP = Transform} & \bitbox{8}{Reserved} & \bitbox{16}{Payload Length} \\
+        \bitbox{8}{Transform \# = 1} & \bitbox{8}{Transform ID} & \bitbox{16}{Reserved2}  \\
+        \bitbox{32}{SA Attributes (3DES)}
+    \end{rightwordgroup} \\
+    \begin{rightwordgroup} {Tran 2}
+        \bitbox{8}{NP = 0} & \bitbox{8}{Reserved} & \bitbox{16}{Payload Length} \\
+        \bitbox{8}{Transform \# = 2} & \bitbox{8}{Transform ID} & \bitbox{16}{Reserved2}  \\
+        \bitbox{32}{SA Attributes (DES) }
+    \end{rightwordgroup} \\
+    \begin{rightwordgroup} {Prop 1 \\ Prot 2}
+        \bitbox{8}{NP = 0} & \bitbox{8}{Reserved} & \bitbox{16}{Payload Length} \\
+        \bitbox{8}{Proposal \# = 1} & \bitbox{8}{Protocol-Id} & \bitbox{8}{SPI Size} &\bitbox{8}{\# of Trans. = 1} \\
+        \bitbox{32}{SPI (Variable)}
+    \end{rightwordgroup} \\
+    \begin{rightwordgroup} {Tran 1}
+        \bitbox{8}{NP = 0} & \bitbox{8}{Reserved} & \bitbox{16}{Payload Length} \\
+        \bitbox{8}{Transform \# = 1} & \bitbox{8}{Transform ID} & \bitbox{16}{Reserved2}  \\
+        \bitbox{32}{SA Attributes (SHA) }
+    \end{rightwordgroup} \\
+
+\end{bytefield}
